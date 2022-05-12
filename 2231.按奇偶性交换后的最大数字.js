@@ -14,16 +14,24 @@ var largestInteger = function (num) {
   let odd_obj = {};
   // 偶数
   let even_obj = {};
+  let numStr = `${num}`;
+  let arr = Array(numStr.length).fill(0);
 
-  `${num}`.split("").map((item, index) => {
+  numStr.split("").map((item, index) => {
     if (item % 2 === 0) {
-      odd_obj[index] = item;
+      odd_obj[index] = item - 0;
     } else {
-      even_obj[index] = item;
+      even_obj[index] = item - 0;
     }
   });
 
-  console.log(odd_obj, even_obj);
+  let odd_arr = Object.entries(odd_obj).sort((a, b) => {
+    return b[1] - a[1];
+  });
+  let even_arr = Object.entries(even_obj).sort((a, b) => {
+    return b[1] - a[1];
+  });
+  console.log(`🚀 ~ odd_arr`, even_arr);
 };
 largestInteger(1234);
 // @lc code=end
