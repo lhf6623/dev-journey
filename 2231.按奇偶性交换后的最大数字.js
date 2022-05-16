@@ -32,7 +32,6 @@ var largestInteger = function (num) {
     return b[1] - a[1];
   });
   console.log(`🚀 ~ odd_arr`, even_arr);
-  console.log(`🚀 ~ odd_arr`, even_arr);
 };
 largestInteger(1234);
 // @lc code=end
