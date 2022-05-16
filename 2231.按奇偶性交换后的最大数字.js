@@ -11,27 +11,31 @@
  */
 var largestInteger = function (num) {
   // 奇数
-  let odd_obj = {};
+  let odd_arr = [];
   // 偶数
-  let even_obj = {};
-  let numStr = `${num}`;
-  let arr = Array(numStr.length).fill(0);
+  let even_arr = [];
+  let arr = `${num}`.split("").map((n) => n - 0);
 
-  numStr.split("").map((item, index) => {
-    if (item % 2 === 0) {
-      odd_obj[index] = item - 0;
-    } else {
-      even_obj[index] = item - 0;
-    }
+  arr.map((item) => {
+    let arr = item % 2 === 0 ? odd_arr : even_arr;
+    arr.push(item);
   });
-
-  let odd_arr = Object.entries(odd_obj).sort((a, b) => {
-    return b[1] - a[1];
+  // 偶数
+  odd_arr.sort((a, b) => {
+    return b - a;
   });
-  let even_arr = Object.entries(even_obj).sort((a, b) => {
-    return b[1] - a[1];
+  // 奇数
+  even_arr.sort((a, b) => {
+    return b - a;
   });
-  console.log(`🚀 ~ odd_arr`, even_arr);
+  return arr
+    .map((item) => {
+      return item % 2 === 0 ? odd_arr.shift() : even_arr.shift();
+    })
+    .join("");
 };
-largestInteger(1234);
+
+/* let arr = largestInteger(1234);
+console.log(`🚀 ~ arr`, arr); */
+
 // @lc code=end
