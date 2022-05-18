@@ -22,15 +22,15 @@ var largestInteger = function (num) {
   });
   // 偶数
   odd_arr.sort((a, b) => {
-    return b - a;
+    return a - b;
   });
   // 奇数
   even_arr.sort((a, b) => {
-    return b - a;
+    return a - b;
   });
   return arr
     .map((item) => {
-      return item % 2 === 0 ? odd_arr.shift() : even_arr.shift();
+      return item % 2 === 0 ? odd_arr.pop() : even_arr.pop();
     })
     .join("");
 };
