@@ -10,6 +10,8 @@
  * @return {string}
  */
 var removeStars = function (s) {
+
+  // return s.split('').reduce((pre, curr) => (pre[curr === '*' ? 'pop' : 'push'](curr), pre), []).join('')
   const res_arr = []
   for (let i = 0; i < s.length; i++) {
     if (s[i] === '*') {
