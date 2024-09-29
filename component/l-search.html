@@ -1,16 +1,8 @@
 <template component>
   <style>
-    .menu {
-      position: relative;
-      padding: 16px;
-      border-right: 1px solid #e6e6e6;
-    }
-
     ul {
       overflow-y: auto;
-      height: 100%;
-      padding: 0;
-      margin: 0;
+      max-height: 300px;
 
       li {
         overflow: hidden;
@@ -37,10 +29,38 @@
     .is-active {
       color: #0073ff;
     }
+
+    .search {
+      position: relative;
+      width: 168px;
+
+      input {
+        position: relative;
+        width: 100%;
+        box-sizing: border-box;
+        padding: 3px 9px;
+      }
+
+      .filter-menu {
+        position: absolute;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        background-color: #fff;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        list-style-type: none;
+      }
+
+    }
+
+    .dark .filter-menu {
+      background-color: #333;
+    }
   </style>
-  <div class="menu">
-    <ul attr:class="store.theme">
-      <x-fill :value="store.menus">
+  <div attr:class="'search ' + store.theme">
+    <input placeholder="快速查询" on:input="filterMenusFn" type="text">
+    <ul class="filter-menu">
+      <x-fill :value="filterMenus">
         <li attr:class="$host.store.currTitle === $data ? 'is-active' : ''" on:click="$host.toggle($data)"
           attr:title="$data.replace('.js', '')">
           {{$data.replace('.js', '')}}</li>
@@ -48,15 +68,15 @@
     </ul>
   </div>
   <script>
-    import { stringToDom, getUrl } from '../js/util.js'
-    import menus from '../js/menusData.js'
-
     export default async function ({ load }) {
       const { data } = await load('../js/store.js')
       return {
-        tag: 'l-menu',
+        tag: 'l-search',
         data: {
           store: {},
+          filterMenus: [],
+          // 键盘上下选择项
+          currIndex: 0,
         },
         attached() {
           this.store = data
@@ -64,21 +84,23 @@
         detached() {
           this.store = null
         },
-        async loaded() {
-
-          this.store.menus = menus.sort((a, b) => {
-            const [a_index] = a.split('.')
-            const [b_index] = b.split('.')
-            return Number(a_index) - Number(b_index)
-          })
-          this.toggle(this.store.menus[0])
-        },
         proto: {
+          filterMenusFn(e) {
+            const value = e.target.value
+            if (!value) {
+              this.filterMenus = []
+              return
+            };
+            this.filterMenus = this.store.menus.filter(m => m.includes(value))
+          },
           toggle(title) {
             this.store.currTitle = title
             const currIndex = this.store.menus.indexOf(title)
             this.store.preTitle = this.store.menus[currIndex - 1] ?? ''
             this.store.nextTitle = this.store.menus[currIndex + 1] ?? ''
+            setTimeout(() => {
+              this.filterMenus = []
+            }, 100);
           }
         }
       }

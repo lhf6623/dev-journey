@@ -2,6 +2,10 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
   <link rel="stylesheet" href="../css/highlight_theme.css">
   <style>
+    header {
+      padding-left: 26px;
+    }
+
     .code-box {
       position: relative;
       margin: 0 26px;
@@ -51,7 +55,7 @@
       display: flex;
       flex-direction: row;
       justify-content: space-between;
-      padding: 0 16px;
+      padding: 0 26px;
 
       p {
         display: flex;
@@ -74,26 +78,26 @@
       display: flex;
       justify-content: center;
       align-items: center;
-    }
 
-    .loader {
-      border: 8px solid #f3f3f3;
-      /* Light grey */
-      border-top: 8px solid #3498db;
-      /* Blue */
-      border-radius: 50%;
-      width: 60px;
-      height: 60px;
-      animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-      0% {
-        transform: rotate(0deg);
+      .loader {
+        border: 8px solid #f3f3f3;
+        /* Light grey */
+        border-top: 8px solid #3498db;
+        /* Blue */
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        animation: spin 1s linear infinite;
       }
 
-      100% {
-        transform: rotate(360deg);
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+
+        100% {
+          transform: rotate(360deg);
+        }
       }
     }
   </style>
