@@ -42,7 +42,7 @@
   </ul>
 
   <script>
-    import { getText, stringToDom } from '../js/util.js'
+    import { getText, stringToDom, getUrl } from '../js/util.js'
 
     export default async function ({ load }) {
       const { data } = await load('../js/store.js')
@@ -58,7 +58,8 @@
           this.store = null
         },
         async loaded() {
-          // const html = await getText('../../questionBank', load)
+          const html = await getText(getUrl('questionBank'), fetch)
+          console.log(`🚀 ~ html:`, html);
 
           // const dom = stringToDom(html);
           this.store.menus = [
@@ -105,7 +106,7 @@
           //   const [b_index] = b.split('.')
           //   return Number(a_index) - Number(b_index)
           // })
-          console.log(this.store.menus);
+          // console.log(this.store.menus);
 
           this.toggle(this.store.menus[0])
         },

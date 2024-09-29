@@ -95,10 +95,11 @@
   <script>
     import hljs from 'https://unpkg.com/@highlightjs/cdn-assets@11.10.0/es/highlight.min.js';
     import javascript from 'https://unpkg.com/@highlightjs/cdn-assets@11.10.0/es/languages/javascript.min.js';
-    import { getText } from '../js/util.js'
+    import { getText, getUrl } from '../js/util.js'
 
     export default async function ({ load }) {
       const { data } = await load('../js/store.js')
+      console.log(`🚀 ~ data:`, data);
       return {
         tag: 'l-main',
         data: {
@@ -110,7 +111,6 @@
         attached() {
           this.store = data
           hljs.registerLanguage('javascript', javascript)
-          hljs.highlightAll();
         },
         detached() {
           this.store = null
@@ -120,9 +120,9 @@
             const { currTitle, theme } = newData
             if (currTitle && currTitle !== this.id) {
               const encodedFileName = encodeURIComponent(currTitle)
-              const test = await fetch('../js/store.js').then(res => res.text())
+              const test = await fetch(getUrl('js/store.js')).then(res => res.text())
               console.log(`🚀 ~ test:`, test);
-              const html = await getText(`../questionBank/${encodedFileName}`, fetch)
+              const html = await getText(getUrl(`questionBank/${encodedFileName}`), fetch)
               this.store.currCode = html
               this.highlightedCode = hljs.highlight(
                 html,

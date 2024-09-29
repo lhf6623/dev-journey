@@ -35,3 +35,12 @@ export function stringToDom(strHtml) {
   const parser = new DOMParser();
   return parser.parseFromString(strHtml, 'text/html');
 }
+
+export function getUrl(url) {
+  if (location.href.includes('htts')) {
+    return `https://lhf6623.github.io/leetcode/${url}`
+  }
+  const _url = `${location.origin}/${url}`
+  console.log(`🚀 ~ _url:`, _url);
+  return _url
+}
