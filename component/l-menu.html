@@ -1,0 +1,86 @@
+<template component>
+  <style>
+    ul {
+      overflow-y: auto;
+      height: 100%;
+      padding: 0;
+      margin: 0;
+    }
+
+    li {
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      font-size: 14px;
+      cursor: pointer;
+      padding: 6px;
+      border-radius: 6px;
+      border-bottom: 1px solid #e6e6e6;
+
+      &:hover {
+        background-color: #f5f5f5;
+      }
+    }
+
+    .dark li {
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+      }
+    }
+
+    .is-active {
+      color: #0073ff;
+    }
+  </style>
+
+  <ul attr:class="store.theme">
+    <x-fill :value="store.menus">
+      <li attr:class="$host.store.currTitle === $data ? 'is-active' : ''" on:click="$host.toggle($data)"
+        attr:title="$data.replace('.js', '')">
+        {{$data.replace('.js', '')}}</li>
+    </x-fill>
+  </ul>
+
+  <script type="module">
+    import { getText, stringToDom } from '../js/util.js'
+
+    export default async function ({ load }) {
+      const { data } = await load('../js/store.js')
+      return {
+        tag: 'l-menu',
+        data: {
+          store: {},
+        },
+        attached() {
+          this.store = data
+        },
+        detached() {
+          this.store = null
+        },
+        async loaded() {
+          const html = await getText('../../questionBank')
+
+          const dom = stringToDom(html);
+          this.store.menus = Array.from(dom.getElementsByTagName('li')).flatMap((li, index) => {
+            if (index === 0) return []
+            const name = li.getElementsByClassName('name')[0].innerHTML
+            return [name]
+          }).sort((a, b) => {
+            const [a_index] = a.split('.')
+            const [b_index] = b.split('.')
+            return Number(a_index) - Number(b_index)
+          })
+          this.toggle(this.store.menus[0])
+        },
+        proto: {
+          toggle(title) {
+            this.store.currTitle = title
+            const currIndex = this.store.menus.indexOf(title)
+            this.store.preTitle = this.store.menus[currIndex - 1] ?? ''
+            this.store.nextTitle = this.store.menus[currIndex + 1] ?? ''
+          }
+        }
+      }
+    }
+  </script>
+</template>

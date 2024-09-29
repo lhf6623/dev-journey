@@ -1,0 +1,51 @@
+<template component>
+  <style>
+    button {
+      border: none;
+      background-color: transparent;
+      cursor: pointer;
+    }
+  </style>
+
+  <button>
+    <x-if :value="store.theme==='dark'">
+      <iconify-icon on:click="toggle('light')" icon="ph:sun-fill" width="24" height="24"></iconify-icon>
+    </x-if>
+    <x-if :value="store.theme==='light'">
+      <iconify-icon on:click="toggle('dark')" icon="mage:moon-fill" width="24" height="24"></iconify-icon>
+    </x-if>
+  </button>
+
+  <script>
+
+    const THEME_KEY = 'theme'
+    export default async function ({ load }) {
+      const { data } = await load('../js/store.js')
+      return {
+        tag: 'l-theme',
+        data: {
+          store: {},
+        },
+        attached() {
+          this.store = data;
+        },
+        detached() {
+          this.store = null;
+        },
+        loaded() {
+          this.store.theme = localStorage.getItem(THEME_KEY) || 'light'
+          this.toggle(this.store.theme)
+        },
+        proto: {
+          toggle(theme) {
+            localStorage.setItem(THEME_KEY, theme)
+            const html = document.getElementsByTagName('html')[0]
+            html.style.colorScheme = theme
+            html.classList.toggle('dark', theme === 'dark')
+            this.store.theme = theme
+          }
+        }
+      }
+    }
+  </script>
+</template>

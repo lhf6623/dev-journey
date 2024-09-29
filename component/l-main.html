@@ -1,0 +1,151 @@
+<template component>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+  <link rel="stylesheet" href="../css/highlight_theme.css">
+  <style>
+    .code-box {
+      position: relative;
+      margin: 0 26px;
+      overflow-x: auto;
+
+      .pos-box {
+        position: relative;
+        width: fit-content;
+        height: fit-content;
+
+        &:hover {
+          .copy {
+            display: inherit;
+          }
+        }
+      }
+
+      pre {
+        width: fit-content;
+        height: auto;
+        margin: 0;
+        padding: 0;
+        position: relative;
+      }
+
+      .code {
+        position: relative;
+        color: #abb2bf;
+        background-color: #282c34;
+        padding: 16px;
+        overflow: auto;
+        display: block;
+        width: fit-content;
+      }
+    }
+
+    .copy {
+      position: absolute;
+      z-index: 1;
+      background-color: transparent;
+      right: 6px;
+      top: 20px;
+      display: none;
+    }
+
+    footer {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      padding: 0 16px;
+
+      p {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+
+        color: #0073ff;
+      }
+    }
+  </style>
+
+  <header>
+    <h1>{{store.currTitle?.replace('.js', '')}}</h1>
+  </header>
+  <div attr:class="store.theme === 'light' ? 'code-box atom-one-light': 'code-box atom-one-dark'">
+    <div class="pos-box">
+      <span class="copy">
+        <l-m src="./l-copy.html"></l-m>
+        <l-copy :code="store.currCode"></l-copy>
+      </span>
+      <pre>
+        <div class="code" :html="highlightedCode"></div>
+      </pre>
+    </div>
+  </div>
+  <footer>
+    <p on:click="pre">
+      <x-if :value="store.preTitle">
+        <iconify-icon icon="mingcute:left-fill" width="24" height="24"></iconify-icon>
+        <span>{{store.preTitle.replace('.js', '')}}</span>
+      </x-if>
+    </p>
+    <p on:click="next">
+      <x-if :value="store.nextTitle">
+        <span>{{store.nextTitle.replace('.js', '')}}</span>
+        <iconify-icon icon="mingcute:right-fill" width="24" height="24"></iconify-icon>
+      </x-if>
+    </p>
+  </footer>
+
+  <script type="module">
+    import hljs from 'https://unpkg.com/@highlightjs/cdn-assets@11.10.0/es/highlight.min.js';
+    import javascript from 'https://unpkg.com/@highlightjs/cdn-assets@11.10.0/es/languages/javascript.min.js';
+    import { getText } from '../js/util.js'
+
+    export default async function ({ load }) {
+      const { data } = await load('../js/store.js')
+      return {
+        tag: 'l-main',
+        data: {
+          // 没有深度监听某一个值，手动缓存一个旧值
+          id: '',
+          highlightedCode: '',
+          store: {},
+        },
+        attached() {
+          this.store = data
+          hljs.registerLanguage('javascript', javascript)
+          hljs.highlightAll();
+        },
+        detached() {
+          this.store = null
+        },
+        watch: {
+          async store(newData) {
+            const { currTitle, theme } = newData
+            if (currTitle && currTitle !== this.id) {
+              const html = await getText(`../questionBank/${currTitle}`, load)
+              this.store.currCode = html
+              this.highlightedCode = hljs.highlight(
+                html,
+                { language: 'javascript' }
+              ).value
+              this.id = currTitle
+            }
+            this.id = currTitle
+          }
+        },
+        proto: {
+          next() {
+            this.store.preTitle = this.store.currTitle
+            this.store.currTitle = this.store.nextTitle
+            const nextIndex = this.store.menus.indexOf(this.store.currTitle)
+            this.store.nextTitle = this.store.menus[nextIndex + 1] ?? ''
+          },
+          pre() {
+            this.store.currTitle = this.store.preTitle
+            this.store.nextTitle = this.store.currTitle
+            const preIndex = this.store.menus.indexOf(this.store.currTitle)
+            this.store.preTitle = this.store.menus[preIndex - 1] ?? ''
+          }
+
+        }
+      }
+    }
+  </script>
+</template>
