@@ -58,7 +58,7 @@
           this.store = null
         },
         async loaded() {
-          const html = await getText(getUrl('questionBank'), fetch)
+          const html = await getText(getUrl('questionBank'), load)
           console.log(`🚀 ~ html:`, html);
 
           // const dom = stringToDom(html);

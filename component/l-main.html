@@ -99,7 +99,6 @@
 
     export default async function ({ load }) {
       const { data } = await load('../js/store.js')
-      console.log(`🚀 ~ data:`, data);
       return {
         tag: 'l-main',
         data: {
@@ -120,8 +119,6 @@
             const { currTitle, theme } = newData
             if (currTitle && currTitle !== this.id) {
               const encodedFileName = encodeURIComponent(currTitle)
-              const test = await fetch(getUrl('js/store.js')).then(res => res.text())
-              console.log(`🚀 ~ test:`, test);
               const html = await getText(getUrl(`questionBank/${encodedFileName}`), fetch)
               this.store.currCode = html
               this.highlightedCode = hljs.highlight(

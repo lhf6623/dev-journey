@@ -4,7 +4,6 @@
  * @returns {string}
  */
 export async function getText(url, load) {
-  console.log(`🚀 ~ load:`, load);
 
   const response = await load(url)
 
@@ -37,12 +36,9 @@ export function stringToDom(strHtml) {
 }
 
 export function getUrl(url) {
-  console.log(location.href);
 
   if (location.href.includes('https')) {
     return `https://lhf6623.github.io/leetcode/${url}`
   }
-  const _url = `${location.origin}/${url}`
-  console.log(`🚀 ~ _url:`, _url);
-  return _url
+  return `${location.origin}/${url}`
 }
