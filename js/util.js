@@ -37,7 +37,9 @@ export function stringToDom(strHtml) {
 }
 
 export function getUrl(url) {
-  if (location.href.includes('htts')) {
+  console.log(location.href);
+
+  if (location.href.includes('https')) {
     return `https://lhf6623.github.io/leetcode/${url}`
   }
   const _url = `${location.origin}/${url}`
