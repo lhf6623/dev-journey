@@ -61,6 +61,41 @@
         color: #0073ff;
       }
     }
+
+    .loading {
+      position: absolute;
+      z-index: 100;
+      background: #00000009;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .loader {
+      border: 8px solid #f3f3f3;
+      /* Light grey */
+      border-top: 8px solid #3498db;
+      /* Blue */
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
   </style>
 
   <header>
@@ -75,6 +110,11 @@
       <pre>
         <div class="code" :html="highlightedCode"></div>
       </pre>
+      <x-if :value="loading">
+        <div class="loading">
+          <div class="loader"></div>
+        </div>
+      </x-if>
     </div>
   </div>
   <footer>
@@ -95,7 +135,7 @@
   <script>
     import hljs from 'https://unpkg.com/@highlightjs/cdn-assets@11.10.0/es/highlight.min.js';
     import javascript from 'https://unpkg.com/@highlightjs/cdn-assets@11.10.0/es/languages/javascript.min.js';
-    import { getText, getUrl } from '../js/util.js'
+    import { getUrl } from '../js/util.js'
 
     export default async function ({ load }) {
       const { data } = await load('../js/store.js')
@@ -106,6 +146,7 @@
           id: '',
           highlightedCode: '',
           store: {},
+          loading: false,
         },
         attached() {
           this.store = data
@@ -116,21 +157,31 @@
         },
         watch: {
           async store(newData) {
-            const { currTitle, theme } = newData
+            const currTitle = newData.currTitle ?? ''
             if (currTitle && currTitle !== this.id) {
-              const encodedFileName = encodeURIComponent(currTitle)
-              const html = await getText(getUrl(`questionBank/${encodedFileName}`), fetch)
-              this.store.currCode = html
-              this.highlightedCode = hljs.highlight(
-                html,
-                { language: 'javascript' }
-              ).value
-              this.id = currTitle
+              this.getCode(currTitle)
             }
-            this.id = currTitle
-          }
+            this.id = newData.currTitle ?? ''
+          },
         },
         proto: {
+          async getCode(id) {
+            const encodedFileName = encodeURIComponent(id)
+            let html = ''
+            try {
+              this.loading = true
+              html = await fetch(getUrl(`questionBank/${encodedFileName}`)).then(res => res.text())
+            } catch (e) {
+              console.error(e)
+            }
+            this.store.currCode = html
+            this.highlightedCode = hljs.highlight(
+              html,
+              { language: 'javascript' }
+            ).value
+
+            this.loading = false
+          },
           next() {
             this.store.preTitle = this.store.currTitle
             this.store.currTitle = this.store.nextTitle
