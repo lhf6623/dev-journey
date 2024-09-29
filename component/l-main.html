@@ -120,6 +120,8 @@
             const { currTitle, theme } = newData
             if (currTitle && currTitle !== this.id) {
               const encodedFileName = encodeURIComponent(currTitle)
+              const test = await fetch('../js/store.js').then(res => res.text())
+              console.log(`🚀 ~ test:`, test);
               const html = await getText(`../questionBank/${encodedFileName}`, fetch)
               this.store.currCode = html
               this.highlightedCode = hljs.highlight(
