@@ -7,7 +7,7 @@
   <button class="btn" attr:data-clipboard-text="code">
     {{isCopy ? '已复制' : '复制'}}
   </button>
-  <script type="module">
+  <script>
     export default async function ({ load }) {
       return {
         tag: 'l-copy',
