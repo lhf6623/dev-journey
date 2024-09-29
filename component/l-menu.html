@@ -58,7 +58,7 @@
           this.store = null
         },
         async loaded() {
-          const html = await getText('../../questionBank')
+          const html = await getText('../../questionBank', load)
 
           const dom = stringToDom(html);
           this.store.menus = Array.from(dom.getElementsByTagName('li')).flatMap((li, index) => {

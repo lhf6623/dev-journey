@@ -3,9 +3,10 @@
  * @param {string} url 目标地址
  * @returns {string}
  */
-export async function getText(url) {
+export async function getText(url, load) {
+  console.log(`🚀 ~ load:`, load);
 
-  const response = await fetch(url)
+  const response = await load(url)
 
   const reader = response.body.getReader()
   let decoder = new TextDecoder()
