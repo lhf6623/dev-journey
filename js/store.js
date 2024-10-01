@@ -1,7 +1,7 @@
 export const data = $.stanz({
-  currTitle: "",
-  preTitle: "",
-  nextTitle: "",
-  currCode: "",
-  menus: [],
+	currTitle: "",
+	preTitle: "",
+	nextTitle: "",
+	currCode: "",
+	menus: [],
 });

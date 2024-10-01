@@ -1,210 +1,226 @@
 <template component>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
-  <link rel="stylesheet" href="../css/highlight_theme.css">
-  <style>
-    header {
-      padding-left: 26px;
-    }
+	<link
+		rel="stylesheet"
+		href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css"
+	/>
+	<link
+		rel="stylesheet"
+		href="../css/highlight_theme.css"
+	/>
+	<style>
+		header {
+			padding-left: 26px;
+		}
 
-    .code-box {
-      position: relative;
-      margin: 0 26px;
-      overflow-x: auto;
+		.code-box {
+			position: relative;
+			margin: 0 26px;
+			overflow-x: auto;
 
-      .pos-box {
-        position: relative;
-        width: fit-content;
-        height: fit-content;
+			.pos-box {
+				position: relative;
+				width: fit-content;
+				height: fit-content;
 
-        &:hover {
-          .copy {
-            display: inherit;
-          }
-        }
-      }
+				&:hover {
+					.copy {
+						display: inherit;
+					}
+				}
+			}
 
-      pre {
-        width: fit-content;
-        height: auto;
-        margin: 0;
-        padding: 0;
-        position: relative;
-      }
+			pre {
+				width: fit-content;
+				height: auto;
+				margin: 0;
+				padding: 0;
+				position: relative;
+			}
 
-      .code {
-        position: relative;
-        color: #abb2bf;
-        background-color: #282c34;
-        padding: 16px;
-        overflow: auto;
-        display: block;
-        width: fit-content;
-      }
-    }
+			.code {
+				position: relative;
+				color: #abb2bf;
+				background-color: #282c34;
+				padding: 16px;
+				overflow: auto;
+				display: block;
+				width: fit-content;
+			}
+		}
 
-    .copy {
-      position: absolute;
-      z-index: 1;
-      background-color: transparent;
-      right: 6px;
-      top: 20px;
-      display: none;
-    }
+		.copy {
+			position: absolute;
+			z-index: 1;
+			background-color: transparent;
+			right: 6px;
+			top: 20px;
+			display: none;
+		}
 
-    footer {
-      display: flex;
-      flex-direction: row;
-      justify-content: space-between;
-      padding: 0 26px;
+		footer {
+			display: flex;
+			flex-direction: row;
+			justify-content: space-between;
+			padding: 0 26px;
 
-      p {
-        display: flex;
-        align-items: center;
-        cursor: pointer;
+			p {
+				display: flex;
+				align-items: center;
+				cursor: pointer;
 
-        color: #0073ff;
-      }
-    }
+				color: #0073ff;
+			}
+		}
 
-    .loading {
-      position: absolute;
-      z-index: 100;
-      background: #00000009;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+		.loading {
+			position: absolute;
+			z-index: 100;
+			background: #00000009;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
 
-      display: flex;
-      justify-content: center;
-      align-items: center;
+			display: flex;
+			justify-content: center;
+			align-items: center;
 
-      .loader {
-        border: 8px solid #f3f3f3;
-        /* Light grey */
-        border-top: 8px solid #3498db;
-        /* Blue */
-        border-radius: 50%;
-        width: 60px;
-        height: 60px;
-        animation: spin 1s linear infinite;
-      }
+			.loader {
+				border: 8px solid #f3f3f3;
+				/* Light grey */
+				border-top: 8px solid #3498db;
+				/* Blue */
+				border-radius: 50%;
+				width: 60px;
+				height: 60px;
+				animation: spin 1s linear infinite;
+			}
 
-      @keyframes spin {
-        0% {
-          transform: rotate(0deg);
-        }
+			@keyframes spin {
+				0% {
+					transform: rotate(0deg);
+				}
 
-        100% {
-          transform: rotate(360deg);
-        }
-      }
-    }
-  </style>
+				100% {
+					transform: rotate(360deg);
+				}
+			}
+		}
+	</style>
 
-  <header>
-    <h1>{{store.currTitle?.replace('.js', '')}}</h1>
-  </header>
-  <div attr:class="theme.value === 'light' ? 'code-box atom-one-light': 'code-box atom-one-dark'">
-    <div class="pos-box">
-      <span class="copy">
-        <l-m src="./l-copy.html"></l-m>
-        <l-copy :code="store.currCode"></l-copy>
-      </span>
-      <pre>
+	<header>
+		<h1>{{store.currTitle?.replace('.js', '')}}</h1>
+	</header>
+	<div
+		attr:class="theme.value === 'light' ? 'code-box atom-one-light': 'code-box atom-one-dark'"
+	>
+		<div class="pos-box">
+			<span class="copy">
+				<l-m src="./l-copy.html"></l-m>
+				<l-copy :code="store.currCode"></l-copy>
+			</span>
+			<pre>
         <div class="code" :html="highlightedCode"></div>
       </pre>
-      <x-if :value="loading">
-        <div class="loading">
-          <div class="loader"></div>
-        </div>
-      </x-if>
-    </div>
-  </div>
-  <footer>
-    <p on:click="pre">
-      <x-if :value="store.preTitle">
-        <iconify-icon icon="mingcute:left-fill" width="24" height="24"></iconify-icon>
-        <span>{{store.preTitle.replace('.js', '')}}</span>
-      </x-if>
-    </p>
-    <p on:click="next">
-      <x-if :value="store.nextTitle">
-        <span>{{store.nextTitle.replace('.js', '')}}</span>
-        <iconify-icon icon="mingcute:right-fill" width="24" height="24"></iconify-icon>
-      </x-if>
-    </p>
-  </footer>
+			<x-if :value="loading">
+				<div class="loading">
+					<div class="loader"></div>
+				</div>
+			</x-if>
+		</div>
+	</div>
+	<footer>
+		<p on:click="pre">
+			<x-if :value="store.preTitle">
+				<iconify-icon
+					icon="mingcute:left-fill"
+					width="24"
+					height="24"
+				></iconify-icon>
+				<span>{{store.preTitle.replace('.js', '')}}</span>
+			</x-if>
+		</p>
+		<p on:click="next">
+			<x-if :value="store.nextTitle">
+				<span>{{store.nextTitle.replace('.js', '')}}</span>
+				<iconify-icon
+					icon="mingcute:right-fill"
+					width="24"
+					height="24"
+				></iconify-icon>
+			</x-if>
+		</p>
+	</footer>
 
-  <script>
-    import hljs from 'https://unpkg.com/@highlightjs/cdn-assets@11.10.0/es/highlight.min.js';
-    import javascript from 'https://unpkg.com/@highlightjs/cdn-assets@11.10.0/es/languages/javascript.min.js';
-    import { getUrl } from '../js/util.js'
-    import { data } from '../js/store.js'
-    import theme from '../js/theme.js'
+	<script>
+		import hljs from "https://unpkg.com/@highlightjs/cdn-assets@11.10.0/es/highlight.min.js";
+		import javascript from "https://unpkg.com/@highlightjs/cdn-assets@11.10.0/es/languages/javascript.min.js";
+		import { getUrl } from "../js/util.js";
+		import { data } from "../js/store.js";
+		import theme from "../js/theme.js";
 
-    export default async function () {
-      return {
-        tag: 'l-main',
-        data: {
-          // 没有深度监听某一个值，手动缓存一个旧值
-          id: '',
-          highlightedCode: '',
-          store: {},
-          loading: false,
-          theme: {},
-        },
-        attached() {
-          this.store = data
-          this.theme = theme
-          hljs.registerLanguage('javascript', javascript)
-        },
-        detached() {
-          this.store = null
-          this.theme = null
-        },
-        watch: {
-          async store(newData) {
-            const currTitle = newData.currTitle ?? ''
-            if (currTitle && currTitle !== this.id) {
-              this.getCode(currTitle)
-            }
-            this.id = newData.currTitle ?? ''
-          },
-        },
-        proto: {
-          async getCode(id) {
-            const encodedFileName = encodeURIComponent(id)
-            let html = ''
-            try {
-              this.loading = true
-              html = await fetch(getUrl(`questionBank/${encodedFileName}`)).then(res => res.text())
-            } catch (e) {
-              console.error(e)
-            }
-            this.store.currCode = html
-            this.highlightedCode = hljs.highlight(
-              html,
-              { language: 'javascript' }
-            ).value
+		export default async function () {
+			return {
+				tag: "l-main",
+				data: {
+					// 没有深度监听某一个值，手动缓存一个旧值
+					id: "",
+					highlightedCode: "",
+					store: {},
+					loading: false,
+					theme: {},
+				},
+				attached() {
+					this.store = data;
+					this.theme = theme;
+					hljs.registerLanguage("javascript", javascript);
+				},
+				detached() {
+					this.store = null;
+					this.theme = null;
+				},
+				watch: {
+					async store(newData) {
+						const currTitle = newData.currTitle ?? "";
+						if (currTitle && currTitle !== this.id) {
+							this.getCode(currTitle);
+						}
+						this.id = newData.currTitle ?? "";
+					},
+				},
+				proto: {
+					async getCode(id) {
+						const encodedFileName = encodeURIComponent(id);
+						let html = "";
+						try {
+							this.loading = true;
+							html = await fetch(
+								getUrl(`questionBank/${encodedFileName}`)
+							).then((res) => res.text());
+						} catch (e) {
+							console.error(e);
+						}
+						this.store.currCode = html;
+						this.highlightedCode = hljs.highlight(html, {
+							language: "javascript",
+						}).value;
 
-            this.loading = false
-          },
-          next() {
-            this.store.preTitle = this.store.currTitle
-            this.store.currTitle = this.store.nextTitle
-            const nextIndex = this.store.menus.indexOf(this.store.currTitle)
-            this.store.nextTitle = this.store.menus[nextIndex + 1] ?? ''
-          },
-          pre() {
-            this.store.currTitle = this.store.preTitle
-            this.store.nextTitle = this.store.currTitle
-            const preIndex = this.store.menus.indexOf(this.store.currTitle)
-            this.store.preTitle = this.store.menus[preIndex - 1] ?? ''
-          }
-
-        }
-      }
-    }
-  </script>
+						this.loading = false;
+					},
+					next() {
+						this.store.preTitle = this.store.currTitle;
+						this.store.currTitle = this.store.nextTitle;
+						const nextIndex = this.store.menus.indexOf(this.store.currTitle);
+						this.store.nextTitle = this.store.menus[nextIndex + 1] ?? "";
+					},
+					pre() {
+						this.store.currTitle = this.store.preTitle;
+						this.store.nextTitle = this.store.currTitle;
+						const preIndex = this.store.menus.indexOf(this.store.currTitle);
+						this.store.preTitle = this.store.menus[preIndex - 1] ?? "";
+					},
+				},
+			};
+		}
+	</script>
 </template>

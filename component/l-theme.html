@@ -1,45 +1,55 @@
 <template component>
-  <style>
-    button {
-      border: none;
-      background-color: transparent;
-      cursor: pointer;
-    }
-  </style>
+	<style>
+		button {
+			border: none;
+			background-color: transparent;
+			cursor: pointer;
+		}
+	</style>
 
-  <button>
-    <x-if :value="theme.value==='dark'">
-      <iconify-icon on:click="toggle('light')" icon="ph:sun-fill" width="24" height="24"></iconify-icon>
-    </x-if>
-    <x-if :value="theme.value==='light'">
-      <iconify-icon on:click="toggle('dark')" icon="mage:moon-fill" width="24" height="24"></iconify-icon>
-    </x-if>
-  </button>
+	<button>
+		<x-if :value="theme.value==='dark'">
+			<iconify-icon
+				on:click="toggle('light')"
+				icon="ph:sun-fill"
+				width="24"
+				height="24"
+			></iconify-icon>
+		</x-if>
+		<x-if :value="theme.value==='light'">
+			<iconify-icon
+				on:click="toggle('dark')"
+				icon="mage:moon-fill"
+				width="24"
+				height="24"
+			></iconify-icon>
+		</x-if>
+	</button>
 
-  <script>
-    import { data } from '../js/store.js'
-    import theme from '../js/theme.js'
-    export default async function () {
-      return {
-        tag: 'l-theme',
-        data: {
-          store: {},
-          theme: {}
-        },
-        attached() {
-          this.store = data;
-          this.theme = theme
-        },
-        detached() {
-          this.store = null;
-          this.theme = null
-        },
-        proto: {
-          toggle(_theme) {
-            theme.value = _theme
-          }
-        }
-      }
-    }
-  </script>
+	<script>
+		import { data } from "../js/store.js";
+		import theme from "../js/theme.js";
+		export default async function () {
+			return {
+				tag: "l-theme",
+				data: {
+					store: {},
+					theme: {},
+				},
+				attached() {
+					this.store = data;
+					this.theme = theme;
+				},
+				detached() {
+					this.store = null;
+					this.theme = null;
+				},
+				proto: {
+					toggle(_theme) {
+						theme.value = _theme;
+					},
+				},
+			};
+		}
+	</script>
 </template>
