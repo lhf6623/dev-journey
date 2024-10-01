@@ -50,14 +50,13 @@
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         list-style-type: none;
       }
-
     }
 
     .dark .filter-menu {
       background-color: #333;
     }
   </style>
-  <div attr:class="'search ' + store.theme">
+  <div attr:class="'search ' + theme.value">
     <input placeholder="快速查询" on:input="filterMenusFn" type="text">
     <ul class="filter-menu">
       <x-fill :value="filterMenus">
@@ -68,8 +67,9 @@
     </ul>
   </div>
   <script>
-    export default async function ({ load }) {
-      const { data } = await load('../js/store.js')
+    import { data } from '../js/store.js'
+    import theme from '../js/theme.js'
+    export default async function () {
       return {
         tag: 'l-search',
         data: {
@@ -77,12 +77,15 @@
           filterMenus: [],
           // 键盘上下选择项
           currIndex: 0,
+          theme: {},
         },
         attached() {
           this.store = data
+          this.theme = theme
         },
         detached() {
           this.store = null
+          this.theme = null
         },
         proto: {
           filterMenusFn(e) {

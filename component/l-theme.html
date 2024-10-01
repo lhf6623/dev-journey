@@ -8,41 +8,35 @@
   </style>
 
   <button>
-    <x-if :value="store.theme==='dark'">
+    <x-if :value="theme.value==='dark'">
       <iconify-icon on:click="toggle('light')" icon="ph:sun-fill" width="24" height="24"></iconify-icon>
     </x-if>
-    <x-if :value="store.theme==='light'">
+    <x-if :value="theme.value==='light'">
       <iconify-icon on:click="toggle('dark')" icon="mage:moon-fill" width="24" height="24"></iconify-icon>
     </x-if>
   </button>
 
   <script>
-
-    const THEME_KEY = 'theme'
-    export default async function ({ load }) {
-      const { data } = await load('../js/store.js')
+    import { data } from '../js/store.js'
+    import theme from '../js/theme.js'
+    export default async function () {
       return {
         tag: 'l-theme',
         data: {
           store: {},
+          theme: {}
         },
         attached() {
           this.store = data;
+          this.theme = theme
         },
         detached() {
           this.store = null;
-        },
-        loaded() {
-          this.store.theme = localStorage.getItem(THEME_KEY) || 'light'
-          this.toggle(this.store.theme)
+          this.theme = null
         },
         proto: {
-          toggle(theme) {
-            localStorage.setItem(THEME_KEY, theme)
-            const html = document.getElementsByTagName('html')[0]
-            html.style.colorScheme = theme
-            html.classList.toggle('dark', theme === 'dark')
-            this.store.theme = theme
+          toggle(_theme) {
+            theme.value = _theme
           }
         }
       }

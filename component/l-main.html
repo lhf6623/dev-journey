@@ -105,7 +105,7 @@
   <header>
     <h1>{{store.currTitle?.replace('.js', '')}}</h1>
   </header>
-  <div attr:class="store.theme === 'light' ? 'code-box atom-one-light': 'code-box atom-one-dark'">
+  <div attr:class="theme.value === 'light' ? 'code-box atom-one-light': 'code-box atom-one-dark'">
     <div class="pos-box">
       <span class="copy">
         <l-m src="./l-copy.html"></l-m>
@@ -140,9 +140,10 @@
     import hljs from 'https://unpkg.com/@highlightjs/cdn-assets@11.10.0/es/highlight.min.js';
     import javascript from 'https://unpkg.com/@highlightjs/cdn-assets@11.10.0/es/languages/javascript.min.js';
     import { getUrl } from '../js/util.js'
+    import { data } from '../js/store.js'
+    import theme from '../js/theme.js'
 
-    export default async function ({ load }) {
-      const { data } = await load('../js/store.js')
+    export default async function () {
       return {
         tag: 'l-main',
         data: {
@@ -151,13 +152,16 @@
           highlightedCode: '',
           store: {},
           loading: false,
+          theme: {},
         },
         attached() {
           this.store = data
+          this.theme = theme
           hljs.registerLanguage('javascript', javascript)
         },
         detached() {
           this.store = null
+          this.theme = null
         },
         watch: {
           async store(newData) {

@@ -39,7 +39,7 @@
     }
   </style>
   <div class="menu">
-    <ul attr:class="store.theme">
+    <ul attr:class="theme.value">
       <x-fill :value="store.menus">
         <li attr:class="$host.store.currTitle === $data ? 'is-active' : ''" on:click="$host.toggle($data)"
           attr:title="$data.replace('.js', '')">
@@ -50,19 +50,23 @@
   <script>
     import { stringToDom, getUrl } from '../js/util.js'
     import menus from '../js/menusData.js'
+    import { data } from '../js/store.js'
+    import theme from '../js/theme.js'
 
-    export default async function ({ load }) {
-      const { data } = await load('../js/store.js')
+    export default async function () {
       return {
         tag: 'l-menu',
         data: {
           store: {},
+          theme: {},
         },
         attached() {
           this.store = data
+          this.theme = theme
         },
         detached() {
           this.store = null
+          this.theme = null
         },
         async loaded() {
 

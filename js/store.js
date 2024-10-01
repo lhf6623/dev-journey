@@ -4,7 +4,4 @@ export const data = $.stanz({
   nextTitle: "",
   currCode: "",
   menus: [],
-
-  // 主题
-  theme: 'light'
 });
