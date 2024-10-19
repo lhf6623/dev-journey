@@ -1,223 +1,188 @@
 <template component>
 	<link
 		rel="stylesheet"
-		href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css"
+		href="../css/uno.css"
 	/>
-	<link
-		rel="stylesheet"
-		href="../css/highlight_theme.css"
-	/>
-	<style>
-		header {
-			padding-left: 26px;
-		}
+	<l-m src="./common/l-loading.html"></l-m>
+	<l-m src="./common/l-switch.html"></l-m>
+	<l-m src="./common/l-button.html"></l-m>
 
-		.code-box {
-			position: relative;
-			margin: 0 26px;
-			overflow-x: auto;
+	<l-m src="./l-console-list.html"></l-m>
+	<l-m src="./l-editor.html"></l-m>
 
-			.pos-box {
-				position: relative;
-				width: fit-content;
-				height: fit-content;
+	<div class="h-full flex flex-col">
+		<main
+			b="l l-solid l-menu-hover-color"
+			class="relative flex-1 flex flex-col overflow-hidden bg-theme-bg-color"
+		>
+			<l-loading :loading="loading.val"></l-loading>
+			<!-- 功能区 -->
+			<div
+				class="p-3px pl-16px m-0 !text-12px flex justify-between items-center *:flex-shrink-0"
+			>
+				<p class="text-14px max-sm:hidden">{{title.val}}</p>
+				<div class="flex-between gap-x-10px *:flex-shrink-0">
+					<l-button
+						:loading="isReset.val"
+						:icon="'pepicons-pop:reload'"
+						on:on-click="restoreCode"
+					>
+						还原代码
+					</l-button>
 
-				&:hover {
-					.copy {
-						display: inherit;
-					}
-				}
-			}
-
-			pre {
-				width: fit-content;
-				height: auto;
-				margin: 0;
-				padding: 0;
-				position: relative;
-			}
-
-			.code {
-				position: relative;
-				color: #abb2bf;
-				background-color: #282c34;
-				padding: 16px;
-				overflow: auto;
-				display: block;
-				width: fit-content;
-			}
-		}
-
-		.copy {
-			position: absolute;
-			z-index: 1;
-			background-color: transparent;
-			right: 6px;
-			top: 20px;
-			display: none;
-		}
-
-		footer {
-			display: flex;
-			flex-direction: row;
-			justify-content: space-between;
-			padding: 0 26px;
-
-			p {
-				display: flex;
-				align-items: center;
-				cursor: pointer;
-
-				color: #0073ff;
-			}
-		}
-
-		.loading {
-			position: absolute;
-			z-index: 100;
-			background: #00000009;
-			top: 0;
-			left: 0;
-			width: 100%;
-			height: 100%;
-
-			display: flex;
-			justify-content: center;
-			align-items: center;
-
-			.loader {
-				border: 8px solid #f3f3f3;
-				/* Light grey */
-				border-top: 8px solid #3498db;
-				/* Blue */
-				border-radius: 50%;
-				width: 60px;
-				height: 60px;
-				animation: spin 1s linear infinite;
-			}
-
-			@keyframes spin {
-				0% {
-					transform: rotate(0deg);
-				}
-
-				100% {
-					transform: rotate(360deg);
-				}
-			}
-		}
-	</style>
-
-	<header>
-		<h1>{{store.currTitle?.replace('.js', '')}}</h1>
-	</header>
-	<div
-		attr:class="theme.value === 'light' ? 'code-box atom-one-light': 'code-box atom-one-dark'"
-	>
-		<div class="pos-box">
-			<span class="copy">
-				<l-m src="./l-copy.html"></l-m>
-				<l-copy :code="store.currCode"></l-copy>
-			</span>
-			<pre>
-        <div class="code" :html="highlightedCode"></div>
-      </pre>
-			<x-if :value="loading">
-				<div class="loading">
-					<div class="loader"></div>
+					<p class="rounded-3px px-14px h-34px flex-center gap-x-6px">
+						<label class="text-14px">实时运行</label>
+						<l-switch
+							on:change="runCodeInterval"
+							:size="'small'"
+							:checked="isRunInterval.val"
+						></l-switch>
+					</p>
+					<l-button
+						:disabled="isRunInterval.val"
+						:loading="isRun.val"
+						:icon="'solar:play-bold'"
+						on:on-click="runCode"
+					>
+						运行
+					</l-button>
 				</div>
-			</x-if>
-		</div>
+				<l-button
+					:icon="!isFullscreen ? 'tabler:arrows-maximize':'tabler:arrows-minimize'"
+					on:on-click="toggleFullScreen"
+				>
+				</l-button>
+			</div>
+			<!-- 编辑区域 -->
+			<div
+				class="flex-1 group relative overflow-hidden flex b b-solid b-menu-hover-color"
+			>
+				<div
+					id="split-0"
+					class="group-[.is-mouse]:select-none group-[.is-mouse]:pointer-events-none"
+				>
+					<l-editor></l-editor>
+				</div>
+				<div
+					id="split-1"
+					class="cursor-col-resize w-10px overflow-hidden bg-menu-hover-color flex-center"
+				>
+					<iconify-icon
+						icon="lsicon:drag-filled"
+						width="16"
+						height="16"
+					></iconify-icon>
+				</div>
+				<div
+					id="split-2"
+					class="group-[.is-mouse]:select-none group-[.is-mouse]:pointer-events-none"
+				>
+					<l-console-list></l-console-list>
+				</div>
+			</div>
+		</main>
+		<!-- 页脚 -->
+		<footer
+			class="flex flex-shrink-0 flex-row justify-between text-#0073ff *:flex *:items-center *:cursor-pointer !*:my-8px"
+		>
+			<p on:click="setNextTitle(preTitle)">
+				<x-if :value="preTitle">
+					<iconify-icon
+						icon="mingcute:left-fill"
+						width="24"
+						height="24"
+					></iconify-icon>
+					<span>{{preTitle}}</span>
+				</x-if>
+			</p>
+			<p on:click="setNextTitle(nextTitle)">
+				<x-if :value="nextTitle">
+					<span>{{nextTitle}}</span>
+					<iconify-icon
+						icon="mingcute:right-fill"
+						width="24"
+						height="24"
+					></iconify-icon>
+				</x-if>
+			</p>
+		</footer>
 	</div>
-	<footer>
-		<p on:click="pre">
-			<x-if :value="store.preTitle">
-				<iconify-icon
-					icon="mingcute:left-fill"
-					width="24"
-					height="24"
-				></iconify-icon>
-				<span>{{store.preTitle.replace('.js', '')}}</span>
-			</x-if>
-		</p>
-		<p on:click="next">
-			<x-if :value="store.nextTitle">
-				<span>{{store.nextTitle.replace('.js', '')}}</span>
-				<iconify-icon
-					icon="mingcute:right-fill"
-					width="24"
-					height="24"
-				></iconify-icon>
-			</x-if>
-		</p>
-	</footer>
-
 	<script>
-		import hljs from "https://unpkg.com/@highlightjs/cdn-assets@11.10.0/es/highlight.min.js";
-		import javascript from "https://unpkg.com/@highlightjs/cdn-assets@11.10.0/es/languages/javascript.min.js";
-		import { getUrl } from "../js/util.js";
-		import { data } from "../js/store.js";
-		import theme from "../js/theme.js";
+		import screenfull from "https://esm.sh/screenfull@6.0.0";
+		import { Split } from "../js/util.js";
 
-		export default async function () {
+		export const tag = "l-main";
+		export default async function ({ load }) {
+			const { menus, title, loading, isRun, isRunInterval, isReset } =
+				await load("../js/store.js");
+
 			return {
-				tag: "l-main",
 				data: {
-					// 没有深度监听某一个值，手动缓存一个旧值
-					id: "",
-					highlightedCode: "",
-					store: {},
-					loading: false,
-					theme: {},
+					title: {},
+					preTitle: "",
+					nextTitle: "",
+					isFullscreen: false,
+					loading: {},
+					isRunInterval: {},
+					isReset: {},
+					isRun: {},
+				},
+				loaded() {
+					Split(
+						[
+							this.shadow.ele.querySelector("#split-0"),
+							this.shadow.ele.querySelector("#split-1"),
+							this.shadow.ele.querySelector("#split-2"),
+						],
+						60
+					);
 				},
 				attached() {
-					this.store = data;
-					this.theme = theme;
-					hljs.registerLanguage("javascript", javascript);
+					this.title = title;
+					this.loading = loading;
+					this.isRunInterval = isRunInterval;
+					this.isReset = isReset;
+					this.isRun = isRun;
 				},
 				detached() {
-					this.store = null;
-					this.theme = null;
+					this.loading = null;
+					this.title = null;
+					this.isRunInterval = null;
+					this.isReset = null;
+					this.isRun = null;
 				},
 				watch: {
-					async store(newData) {
-						const currTitle = newData.currTitle ?? "";
-						if (currTitle && currTitle !== this.id) {
-							this.getCode(currTitle);
-						}
-						this.id = newData.currTitle ?? "";
+					title() {
+						const index = menus.val.findIndex((item) => item === title.val);
+						this.preTitle = menus.val[index - 1] || "";
+						this.nextTitle = menus.val[index + 1] || "";
 					},
 				},
 				proto: {
-					async getCode(id) {
-						const encodedFileName = encodeURIComponent(id);
-						let html = "";
-						try {
-							this.loading = true;
-							html = await fetch(
-								getUrl(`questionBank/${encodedFileName}`)
-							).then((res) => res.text());
-						} catch (e) {
-							console.error(e);
-						}
-						this.store.currCode = html;
-						this.highlightedCode = hljs.highlight(html, {
-							language: "javascript",
-						}).value;
+					setNextTitle(_title) {
+						title.val = _title;
+					},
+					toggleFullScreen() {
+						const element = this.shadow.ele.querySelector("main");
 
-						this.loading = false;
+						if (screenfull.isEnabled) {
+							screenfull.toggle(element);
+							setTimeout(() => {
+								this.isFullscreen = screenfull.isFullscreen;
+							}, 100);
+						}
 					},
-					next() {
-						this.store.preTitle = this.store.currTitle;
-						this.store.currTitle = this.store.nextTitle;
-						const nextIndex = this.store.menus.indexOf(this.store.currTitle);
-						this.store.nextTitle = this.store.menus[nextIndex + 1] ?? "";
+					// 还原代码
+					restoreCode() {
+						this.isReset.val = true;
 					},
-					pre() {
-						this.store.currTitle = this.store.preTitle;
-						this.store.nextTitle = this.store.currTitle;
-						const preIndex = this.store.menus.indexOf(this.store.currTitle);
-						this.store.preTitle = this.store.menus[preIndex - 1] ?? "";
+					// 运行代码
+					runCode() {
+						this.isRun.val = true;
+					},
+					// 周期性运行代码
+					runCodeInterval(e) {
+						this.isRunInterval.val = e.data;
 					},
 				},
 			};

@@ -1,0 +1,104 @@
+<template component>
+	<link
+		rel="stylesheet"
+		href="../css/uno.css"
+	/>
+	<link
+		rel="stylesheet"
+		href="../css/theme-one-dark.css"
+	/>
+	<div class="h-full w-full overflow-auto relative">
+		<div
+			id="code"
+			attr:class="`${theme.val} h-full relative *:h-full`"
+		></div>
+	</div>
+
+	<script type="module">
+		import { basicSetup, EditorView } from "https://esm.sh/codemirror@6.0.1";
+		import { javascript } from "https://esm.sh/@codemirror/lang-javascript@6.0.1";
+
+		export const tag = "l-editor";
+		export default async function ({ load } = 1) {
+			const { code, theme, editorCode, isReset, title, menus_index } =
+				await load("../js/store.js");
+			let editor = null;
+			let timeoutId = null;
+
+			return {
+				data: {
+					theme: {},
+					code: {},
+					editorCode: {},
+					isReset: {},
+				},
+				watch: {
+					// 点击菜单时
+					code(_code) {
+						if (!editor) return;
+						if (!_code.val) return;
+
+						editorCode.val = _code.val;
+						this.changeEditorCode(_code.val);
+					},
+					// 还原代码
+					isReset(_isReset) {
+						if (_isReset.val) {
+							editorCode.val = code.val;
+							this.changeEditorCode(editorCode.val);
+							isReset.val = false;
+						}
+					},
+				},
+				loaded() {
+					editor = new EditorView({
+						doc: localStorage.getItem(tag) ?? code.val,
+						extensions: [
+							basicSetup,
+							javascript(),
+							EditorView.updateListener.of((update) => {
+								if (update.changes) {
+									clearTimeout(timeoutId);
+									timeoutId = setTimeout(() => {
+										editorCode.val = editor.state.doc.toString();
+										localStorage.setItem(tag, editorCode.val);
+									}, 300);
+								}
+							}),
+						],
+						parent: this.shadow.ele.querySelector("#code"),
+					});
+
+					// 网页一打开就聚焦到编辑器
+					setTimeout(() => {
+						editor.focus();
+					}, 300);
+				},
+				attached() {
+					this.theme = theme;
+					this.code = code;
+					this.editorCode = editorCode;
+					this.isReset = isReset;
+				},
+				detached() {
+					this.theme = null;
+					this.code = null;
+					this.editorCode = null;
+					this.isReset = null;
+				},
+				proto: {
+					changeEditorCode(code) {
+						let transaction = editor.state.update({
+							changes: {
+								from: 0,
+								to: editor.state.doc.length,
+								insert: code ?? "",
+							},
+						});
+						editor.dispatch(transaction);
+					},
+				},
+			};
+		}
+	</script>
+</template>

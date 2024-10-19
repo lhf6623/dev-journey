@@ -11,3 +11,9 @@
 - 不能当成静态文件打开，需要一个服务器，比如 vs code 的插件 Live Server
 
 - GitHub Pages: https://lhf6623.github.io/leetcode/
+
+- css 为 unocss 自动生成
+
+### npm 依赖使用
+
+文档地址：[esm.sh](https://esm.sh/#docs)

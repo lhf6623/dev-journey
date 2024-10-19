@@ -1,0 +1,134 @@
+/** 注释 */
+.ͼ24 {
+	color: #008000 !important;
+}
+
+.dark {
+	--chalky: #e5c07b;
+	--oral: #e06c75;
+	--cyan: #56b6c2;
+	--invalid: #ffffff;
+	--ivory: #abb2bf;
+	--stone: #7d8799;
+	--malibu: #61afef;
+	--sage: #98c379;
+	--whiskey: #d19a66;
+	--violet: #c678dd;
+	--darkBackground: #21252b;
+	--highlightBackground: #2c313a;
+	--background: #282c34;
+	--tooltipBackground: #353a42;
+	--selection: #3e4451;
+	--cursor: #528bff;
+
+	color: var(--ivory);
+	background-color: var(--background);
+
+	.cm-content {
+		caret-color: var(--cursor);
+	}
+	/** 注释 */
+	.ͼ24 {
+		/* dark 6a9a55 0e840b */
+		color: #6a9a55 !important;
+	}
+	/** 对象里面的变量 key */
+	.ͼ23 {
+		color: #9cdcff;
+	}
+	/* function */
+	.ͼ1t {
+		color: #569cd6;
+	}
+	/* 变量 */
+	.ͼ1y {
+		color: #dcdcaa;
+	}
+	/* 字符串 */
+	.ͼ1w {
+		color: #ce9178;
+	}
+	/** 数字 */
+	.ͼ1v {
+		color: #f78c6c;
+	}
+	/** false */
+	.ͼ1u {
+		color: #5699d2;
+	}
+
+	.cm-cursor,
+	.cm-dropCursor {
+		border-left-color: var(--cursor);
+	}
+	.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground,
+	.cm-selectionBackground,
+	.cm-content ::selection {
+		background-color: var(--selection) !important;
+	}
+
+	.cm-panels {
+		background-color: var(--darkBackground);
+		color: var(--ivory);
+	}
+	.cm-panels.cm-panels-top {
+		border-bottom: 2px solid black;
+	}
+	.cm-panels.cm-panels-bottom {
+		border-top: 2px solid black;
+	}
+	.cm-searchMatch {
+		background-color: #72a1ff59;
+		outline: 1px solid #457dff;
+	}
+	.cm-searchMatch.cm-searchMatch-selected {
+		background-color: #6199ff2f;
+	}
+
+	.cm-activeLine {
+		background-color: #6699ff0b !important;
+	}
+	.cm-selectionMatch {
+		background-color: #aafe661a;
+	}
+
+	.cm-focused .cm-matchingBracket,
+	.cm-focused .cm-nonmatchingBracket {
+		background-color: #bad0f847;
+	}
+
+	.cm-gutters {
+		background-color: var(--background) !important;
+		color: var(--stone);
+		border: none !important;
+	}
+
+	.cm-activeLineGutter {
+		background-color: var(--highlightBackground) !important;
+	}
+
+	.cm-foldPlaceholder {
+		background-color: transparent;
+		border: none;
+		color: #ddd;
+	}
+
+	.cm-tooltip {
+		border: none;
+		background-color: var(--tooltipBackground);
+	}
+	.cm-tooltip .cm-tooltip-arrow:before {
+		border-top-color: transparent;
+		border-bottom-color: transparent;
+	}
+	.cm-tooltip .cm-tooltip-arrow:after {
+		border-top-color: var(--tooltipBackground);
+		border-bottom-color: var(--tooltipBackground);
+	}
+	.cm-tooltip-autocomplete {
+		ul > li[aria-selected] {
+			background-color: var(--highlightBackground);
+			color: var(--ivory);
+		}
+	}
+}

@@ -1,60 +1,52 @@
 <template component>
-	<style>
-		input {
-			position: relative;
-			width: 168px;
-			box-sizing: border-box;
-			padding: 3px 9px;
-		}
-		#menus {
-			width: 168px;
-		}
-	</style>
+	<link
+		rel="stylesheet"
+		href="../css/uno.css"
+	/>
+
 	<input
 		placeholder="快速查询"
 		list="menus"
 		:value="inputValue"
 		on:change="toggle"
-		type="text"
+		class="relative w-168px box-border px-9px py-3px"
+		input="~ xs"
 	/>
 	<datalist id="menus">
-		<x-fill :value="store.menus">
-			<option :value="$data.replace('.js', '')" />
+		<x-fill :value="menus.val">
+			<option :value="$data" />
 		</x-fill>
 	</datalist>
 	<script>
-		import { data } from "../js/store.js";
-		export default async function () {
+		const menu = "l-menu";
+		export const tag = "l-search";
+		export default async function ({ load }) {
+			const { menus, title } = await load("../js/store.js");
 			return {
-				tag: "l-search",
 				data: {
-					store: {},
+					menus: [],
 					inputValue: "",
 				},
 				attached() {
-					this.store = data;
+					this.menus = menus;
 				},
 				detached() {
-					this.store = null;
+					this.menus = null;
 				},
 				proto: {
 					toggle(e) {
-						const value = e.target.value.trim();
-						if (!value) return;
+						const _title = e.target.value.trim();
+						if (!_title) return;
 
-						const title = `${value}.js`;
-						const isMenu = this.store.menus.reduce((pre, curr) => {
+						const inMenu = menus.val.reduce((pre, curr) => {
 							if (pre === true) return pre;
-							return curr === title;
+							return curr === _title;
 						}, false);
-						if (!isMenu) return;
+						if (!inMenu) return;
 
 						this.inputValue = e.target.value;
-						this.store.currTitle = title;
-						const currIndex = this.store.menus.indexOf(title);
-						this.store.preTitle = this.store.menus[currIndex - 1] ?? "";
-						this.store.nextTitle = this.store.menus[currIndex + 1] ?? "";
-
+						title.val = _title;
+						localStorage.setItem(menu, menus.val.indexOf(_title));
 						this.inputValue = "";
 					},
 				},

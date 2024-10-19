@@ -1,0 +1,91 @@
+<template component>
+	<link
+		rel="stylesheet"
+		href="../css/uno.css"
+	/>
+	<l-m src="./l-search.html"></l-m>
+	<l-m src="./common/l-button.html"></l-m>
+
+	<header
+		class="z-10 relative h-50px !px-18px flex-shrink-0 b b-menu-hover-color flex items-center"
+	>
+		<x-if :value="isSmall.val">
+			<l-button
+				:icon="'typcn:th-menu'"
+				on:on-click="setMenu"
+				:size="'large'"
+			>
+			</l-button>
+		</x-if>
+		<nav class="h-full w-full flex items-center justify-end">
+			<ul class="flex h-full list-none gap-x-8px m-0 flex-center">
+				<li>
+					<l-search></l-search>
+				</li>
+				<li>
+					<l-button
+						:icon="theme.val !== 'dark' ?'mage:moon-fill' : 'ph:sun-fill'"
+						on:on-click="toggleTheme"
+						:round="true"
+					>
+					</l-button>
+				</li>
+				<li>
+					<a
+						class="flex-center w-32px h-32px"
+						target="_blank"
+						href="https://github.com/lhf6623/leetcode"
+					>
+						<iconify-icon
+							icon="mdi:github"
+							width="24"
+							height="24"
+						></iconify-icon>
+					</a>
+				</li>
+				<li>
+					<a
+						class="flex-center w-32px h-32px"
+						target="_blank"
+						href="https://leetcode.cn/u/dalichuqiji/"
+					>
+						<iconify-icon
+							icon="tabler:brand-leetcode"
+							width="24"
+							height="24"
+						></iconify-icon>
+					</a>
+				</li>
+			</ul>
+		</nav>
+	</header>
+
+	<script>
+		export const tag = "l-header";
+		export default async function ({ load }) {
+			const { isSmall, isShowMenu, theme } = await load("../js/store.js");
+			return {
+				data: {
+					isSmall: {},
+					theme: {},
+				},
+				attached() {
+					this.isSmall = isSmall;
+					this.theme = theme;
+				},
+				detached() {
+					this.isSmall = null;
+					this.theme = null;
+				},
+				proto: {
+					setMenu() {
+						isShowMenu.val = !isShowMenu.val;
+					},
+					toggleTheme() {
+						theme.val = theme.val === "dark" ? "light" : "dark";
+					},
+				},
+			};
+		}
+	</script>
+</template>

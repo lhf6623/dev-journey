@@ -1,0 +1,85 @@
+<template component>
+	<link
+		rel="stylesheet"
+		href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/styles/atom-one-dark.min.css"
+	/>
+
+	<div
+		:html="mdTxt"
+		id="md"
+	></div>
+	<script>
+		import { getUrl } from "../../js/util.js";
+		import { Marked } from "https://esm.sh/marked@14.1.3";
+		import { markedHighlight } from "https://esm.sh/marked-highlight@2.2.0";
+		import hljs from "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/es/highlight.min.js";
+		import { jsPDF } from "https://esm.sh/jspdf@2.5.2";
+		import html2canvas from "https://esm.sh/html2canvas@1.4.1";
+
+		const loadIcon = "eos-icons:bubble-loading";
+
+		export const tag = "l-load-md";
+		export default async function ({ load }) {
+			let marked = null;
+			return {
+				data: {
+					mdTxt: "在地址栏添加参数 ?md=xxxxx 即可加载md文件",
+					loading: false,
+				},
+
+				async attached() {
+					marked = new Marked(
+						markedHighlight({
+							emptyLangClass: "hljs",
+							langPrefix: "hljs language-",
+							highlight(code, lang, info) {
+								const language = hljs.getLanguage(lang) ? lang : "plaintext";
+								console.log(`🚀 ~ language:`, language);
+
+								return hljs.highlight(code, { language }).value;
+							},
+						})
+					);
+
+					setTimeout(() => {
+						this.setMDText();
+					}, 100);
+				},
+				proto: {
+					async setMDText() {
+						const ele = this.shadow.ele;
+						const params = new URLSearchParams(location.search);
+
+						const { md } = Object.fromEntries(params);
+
+						if (!md) {
+							console.error("md参数为空");
+							return;
+						}
+						// marked
+						const mdUrl = `${getUrl("md/")}${md}.md`;
+						const mdTxt = await fetch(mdUrl).then((res) => res.text());
+						this.mdTxt = await marked.parse(mdTxt);
+
+						// pdf
+						// const mdDom = ele.querySelector("#md");
+
+						// const doc = new jsPDF();
+
+						// setTimeout(() => {
+						// 	html2canvas(document.body).then((canvas) => {
+						// 		const imgData = canvas.toDataURL("image/png");
+						// 		const imgProps = doc.getImageProperties(imgData);
+						// 		const pdfWidth = doc.internal.pageSize.getWidth();
+						// 		const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+						// 		doc.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+						// 		doc.save("test.pdf");
+						// 	});
+						// }, 1000);
+					},
+				},
+			};
+		}
+	</script>
+</template>
