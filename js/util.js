@@ -100,11 +100,9 @@ export function createJsRunner() {
  */
 export function Split([el1, el2, el3], el1_defaultWidth) {
 	const { parentElement } = el1;
-	// 父元素
-	const { width: parentWidth, left: parentLeft } =
+	let { width: parentWidth, left: parentLeft } =
 		parentElement.getBoundingClientRect();
 
-	// 中间元素
 	const { width: midWidth } = el2.getBoundingClientRect();
 
 	function mouse(event) {
@@ -118,6 +116,19 @@ export function Split([el1, el2, el3], el1_defaultWidth) {
 
 	const defaultWidth = getInRange(el1_defaultWidth ?? 50, 100);
 	setStyle(defaultWidth);
+
+	const resizeObserver = new ResizeObserver((entries) => {
+		for (let entry of entries) {
+			if (entry.target === parentElement) {
+				const { width, left } = entry.target.getBoundingClientRect();
+
+				parentWidth = width;
+				parentLeft = left;
+			}
+		}
+	});
+
+	resizeObserver.observe(parentElement);
 
 	function setStyle(left_width) {
 		// 百分百
