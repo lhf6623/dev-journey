@@ -1,0 +1,87 @@
+<template component>
+  <link
+    rel="stylesheet"
+    href="../css/uno.css"
+  />
+  <div
+    on:click="setMenu"
+    attr:class="`${isSmall.val && isShowMenu.val ? 'left-0' : 'left--100vw'} bg-#00000044 transition-all fixed w-100vw h-100vh top-0 z-300`"
+  ></div>
+  <aside
+    attr:class="`${menuClass} transition-all w-280px text-theme-text bg-theme-bg-color overflow-y-auto h-full relative flex-shrink-0 z-1`"
+  >
+    <ul class="p-0 m-0 relative px-16px">
+      <x-fill :value="menus.val">
+        <li
+          attr:class="`${$host.title.val === $data ? 'text-#0173ff' : ''} l-btn rounded-5px font-500 truncate`"
+          p="l-8px y-2px"
+          m="y-5px x-0px"
+          text="ellipsis 16px"
+          on:click="$host.toggle($data)"
+          attr:title="$data"
+        >
+          {{$data}}
+        </li>
+      </x-fill>
+    </ul>
+  </aside>
+  <script>
+    import Cache from "../js/cache.js";
+    export const tag = "l-menu";
+    export default async function ({ load }) {
+      const { menus, title, isSmall, isShowMenu } = await load(
+        "../js/store.js"
+      );
+      return {
+        data: {
+          isSmall: {},
+          isShowMenu: {},
+          menus: [],
+          menuClass: "",
+          title: {},
+        },
+        watch: {
+          isShowMenu() {
+            const show = isSmall.val && isShowMenu.val;
+
+            if (isSmall.val) {
+              this.menuClass = show
+                ? "!fixed z-400 !top-0 !h-100vh"
+                : "!fixed !w-0 overflow-hidden";
+            } else {
+              this.menuClass = "";
+            }
+          },
+        },
+        attached() {
+          this.menus = menus;
+          this.isSmall = isSmall;
+          this.isShowMenu = isShowMenu;
+          this.title = title;
+        },
+        detached() {
+          this.menus = null;
+          this.isSmall = null;
+          this.isShowMenu = null;
+          this.title = null;
+        },
+        async loaded() {
+          const index = Cache.getItem(tag) ?? 0;
+          this.toggle(menus.val[index]);
+        },
+        proto: {
+          setMenu() {
+            isShowMenu.val = false;
+          },
+          toggle(_title) {
+            this.setMenu();
+            setTimeout(() => {
+              title.val = _title;
+              Cache.setItem(tag, menus.val.indexOf(_title));
+            }, 0);
+          },
+        },
+      };
+    }
+  </script>
+</template>

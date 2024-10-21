@@ -1,0 +1,150 @@
+<template component>
+  <link
+    rel="stylesheet"
+    href="../css/uno.css"
+  />
+  <style>
+    a {
+      width: calc(100%);
+    }
+  </style>
+  <div
+    id="console-list"
+    attr:class="`${theme.val} h-full relative overflow-auto`"
+  >
+    <ul
+      class="p-6px text-14px text-#1c1c1c dark:text-#fff bg-#fff !dark:bg-transparent"
+    >
+      <x-fill :value="list">
+        <li
+          attr:class="`${$data.cls}`"
+          relative
+          rounded
+          p="x-22px"
+          m="y-3px"
+        >
+          <p
+            overflow-hidden
+            b="b-solid b-1px b-#cadbfd dark:b-#4c4c4c"
+            attr:class="`${$host.isBorder($data, $index) ? '!b-none' : ''}`"
+          >
+            <!-- <span class="">[{{$data.time}}]</span> -->
+            <span class="">{{$data.message}}</span>
+          </p>
+        </li>
+      </x-fill>
+    </ul>
+  </div>
+
+  <script>
+    import dayjs from "https://esm.sh/dayjs@1.11.13";
+    import { stringify } from "https://esm.sh/flatted@3.3.1";
+    import { createJsRunner } from "../js/util.js";
+
+    export const tag = "l-console-list";
+    export default async function ({ load }) {
+      const { editorCode, isRunInterval, isRun, code, theme, isReset } =
+        await load("../js/store.js");
+      let timeout = null;
+
+      const cls = {
+        warn: "bg-#fef4cb text-#2f2400 dark:bg-#322e1d dark:text-#efe591",
+        error: "bg-#fae6e6 text-#492222 dark:bg-#3c2728 dark:text-#eececd",
+      };
+      return {
+        data: {
+          list: [],
+          isRun: {},
+          isRunInterval: {},
+          writeCode: null,
+          code: {},
+          theme: {},
+          isReset: {},
+        },
+        watch: {
+          isReset() {
+            this.list = [];
+          },
+          code() {
+            this.list = [];
+          },
+          async isRun({ val }) {
+            if (val) {
+              this.list = [];
+              this.writeCode(editorCode.val);
+              isRun.val = false;
+            }
+          },
+          isRunInterval(data) {
+            if (data.val) {
+              isRun.val = false;
+              // 如果在循环了就跳出
+              if (timeout) return;
+
+              this.list = [];
+              this.runCode();
+            } else {
+              if (timeout) {
+                clearTimeout(timeout);
+                timeout = null;
+              }
+            }
+          },
+        },
+        attached() {
+          const { writeCode, onMessage } = createJsRunner();
+
+          onMessage((data) => {
+            this.list.push({
+              ...data,
+              time: dayjs().format("HH:mm:ss"),
+              cls: cls[data.type] ?? "",
+            });
+            this.scrollTop();
+          });
+          this.writeCode = writeCode;
+
+          this.isRun = isRun;
+          this.isRunInterval = isRunInterval;
+          this.code = code;
+          this.theme = theme;
+          this.isReset = isReset;
+        },
+        detached() {
+          this.isRun = null;
+          this.isRunInterval = null;
+          this.code = null;
+          this.theme = null;
+          this.isReset = null;
+        },
+        proto: {
+          scrollTop() {
+            const ele = this.shadow.ele;
+            // 滚动到底部
+            setTimeout(() => {
+              const consoleList = ele.querySelector("#console-list");
+              consoleList.scroll({
+                top: consoleList.scrollHeight + 30,
+                behavior: "smooth",
+              });
+            }, 300);
+          },
+          isBorder(data, index) {
+            if (data.cls) return true;
+            // ($data.cls || $host.list[$index + 1]?.cls) || $host.list.length == ($index - 1)
+            if (this.list[index + 1]?.cls) return true;
+            if (this.list.length === index + 1) return true;
+            return false;
+          },
+          async runCode() {
+            this.writeCode(editorCode.val);
+
+            timeout = setTimeout(() => {
+              this.runCode();
+            }, 1300);
+          },
+        },
+      };
+    }
+  </script>
+</template>

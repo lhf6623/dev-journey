@@ -1,0 +1,190 @@
+<template component>
+  <link
+    rel="stylesheet"
+    href="../css/uno.css"
+  />
+  <l-m src="./common/l-switch.html"></l-m>
+  <l-m src="./common/l-button.html"></l-m>
+
+  <l-m src="./l-console-list.html"></l-m>
+  <l-m src="./l-editor.html"></l-m>
+  <div class="relative h-full flex flex-col">
+    <div class="flex relative flex-col overflow-hidden flex-1">
+      <!-- 功能区 -->
+      <div class="p-3px pl-16px m-0 flex-between">
+        <p class="text-14px max-sm:hidden">{{title.val}}</p>
+        <div class="flex-between gap-x-10px *:flex-shrink-0">
+          <l-button
+            :loading="isReset.val"
+            :icon="'pepicons-pop:reload'"
+            on:on-click="restoreCode"
+          >
+            还原代码
+          </l-button>
+
+          <div
+            class="l-btn rounded-3px overflow-hidden px-14px h-34px flex-center gap-x-6px"
+          >
+            <p class="text-14px">实时运行</p>
+            <l-switch
+              on:change="runCodeInterval"
+              :size="'small'"
+              :checked="isRunInterval.val"
+            ></l-switch>
+          </div>
+          <l-button
+            :disabled="isRunInterval.val"
+            :loading="isRun.val"
+            :icon="'solar:play-bold'"
+            on:on-click="runCode"
+          >
+            运行
+          </l-button>
+        </div>
+        <l-button
+          :icon="!isFullscreen ? 'tabler:arrows-maximize':'tabler:arrows-minimize'"
+          on:on-click="toggleFullScreen"
+        >
+        </l-button>
+      </div>
+      <!-- 编辑区 -->
+      <div
+        class="flex-1 group relative flex b overflow-hidden b-solid b-menu-hover-color"
+      >
+        <div
+          id="split-0"
+          class="relative h-full overflow-hidden group-[.is-mouse]:select-none group-[.is-mouse]:pointer-events-none"
+        >
+          <l-editor></l-editor>
+        </div>
+        <div
+          id="split-1"
+          class="cursor-col-resize w-10px overflow-hidden bg-menu-hover-color flex-center"
+        >
+          <iconify-icon
+            icon="lsicon:drag-filled"
+            width="16"
+            height="16"
+          ></iconify-icon>
+        </div>
+        <div
+          id="split-2"
+          class="group-[.is-mouse]:select-none group-[.is-mouse]:pointer-events-none"
+        >
+          <l-console-list></l-console-list>
+        </div>
+      </div>
+    </div>
+
+    <footer
+      class="flex-shrink-0 flex-row flex-between text-#0073ff *:flex *:items-center *:cursor-pointer !*:my-8px"
+    >
+      <button
+        class="l-btn"
+        on:click="setNextTitle(preTitle)"
+      >
+        <x-if :value="preTitle">
+          <iconify-icon
+            icon="mingcute:left-fill"
+            width="24"
+            height="24"
+          ></iconify-icon>
+          <span>{{preTitle}}</span>
+        </x-if>
+      </button>
+      <button
+        class="l-btn"
+        on:click="setNextTitle(nextTitle)"
+      >
+        <x-if :value="nextTitle">
+          <span>{{nextTitle}}</span>
+          <iconify-icon
+            icon="mingcute:right-fill"
+            width="24"
+            height="24"
+          ></iconify-icon>
+        </x-if>
+      </button>
+    </footer>
+  </div>
+
+  <script>
+    import screenfull from "https://esm.sh/screenfull@6.0.0";
+    import { Split } from "../js/util.js";
+
+    export const tag = "l-leetcode";
+    export default async function ({ load }) {
+      const { menus, title, isRun, isRunInterval, isReset } = await load(
+        "../js/store.js"
+      );
+
+      return {
+        data: {
+          title: {},
+          preTitle: "",
+          nextTitle: "",
+          isFullscreen: false,
+          isRunInterval: {},
+          isReset: {},
+          isRun: {},
+        },
+        loaded() {
+          Split(
+            [
+              this.shadow.ele.querySelector("#split-0"),
+              this.shadow.ele.querySelector("#split-1"),
+              this.shadow.ele.querySelector("#split-2"),
+            ],
+            66
+          );
+        },
+        attached() {
+          this.title = title;
+          this.isRunInterval = isRunInterval;
+          this.isReset = isReset;
+          this.isRun = isRun;
+        },
+        detached() {
+          this.title = null;
+          this.isRunInterval = null;
+          this.isReset = null;
+          this.isRun = null;
+        },
+        watch: {
+          title() {
+            const index = menus.val.findIndex((item) => item === title.val);
+            this.preTitle = menus.val[index - 1] || "";
+            this.nextTitle = menus.val[index + 1] || "";
+          },
+        },
+        proto: {
+          setNextTitle(_title) {
+            title.val = _title;
+          },
+          toggleFullScreen() {
+            const element = this.shadow.ele.querySelector("main");
+
+            if (screenfull.isEnabled) {
+              screenfull.toggle(element);
+              setTimeout(() => {
+                this.isFullscreen = screenfull.isFullscreen;
+              }, 100);
+            }
+          },
+          // 还原代码
+          restoreCode() {
+            this.isReset.val = true;
+          },
+          // 运行代码
+          runCode() {
+            this.isRun.val = true;
+          },
+          // 周期性运行代码
+          runCodeInterval(e) {
+            this.isRunInterval.val = e.data;
+          },
+        },
+      };
+    }
+  </script>
+</template>

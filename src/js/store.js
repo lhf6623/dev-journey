@@ -1,92 +1,93 @@
 import { getUrl } from "./util.js";
-import menusData from "./menusData.js";
+import leetcode_menu from "./leetcode_menu.js";
 import { throttle } from "https://esm.sh/lodash-es@4.17.21";
+import Cache from "../js/cache.js";
 
 const THEME_KEY = "theme";
 
 // 读取系统主题
 const os_theme = window.matchMedia("(prefers-color-scheme: dark)").matches
-	? "dark"
-	: "light";
+  ? "dark"
+  : "light";
 // 读取本地主题
-const local_theme = localStorage.getItem(THEME_KEY);
+const local_theme = Cache.getItem(THEME_KEY);
 
-const _menus = [...menusData].sort((a, b) => {
-	const [a_index] = a.split(".");
-	const [b_index] = b.split(".");
-	return Number(a_index) - Number(b_index);
+const _menus = [...leetcode_menu].sort((a, b) => {
+  const [a_index] = a.split(".");
+  const [b_index] = b.split(".");
+  return Number(a_index) - Number(b_index);
 });
 /** 当前标题 */
 export const title = $.stanz({
-	val: "",
+  val: "",
 });
 /** 当前代码 */
 export const code = $.stanz({
-	val: "",
+  val: "",
 });
 /** 加载 code 状态 */
 export const loading = $.stanz({
-	val: false,
+  val: false,
 });
 /** 菜单列表 */
 export const menus = $.stanz({
-	val: _menus,
+  val: _menus,
 });
 /** 显示菜单 */
 export const isShowMenu = $.stanz({
-	val: true,
+  val: true,
 });
 /** 小屏 */
 export const isSmall = $.stanz({
-	val: false,
+  val: false,
 });
 /** 主题 */
 export const theme = $.stanz({
-	val: local_theme ?? os_theme,
+  val: local_theme ?? os_theme,
 });
 /** 编辑器中在编辑的代码 */
 export const editorCode = $.stanz({
-	val: "",
+  val: "",
 });
 /** 立即运行 */
 export const isRun = $.stanz({
-	val: false,
+  val: false,
 });
 /** 周期性 运行 */
 export const isRunInterval = $.stanz({
-	val: false,
+  val: false,
 });
 /** 还原代码 */
 export const isReset = $.stanz({
-	val: false,
+  val: false,
 });
 
 function refreshTheme(theme = "light") {
-	const html = document.getElementsByTagName("html")[0];
-	html.classList.toggle("dark", theme === "dark");
+  const html = document.getElementsByTagName("html")[0];
+  html.classList.toggle("dark", theme === "dark");
 
-	localStorage.setItem(THEME_KEY, theme);
+  Cache.setItem(THEME_KEY, theme);
 }
 
 refreshTheme(theme.val);
 
 // 监听浏览器颜色主题变化
 window
-	.matchMedia("(prefers-color-scheme: dark)")
-	.addEventListener("change", ({ matches }) => {
-		theme.val = matches ? "dark" : "light";
-		refreshTheme(theme.val);
-	});
+  .matchMedia("(prefers-color-scheme: dark)")
+  .addEventListener("change", ({ matches }) => {
+    theme.val = matches ? "dark" : "light";
+    refreshTheme(theme.val);
+  });
 
 theme.watch((data) => {
-	refreshTheme(data.value);
+  refreshTheme(data.value);
 });
 
 // bug 赋值太快 watch 监听会丢失数据
 const setShowMenu = throttle(() => {
-	const width = window.innerWidth;
-	isSmall.val = width < 960;
-	isShowMenu.val = width > 960;
+  const width = window.innerWidth;
+  isSmall.val = width < 960;
+  isShowMenu.val = width > 960;
 }, 300);
 setShowMenu();
 
@@ -94,16 +95,16 @@ setShowMenu();
 window.addEventListener("resize", setShowMenu);
 
 title.watchTick(async () => {
-	if (title.val) {
-		try {
-			loading.val = true;
-			code.val = await fetch(getUrl(`questionBank/${title.val}`)).then((res) =>
-				res.text()
-			);
-		} catch (e) {
-			console.error(e);
-		}
+  if (title.val) {
+    try {
+      loading.val = true;
+      code.val = await fetch(getUrl(`leetcode/${title.val}`)).then((res) =>
+        res.text()
+      );
+    } catch (e) {
+      console.error(e);
+    }
 
-		loading.val = false;
-	}
+    loading.val = false;
+  }
 });

@@ -1,0 +1,17 @@
+<template page>
+  <link
+    rel="stylesheet"
+    href="../css/uno.css"
+  />
+  <div class="flex flex-col h-100vh relative">
+    <l-m src="../component/l-header.html"></l-m>
+    <l-m src="../component/l-menu.html"></l-m>
+    <l-m src="../component/l-main.html"></l-m>
+
+    <l-header></l-header>
+    <div class="flex-1 flex relative flex-shrink-0 overflow-hidden">
+      <l-menu class="relative h-full"></l-menu>
+      <l-main class="relative flex-1 overflow-hidden"></l-main>
+    </div>
+  </div>
+</template>

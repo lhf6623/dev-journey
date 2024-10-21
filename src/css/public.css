@@ -1,0 +1,40 @@
+[un-cloak] {
+  display: none;
+}
+html,
+body {
+  height: 100%;
+}
+
+html {
+  --theme-bg-color: #fff;
+  --text-base-color: #333;
+  --text-color: #606770;
+  --border-color: #858585;
+  --bg-hover-color: rgb(240, 240, 240);
+}
+
+html.dark {
+  --theme-bg-color: #222;
+  --text-base-color: #fff;
+  --text-color: #dedede;
+  --border-color: #767676;
+  --bg-hover-color: rgb(50, 50, 50);
+}
+
+.dark {
+  color-scheme: dark;
+}
+
+[tabindex]:focus-visible,
+select:focus-visible,
+a:focus-visible,
+button:focus-visible,
+input:focus-visible {
+  outline: solid #0173ff !important;
+}
+
+input:focus-within {
+  border: none !important;
+  box-shadow: none !important;
+}

@@ -1,0 +1,72 @@
+<template component>
+  <link
+    rel="stylesheet"
+    href="../../css/uno.css"
+  />
+
+  <button
+    on:click="handleClick"
+    type="button"
+    attr:disabled="loading || disabled"
+    attr:class="`l-btn l-btn-disabled flex items-center gap-x-6px ${butCls} ${round ? roundStyle : ''}`"
+  >
+    <x-if :value="icon">
+      <iconify-icon
+        attr:icon="icon"
+        attr:width="iconSize ?? defaultIconSize"
+        attr:height="iconSize ?? defaultIconSize"
+      ></iconify-icon>
+    </x-if>
+    <slot></slot>
+  </button>
+  <script>
+    const loadIcon = "eos-icons:bubble-loading";
+    const defaultSize = "medium";
+    const iconSize = {
+      tiny: 14,
+      small: 18,
+      medium: 18,
+      large: 20,
+    };
+    const size = {
+      tiny: "py-0 px-6px h-22px rounded-3px text-12px",
+      small: "py-0 px-10px h-28px rounded-3px text-14px",
+      medium: "py-0 px-14px h-34px rounded-3px text-14px",
+      large: "py-0 px-18px h-40px rounded-3px text-15px",
+    };
+    const roundStyle = "rounded-full overflow-hidden aspect-square flex-center";
+
+    export const tag = "l-button";
+    export default async function () {
+      return {
+        data: {
+          loading: false,
+          disabled: false,
+          icon: "",
+          iconSize: null,
+          defaultIconSize: null,
+          size: defaultSize,
+          butCls: "",
+          round: false,
+          roundStyle,
+        },
+        watch: {
+          loading(val) {
+            this.icon = !val ? this.icon : loadIcon;
+          },
+          size(val) {
+            this.butCls = size[val] ?? size[defaultSize];
+            this.defaultIconSize = iconSize[val] ?? iconSize[defaultSize];
+          },
+        },
+        proto: {
+          handleClick(e) {
+            this.emit("on-click", {
+              data: e,
+            });
+          },
+        },
+      };
+    }
+  </script>
+</template>

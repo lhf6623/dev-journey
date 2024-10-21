@@ -1,0 +1,58 @@
+<template component>
+  <link
+    rel="stylesheet"
+    href="../css/uno.css"
+  />
+
+  <input
+    placeholder="快速查询"
+    list="menus"
+    :value="inputValue"
+    on:change="toggle"
+    b="solid 1px menu-border"
+    class="relative w-168px box-border px-6px py-0px rounded placeholder:text-12px"
+  />
+  <datalist id="menus">
+    <x-fill :value="menus.val">
+      <option :value="$data" />
+    </x-fill>
+  </datalist>
+  <script type="module">
+    import Cache from "../js/cache.js";
+
+    const menu = "l-menu";
+    export const tag = "l-search";
+    export default async function ({ load }) {
+      const { menus, title } = await load("../js/store.js");
+      return {
+        data: {
+          menus: [],
+          inputValue: "",
+        },
+        attached() {
+          this.menus = menus;
+        },
+        detached() {
+          this.menus = null;
+        },
+        proto: {
+          toggle(e) {
+            const _title = e.target.value.trim();
+            if (!_title) return;
+
+            const inMenu = menus.val.reduce((pre, curr) => {
+              if (pre === true) return pre;
+              return curr === _title;
+            }, false);
+            if (!inMenu) return;
+
+            this.inputValue = e.target.value;
+            title.val = _title;
+            Cache.setItem(menu, menus.val.indexOf(_title));
+            this.inputValue = "";
+          },
+        },
+      };
+    }
+  </script>
+</template>

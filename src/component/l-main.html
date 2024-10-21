@@ -1,0 +1,56 @@
+<template component>
+  <link
+    rel="stylesheet"
+    href="../css/uno.css"
+  />
+  <l-m src="./common/l-loading.html"></l-m>
+  <l-m src="./l-leetcode.html"></l-m>
+
+  <main
+    b="l l-solid l-menu-hover-color"
+    class="relative h-full bg-theme-bg-color"
+  >
+    <l-loading :loading="loading.val"></l-loading>
+    <l-leetcode></l-leetcode>
+  </main>
+  <script>
+    import { getUrl } from "../js/util.js";
+    export const tag = "l-main";
+    export default async function ({ load }) {
+      const { title, loading } = await load("../js/store.js");
+
+      return {
+        data: {
+          preTitle: "",
+          nextTitle: "",
+          isFullscreen: false,
+          loading: {},
+        },
+        ready() {
+          const dir = getUrl("leetcode/");
+          fetch(dir)
+            .then((res) => res.text())
+            .then((data) => {
+              console.log(data);
+              console.log("===========");
+            });
+
+          fetch("../../leetcode/")
+            .then((res) => res.text())
+            .then((data) => {
+              console.log(data);
+            });
+        },
+        attached() {
+          this.loading = loading;
+        },
+        detached() {
+          this.loading = null;
+        },
+        proto: {
+          setNextTitle(_title) {},
+        },
+      };
+    }
+  </script>
+</template>
