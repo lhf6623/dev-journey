@@ -9,7 +9,7 @@
   <header
     class="z-10 relative h-50px !px-18px flex-shrink-0 b b-menu-hover-color flex-center"
   >
-    <x-if :value="isSmall.val">
+    <x-if :value="is_small.val">
       <l-button
         :icon="'typcn:th-menu'"
         on:on-click="setMenu"
@@ -18,10 +18,14 @@
       >
       </l-button>
     </x-if>
-    <!-- <select class="ml-6px">
+    <select
+      class="ml-6px text-12px bg-menu-hover-color inline-block py-6px px-16px"
+      on:change="changeDocumentType"
+      :value="document_type.val"
+    >
       <option value="leetcode">题目</option>
-      <option value="md">问题</option>
-    </select> -->
+      <option value="mdbook">问题</option>
+    </select>
     <nav class="h-full w-full flex items-center justify-end">
       <ul class="flex h-full list-none gap-x-8px m-0 flex-center">
         <li>
@@ -66,30 +70,40 @@
     </nav>
   </header>
 
-  <script>
+  <script type="module">
     export const tag = "l-header";
     export default async function ({ load }) {
-      const { isSmall, isShowMenu, theme } = await load("../js/store.js");
+      const {
+        content,
+        theme,
+        title,
+        is_small,
+        is_show_menu,
+        changeDocumentType,
+        document_type,
+      } = await load("../js/sys_store.js");
       return {
         data: {
-          isSmall: {},
+          is_small: {},
           theme: {},
+          document_type: {},
         },
         attached() {
-          this.isSmall = isSmall;
+          this.is_small = is_small;
           this.theme = theme;
+          this.document_type = document_type;
         },
         detached() {
-          this.isSmall = null;
+          this.is_small = null;
           this.theme = null;
+          this.document_type = null;
         },
         proto: {
-          toMd() {
-            console.log(this.goto);
-            this.goto("../md.html");
+          changeDocumentType(e) {
+            changeDocumentType(e.target.value);
           },
           setMenu() {
-            isShowMenu.val = !isShowMenu.val;
+            is_show_menu.val = !is_show_menu.val;
           },
           toggleTheme() {
             theme.val = theme.val === "dark" ? "light" : "dark";

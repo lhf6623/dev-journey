@@ -12,12 +12,7 @@ export default defineConfig({
   presets: [presetUno(), presetAttributify()],
   cli: {
     entry: {
-      patterns: [
-        "src/component/*/*.html",
-        "src/component/*.html",
-        "src/page/*.html",
-        "index.html",
-      ],
+      patterns: ["src/**/*.html", "index.html"],
       outFile: "src/css/uno.css",
     },
   },
@@ -34,7 +29,6 @@ export default defineConfig({
     {
       getCSS: async () => {
         const dir = getDir();
-        console.log(`🚀 ~ dir:`, dir);
         const resetCSS = await readFile(
           `${dir}node_modules/@unocss/reset/tailwind-compat.css`,
           "utf-8"

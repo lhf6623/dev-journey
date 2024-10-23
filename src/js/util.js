@@ -24,7 +24,11 @@ function getInRange(value, start, end) {
  * @param {String} url
  */
 export function getUrl(url) {
-  return `${location.protocol === "https:" ? "/leetcode/" : "/"}${url}`;
+  const { origin, protocol } = location;
+  if (protocol === "https:") {
+    return `https://lhf6623.github.io/leetcode/${url}`;
+  }
+  return `${origin}/${url}`;
 }
 /**
  * 创建运行器

@@ -4,6 +4,7 @@
     href="../css/uno.css"
   />
   <l-m src="./common/l-loading.html"></l-m>
+  <l-m src="./l-load-md.html"></l-m>
   <l-m src="./l-leetcode.html"></l-m>
 
   <main
@@ -11,45 +12,36 @@
     class="relative h-full bg-theme-bg-color"
   >
     <l-loading :loading="loading.val"></l-loading>
-    <l-leetcode></l-leetcode>
+    <x-if :value="document_type.val === 'leetcode'">
+      <l-leetcode></l-leetcode>
+    </x-if>
+    <x-if :value="document_type.val === 'mdbook'">
+      <l-load-md></l-load-md>
+    </x-if>
   </main>
-  <script>
+  <script type="module">
     import { getUrl } from "../js/util.js";
+
     export const tag = "l-main";
     export default async function ({ load }) {
-      const { title, loading } = await load("../js/store.js");
+      const { title, loading, document_type } = await load(
+        "../js/sys_store.js"
+      );
 
       return {
         data: {
-          preTitle: "",
-          nextTitle: "",
-          isFullscreen: false,
           loading: {},
-        },
-        ready() {
-          const dir = getUrl("leetcode/");
-          fetch(dir)
-            .then((res) => res.text())
-            .then((data) => {
-              console.log(data);
-              console.log("===========");
-            });
-
-          fetch("../../leetcode/")
-            .then((res) => res.text())
-            .then((data) => {
-              console.log(data);
-            });
+          document_type: {},
         },
         attached() {
           this.loading = loading;
+          this.document_type = document_type;
         },
         detached() {
           this.loading = null;
+          this.document_type = null;
         },
-        proto: {
-          setNextTitle(_title) {},
-        },
+        proto: {},
       };
     }
   </script>

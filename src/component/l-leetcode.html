@@ -9,13 +9,16 @@
   <l-m src="./l-console-list.html"></l-m>
   <l-m src="./l-editor.html"></l-m>
   <div class="relative h-full flex flex-col">
-    <div class="flex relative flex-col overflow-hidden flex-1">
+    <div
+      id="main"
+      class="flex relative flex-col overflow-hidden flex-1 bg-theme-bg-color"
+    >
       <!-- 功能区 -->
       <div class="p-3px pl-16px m-0 flex-between">
         <p class="text-14px max-sm:hidden">{{title.val}}</p>
         <div class="flex-between gap-x-10px *:flex-shrink-0">
           <l-button
-            :loading="isReset.val"
+            :loading="is_reset.val"
             :icon="'pepicons-pop:reload'"
             on:on-click="restoreCode"
           >
@@ -29,12 +32,12 @@
             <l-switch
               on:change="runCodeInterval"
               :size="'small'"
-              :checked="isRunInterval.val"
+              :checked="is_run_interval.val"
             ></l-switch>
           </div>
           <l-button
-            :disabled="isRunInterval.val"
-            :loading="isRun.val"
+            :disabled="is_run_interval.val"
+            :loading="is_run.val"
             :icon="'solar:play-bold'"
             on:on-click="runCode"
           >
@@ -108,15 +111,16 @@
     </footer>
   </div>
 
-  <script>
+  <script type="module">
     import screenfull from "https://esm.sh/screenfull@6.0.0";
     import { Split } from "../js/util.js";
 
     export const tag = "l-leetcode";
     export default async function ({ load }) {
-      const { menus, title, isRun, isRunInterval, isReset } = await load(
+      const { is_run, is_run_interval, is_reset } = await load(
         "../js/store.js"
       );
+      const { menus, title } = await load("../js/sys_store.js");
 
       return {
         data: {
@@ -124,9 +128,9 @@
           preTitle: "",
           nextTitle: "",
           isFullscreen: false,
-          isRunInterval: {},
-          isReset: {},
-          isRun: {},
+          is_run_interval: {},
+          is_reset: {},
+          is_run: {},
         },
         loaded() {
           Split(
@@ -140,15 +144,15 @@
         },
         attached() {
           this.title = title;
-          this.isRunInterval = isRunInterval;
-          this.isReset = isReset;
-          this.isRun = isRun;
+          this.is_run_interval = is_run_interval;
+          this.is_reset = is_reset;
+          this.is_run = is_run;
         },
         detached() {
           this.title = null;
-          this.isRunInterval = null;
-          this.isReset = null;
-          this.isRun = null;
+          this.is_run_interval = null;
+          this.is_reset = null;
+          this.is_run = null;
         },
         watch: {
           title() {
@@ -162,7 +166,7 @@
             title.val = _title;
           },
           toggleFullScreen() {
-            const element = this.shadow.ele.querySelector("main");
+            const element = this.shadow.ele.querySelector("#main");
 
             if (screenfull.isEnabled) {
               screenfull.toggle(element);
@@ -173,15 +177,15 @@
           },
           // 还原代码
           restoreCode() {
-            this.isReset.val = true;
+            this.is_reset.val = true;
           },
           // 运行代码
           runCode() {
-            this.isRun.val = true;
+            this.is_run.val = true;
           },
           // 周期性运行代码
           runCodeInterval(e) {
-            this.isRunInterval.val = e.data;
+            this.is_run_interval.val = e.data;
           },
         },
       };

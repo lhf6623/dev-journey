@@ -15,45 +15,45 @@
   <script type="module">
     import { basicSetup, EditorView } from "https://esm.sh/codemirror@6.0.1";
     import { javascript } from "https://esm.sh/@codemirror/lang-javascript@6.0.1";
-    import Cache from "../js/cache.js";
 
-    export const tag = "l-editor";
     export default async function ({ load } = 1) {
-      const { code, theme, editorCode, isReset, title, menus_index } =
-        await load("../js/store.js");
+      const { editor_code, setEditorCode, is_reset } = await load(
+        "../js/store.js"
+      );
+      const { content, theme, title } = await load("../js/sys_store.js");
       let editor = null;
       let timeoutId = null;
 
       return {
         data: {
           theme: {},
-          code: {},
-          editorCode: {},
-          isReset: {},
+          content: {},
+          editor_code: {},
+          is_reset: {},
         },
         watch: {
           // 点击菜单时
-          code(_code) {
+          content(_code) {
             if (!editor) return;
-            if (!_code.val) return;
+            if (!_code?.val) return;
 
-            editorCode.val = _code.val;
+            setEditorCode(_code.val);
             setTimeout(() => {
               this.changeEditorCode(_code.val);
             }, 100);
           },
           // 还原代码
-          isReset(_isReset) {
-            if (_isReset.val) {
-              editorCode.val = code.val;
-              this.changeEditorCode(editorCode.val);
-              isReset.val = false;
+          is_reset(_isReset) {
+            if (_isReset?.val) {
+              setEditorCode(content.val);
+              this.changeEditorCode(editor_code.val);
+              is_reset.val = false;
             }
           },
         },
         loaded() {
           editor = new EditorView({
-            doc: Cache.getItem(tag) ?? code.val,
+            doc: editor_code.val || content.val,
             extensions: [
               basicSetup,
               javascript(),
@@ -61,15 +61,13 @@
                 if (update.changes) {
                   clearTimeout(timeoutId);
                   timeoutId = setTimeout(() => {
-                    editorCode.val = editor.state.doc.toString();
-                    Promise.resolve().then(Cache.setItem(tag, editorCode.val));
+                    setEditorCode(editor.state.doc.toString());
                   }, 300);
                 }
               }),
             ],
             parent: this.shadow.ele.querySelector("#code"),
           });
-
           // 网页一打开就聚焦到编辑器
           setTimeout(() => {
             editor.focus();
@@ -77,20 +75,19 @@
         },
         attached() {
           this.theme = theme;
-          this.code = code;
-          this.editorCode = editorCode;
-          this.isReset = isReset;
+          this.content = content;
+          this.editor_code = editor_code;
+          console.log(editor_code.val);
+          this.is_reset = is_reset;
         },
         detached() {
           this.theme = null;
-          this.code = null;
-          this.editorCode = null;
-          this.isReset = null;
+          this.content = null;
+          this.editor_code = null;
+          this.is_reset = null;
         },
         proto: {
           changeEditorCode(code) {
-            console.dir(`🚀 ~ code:`, code);
-
             let transaction = editor.state.update({
               changes: {
                 from: 0,

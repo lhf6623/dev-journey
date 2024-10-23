@@ -5,7 +5,7 @@
   />
   <div
     on:click="setMenu"
-    attr:class="`${isSmall.val && isShowMenu.val ? 'left-0' : 'left--100vw'} bg-#00000044 transition-all fixed w-100vw h-100vh top-0 z-300`"
+    attr:class="`${is_small.val && is_show_menu.val ? 'left-0' : 'left--100vw'} bg-#00000044 transition-all fixed w-100vw h-100vh top-0 z-300`"
   ></div>
   <aside
     attr:class="`${menuClass} transition-all w-280px text-theme-text bg-theme-bg-color overflow-y-auto h-full relative flex-shrink-0 z-1`"
@@ -25,26 +25,24 @@
       </x-fill>
     </ul>
   </aside>
-  <script>
-    import Cache from "../js/cache.js";
-    export const tag = "l-menu";
+  <script type="module">
     export default async function ({ load }) {
-      const { menus, title, isSmall, isShowMenu } = await load(
-        "../js/store.js"
+      const { menus, title, is_small, is_show_menu } = await load(
+        "../js/sys_store.js"
       );
       return {
         data: {
-          isSmall: {},
-          isShowMenu: {},
+          is_small: {},
+          is_show_menu: {},
           menus: [],
           menuClass: "",
           title: {},
         },
         watch: {
-          isShowMenu() {
-            const show = isSmall.val && isShowMenu.val;
+          is_show_menu() {
+            const show = is_small.val && is_show_menu.val;
 
-            if (isSmall.val) {
+            if (is_small.val) {
               this.menuClass = show
                 ? "!fixed z-400 !top-0 !h-100vh"
                 : "!fixed !w-0 overflow-hidden";
@@ -55,29 +53,31 @@
         },
         attached() {
           this.menus = menus;
-          this.isSmall = isSmall;
-          this.isShowMenu = isShowMenu;
+          this.is_small = is_small;
+          this.is_show_menu = is_show_menu;
           this.title = title;
         },
         detached() {
           this.menus = null;
-          this.isSmall = null;
-          this.isShowMenu = null;
+          this.is_small = null;
+          this.is_show_menu = null;
           this.title = null;
         },
         async loaded() {
-          const index = Cache.getItem(tag) ?? 0;
-          this.toggle(menus.val[index]);
+          const index = menus.val.indexOf(this.title.val);
+          if (index >= 0) {
+            const _title = menus.val[index];
+            this.toggle(_title);
+          }
         },
         proto: {
           setMenu() {
-            isShowMenu.val = false;
+            is_show_menu.val = false;
           },
           toggle(_title) {
             this.setMenu();
             setTimeout(() => {
               title.val = _title;
-              Cache.setItem(tag, menus.val.indexOf(_title));
             }, 0);
           },
         },

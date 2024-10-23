@@ -13,7 +13,7 @@
     attr:class="`${theme.val} h-full relative overflow-auto`"
   >
     <ul
-      class="p-6px text-14px text-#1c1c1c dark:text-#fff bg-#fff !dark:bg-transparent"
+      class="px-6px text-14px text-#1c1c1c dark:text-#fff bg-#fff !dark:bg-transparent"
     >
       <x-fill :value="list">
         <li
@@ -36,15 +36,17 @@
     </ul>
   </div>
 
-  <script>
+  <script type="module">
     import dayjs from "https://esm.sh/dayjs@1.11.13";
     import { stringify } from "https://esm.sh/flatted@3.3.1";
     import { createJsRunner } from "../js/util.js";
 
     export const tag = "l-console-list";
     export default async function ({ load }) {
-      const { editorCode, isRunInterval, isRun, code, theme, isReset } =
-        await load("../js/store.js");
+      const { editor_code, is_run_interval, is_run, is_reset } = await load(
+        "../js/store.js"
+      );
+      const { content, theme } = await load("../js/sys_store.js");
       let timeout = null;
 
       const cls = {
@@ -54,30 +56,30 @@
       return {
         data: {
           list: [],
-          isRun: {},
-          isRunInterval: {},
+          is_run: {},
+          is_run_interval: {},
           writeCode: null,
-          code: {},
+          content: {},
           theme: {},
-          isReset: {},
+          is_reset: {},
         },
         watch: {
-          isReset() {
+          is_reset() {
             this.list = [];
           },
-          code() {
+          content() {
             this.list = [];
           },
-          async isRun({ val }) {
-            if (val) {
+          async is_run(data) {
+            if (data?.val) {
               this.list = [];
-              this.writeCode(editorCode.val);
-              isRun.val = false;
+              this.writeCode(editor_code.val);
+              is_run.val = false;
             }
           },
-          isRunInterval(data) {
-            if (data.val) {
-              isRun.val = false;
+          is_run_interval(data) {
+            if (data?.val) {
+              is_run.val = false;
               // 如果在循环了就跳出
               if (timeout) return;
 
@@ -104,18 +106,18 @@
           });
           this.writeCode = writeCode;
 
-          this.isRun = isRun;
-          this.isRunInterval = isRunInterval;
-          this.code = code;
+          this.is_run = is_run;
+          this.is_run_interval = is_run_interval;
+          this.content = content;
           this.theme = theme;
-          this.isReset = isReset;
+          this.is_reset = is_reset;
         },
         detached() {
-          this.isRun = null;
-          this.isRunInterval = null;
-          this.code = null;
+          this.is_run = null;
+          this.is_run_interval = null;
+          this.content = null;
           this.theme = null;
-          this.isReset = null;
+          this.is_reset = null;
         },
         proto: {
           scrollTop() {
@@ -137,7 +139,7 @@
             return false;
           },
           async runCode() {
-            this.writeCode(editorCode.val);
+            this.writeCode(editor_code.val);
 
             timeout = setTimeout(() => {
               this.runCode();
