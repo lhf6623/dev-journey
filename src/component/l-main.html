@@ -1,8 +1,4 @@
 <template component>
-  <link
-    rel="stylesheet"
-    href="../css/uno.css"
-  />
   <l-m src="./common/l-loading.html"></l-m>
   <l-m src="./l-load-md.html"></l-m>
   <l-m src="./l-leetcode.html"></l-m>
@@ -20,8 +16,6 @@
     </x-if>
   </main>
   <script type="module">
-    import { getUrl } from "../js/util.js";
-
     export const tag = "l-main";
     export default async function ({ load }) {
       const { title, loading, document_type } = await load(

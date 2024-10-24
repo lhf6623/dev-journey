@@ -1,13 +1,4 @@
 <template component>
-  <link
-    rel="stylesheet"
-    href="../css/uno.css"
-  />
-  <style>
-    a {
-      width: calc(100%);
-    }
-  </style>
   <div
     id="console-list"
     attr:class="`${theme.val} h-full relative overflow-auto`"
@@ -16,13 +7,7 @@
       class="px-6px text-14px text-#1c1c1c dark:text-#fff bg-#fff !dark:bg-transparent"
     >
       <x-fill :value="list">
-        <li
-          attr:class="`${$data.cls}`"
-          relative
-          rounded
-          p="x-22px"
-          m="y-3px"
-        >
+        <li attr:class="`${$data.cls}`" relative rounded p="x-22px" m="y-3px">
           <p
             overflow-hidden
             b="b-solid b-1px b-#cadbfd dark:b-#4c4c4c"

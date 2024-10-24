@@ -1,4 +1,3 @@
-import { readFile } from "fs/promises";
 import {
   defineConfig,
   transformerDirectives,
@@ -6,7 +5,6 @@ import {
   presetAttributify,
   presetUno,
 } from "unocss";
-import { getDir } from "./node_util/index";
 
 export default defineConfig({
   presets: [presetUno(), presetAttributify()],
@@ -25,24 +23,6 @@ export default defineConfig({
       menuHoverColor: "var(--bg-hover-color)",
     },
   },
-  preflights: [
-    {
-      getCSS: async () => {
-        const dir = getDir();
-        const resetCSS = await readFile(
-          `${dir}node_modules/@unocss/reset/tailwind-compat.css`,
-          "utf-8"
-        );
-        // 用正则筛选 /** */注释 空格 换行
-        const reg = /\/\*[\s\S]*?\*\/|\s|\n/g;
-        const publicCSS = await readFile(`${dir}src/css/public.css`, "utf-8");
-        const _resetCSS = resetCSS.replace(reg, "");
-        const _publicCSS = publicCSS.replace(reg, "");
-
-        return `${_resetCSS}\n${_publicCSS}`;
-      },
-    },
-  ],
   shortcuts: {
     // 文本溢出显示省略号
     truncate: "overflow-hidden text-ellipsis whitespace-nowrap",

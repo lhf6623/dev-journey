@@ -1,24 +1,13 @@
 <template component>
-  <link
-    rel="stylesheet"
-    href="../css/highlight-theme.css"
-  />
+  <link rel="stylesheet" href="../css/highlight-theme.css" />
 
   <div attr:class="`md ${theme.val}`">
     <div class="bnts">
-      <button
-        title="下载文档为PDF"
-        on:click="getPdf"
-      >
-        PDF
-      </button>
+      <button title="下载文档为PDF" on:click="getPdf">PDF</button>
     </div>
     <div id="pdf">
       <h1 class="title">{{title.val?.replace('.md', '')}}</h1>
-      <div
-        :html="mdTxt"
-        id="md"
-      ></div>
+      <div :html="mdTxt" id="md"></div>
     </div>
   </div>
   <script type="module">

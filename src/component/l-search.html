@@ -1,9 +1,4 @@
 <template component>
-  <link
-    rel="stylesheet"
-    href="../css/uno.css"
-  />
-
   <input
     placeholder="快速查询"
     list="menus"
@@ -14,10 +9,7 @@
   />
   <datalist id="menus">
     <x-fill :value="menus.val">
-      <option
-        :value="$data"
-        class="bg-red"
-      />
+      <option :value="$data" class="bg-red" />
     </x-fill>
   </datalist>
   <script type="module">

@@ -1,8 +1,4 @@
 <template component>
-  <link
-    rel="stylesheet"
-    href="../css/uno.css"
-  />
   <l-m src="./common/l-switch.html"></l-m>
   <l-m src="./common/l-button.html"></l-m>
 
@@ -80,12 +76,9 @@
     </div>
 
     <footer
-      class="flex-shrink-0 flex-row flex-between text-#0073ff *:flex *:items-center *:cursor-pointer !*:my-8px"
+      class="flex-shrink-0 flex-row flex-between !text-#0073ff *:flex *:items-center *:cursor-pointer !*:my-8px"
     >
-      <button
-        class="l-btn"
-        on:click="setNextTitle(preTitle)"
-      >
+      <button class="l-btn" on:click="setNextTitle(preTitle)">
         <x-if :value="preTitle">
           <iconify-icon
             icon="mingcute:left-fill"
@@ -95,10 +88,7 @@
           <span>{{preTitle}}</span>
         </x-if>
       </button>
-      <button
-        class="l-btn"
-        on:click="setNextTitle(nextTitle)"
-      >
+      <button class="l-btn" on:click="setNextTitle(nextTitle)">
         <x-if :value="nextTitle">
           <span>{{nextTitle}}</span>
           <iconify-icon
