@@ -14,7 +14,10 @@
   />
   <datalist id="menus">
     <x-fill :value="menus.val">
-      <option :value="$data" />
+      <option
+        :value="$data"
+        class="bg-red"
+      />
     </x-fill>
   </datalist>
   <script type="module">

@@ -145,7 +145,9 @@ async function setContent() {
       console.error(e);
     }
 
-    loading.val = false;
+    setTimeout(() => {
+      loading.val = false;
+    }, 500);
   }
 }
 function init_content() {

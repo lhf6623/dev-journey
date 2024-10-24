@@ -7,10 +7,12 @@
     rel="stylesheet"
     href="../css/theme-one-dark.css"
   />
-  <div
-    id="code"
-    attr:class="`${theme.val} h-full relative *:h-full`"
-  ></div>
+  <div attr:class="`${loading.val ? '!h-0 overflow-hidden' : 'h-full'}`">
+    <div
+      id="code"
+      attr:class="`${theme.val} h-full relative *:h-full`"
+    ></div>
+  </div>
 
   <script type="module">
     import { basicSetup, EditorView } from "https://esm.sh/codemirror@6.0.1";
@@ -20,7 +22,9 @@
       const { editor_code, setEditorCode, is_reset } = await load(
         "../js/store.js"
       );
-      const { content, theme, title } = await load("../js/sys_store.js");
+      const { content, theme, title, loading } = await load(
+        "../js/sys_store.js"
+      );
       let editor = null;
       let timeoutId = null;
 
@@ -30,6 +34,7 @@
           content: {},
           editor_code: {},
           is_reset: {},
+          loading: {},
         },
         watch: {
           // 点击菜单时
@@ -77,14 +82,15 @@
           this.theme = theme;
           this.content = content;
           this.editor_code = editor_code;
-          console.log(editor_code.val);
           this.is_reset = is_reset;
+          this.loading = loading;
         },
         detached() {
           this.theme = null;
           this.content = null;
           this.editor_code = null;
           this.is_reset = null;
+          this.loading = null;
         },
         proto: {
           changeEditorCode(code) {

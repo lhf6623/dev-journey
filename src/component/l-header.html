@@ -18,14 +18,25 @@
       >
       </l-button>
     </x-if>
-    <select
-      class="ml-6px text-12px bg-menu-hover-color inline-block py-6px px-16px"
-      on:change="changeDocumentType"
-      :value="document_type.val"
+    <div
+      class="flex-center *:bg-transparent *:px-10px *:py-3px *:whitespace-nowrap *:text-12px"
     >
-      <option value="leetcode">题目</option>
-      <option value="mdbook">问题</option>
-    </select>
+      <button
+        b="1px solid menu-border"
+        attr:class="`rounded-s-full l-btn ${document_type.val === 'leetcode' ? 'text-blue':''}`"
+        on:click="changeDocumentType('leetcode')"
+      >
+        力扣
+      </button>
+      <button
+        b="1px solid menu-border l-0px"
+        attr:class="`rounded-e-full l-btn ${document_type.val === 'mdbook' ? 'text-blue':''}`"
+        on:click="changeDocumentType('mdbook')"
+      >
+        文档
+      </button>
+      <button on:click="gopage">test</button>
+    </div>
     <nav class="h-full w-full flex items-center justify-end">
       <ul class="flex h-full list-none gap-x-8px m-0 flex-center">
         <li>
@@ -99,8 +110,11 @@
           this.document_type = null;
         },
         proto: {
-          changeDocumentType(e) {
-            changeDocumentType(e.target.value);
+          gopage() {
+            this.app.goto("../src/pages/test.html");
+          },
+          changeDocumentType(type) {
+            changeDocumentType(type);
           },
           setMenu() {
             is_show_menu.val = !is_show_menu.val;

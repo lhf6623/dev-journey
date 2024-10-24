@@ -13,6 +13,7 @@
     />
     <title>leetcode刷题库</title>
     <script src="https://cdn.jsdelivr.net/gh/kirakiray/ofa.js@4.5.21/dist/ofa.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/kirakiray/ofa.js@4.5.21/libs/router/dist/router.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/iconify-icon@2.1.0/dist/iconify-icon.min.js"></script>
     <link
       rel="stylesheet"
@@ -20,6 +21,8 @@
     />
   </head>
   <body>
-    <o-app src="./app-config.mjs"> </o-app>
+    <o-router fix-body>
+      <o-app src="./app-config.mjs"> </o-app>
+    </o-router>
   </body>
 </html>
