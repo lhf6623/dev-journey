@@ -82,6 +82,7 @@
   </header>
 
   <script type="module">
+    import { getUrl } from "../js/util.js";
     export const tag = "l-header";
     export default async function ({ load }) {
       const {
@@ -111,7 +112,7 @@
         },
         proto: {
           gopage() {
-            this.app.goto("../src/pages/test.html");
+            this.app.goto(getUrl("src/pages/test.html"));
           },
           changeDocumentType(type) {
             changeDocumentType(type);
