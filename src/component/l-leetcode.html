@@ -15,7 +15,7 @@
         <div class="flex-between gap-x-10px *:flex-shrink-0">
           <l-button
             :loading="is_reset.val"
-            :icon="'pepicons-pop:reload'"
+            :icon="'i-pepicons-pop:reload'"
             on:on-click="restoreCode"
           >
             还原代码
@@ -34,14 +34,14 @@
           <l-button
             :disabled="is_run_interval.val"
             :loading="is_run.val"
-            :icon="'solar:play-bold'"
+            :icon="'i-solar:play-bold'"
             on:on-click="runCode"
           >
             运行
           </l-button>
         </div>
         <l-button
-          :icon="!isFullscreen ? 'tabler:arrows-maximize':'tabler:arrows-minimize'"
+          :icon="!isFullscreen ? 'i-tabler:arrows-maximize':'i-tabler:arrows-minimize'"
           on:on-click="toggleFullScreen"
         >
         </l-button>
@@ -60,11 +60,7 @@
           id="split-1"
           class="cursor-col-resize flex-shrink-0 w-10px overflow-hidden bg-menu-hover-color flex-center"
         >
-          <iconify-icon
-            icon="lsicon:drag-filled"
-            width="16"
-            height="16"
-          ></iconify-icon>
+          <i class="i-akar-icons:drag-vertical w-16px h-16px"></i>
         </div>
         <div
           id="split-2"
@@ -76,26 +72,18 @@
     </div>
 
     <footer
-      class="flex-shrink-0 flex-row flex-between !text-#0073ff *:flex *:items-center *:cursor-pointer !*:my-8px"
+      class="flex-shrink-0 flex-row flex-between !*:text-#0073ff *:flex *:items-center *:cursor-pointer !*:my-8px"
     >
       <button class="l-btn" on:click="setNextTitle(preTitle)">
         <x-if :value="preTitle">
-          <iconify-icon
-            icon="mingcute:left-fill"
-            width="24"
-            height="24"
-          ></iconify-icon>
+          <i class="i-mingcute:left-fill w-24px h-24px"></i>
           <span>{{preTitle}}</span>
         </x-if>
       </button>
       <button class="l-btn" on:click="setNextTitle(nextTitle)">
         <x-if :value="nextTitle">
           <span>{{nextTitle}}</span>
-          <iconify-icon
-            icon="mingcute:right-fill"
-            width="24"
-            height="24"
-          ></iconify-icon>
+          <i class="i-mingcute:right-fill w-24px h-24px"></i>
         </x-if>
       </button>
     </footer>
@@ -149,6 +137,7 @@
             const index = menus.val.findIndex((item) => item === title.val);
             this.preTitle = menus.val[index - 1] || "";
             this.nextTitle = menus.val[index + 1] || "";
+            this.is_run_interval.val = false;
           },
         },
         proto: {

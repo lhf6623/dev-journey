@@ -5,17 +5,16 @@
     attr:disabled="loading || disabled"
     attr:class="`l-btn l-btn-disabled flex items-center gap-x-6px ${butCls} ${round ? roundStyle : ''}`"
   >
-    <x-if :value="icon">
-      <iconify-icon
-        attr:icon="icon"
-        attr:width="iconSize ?? defaultIconSize"
-        attr:height="iconSize ?? defaultIconSize"
-      ></iconify-icon>
+    <x-if :value="defaultIcon">
+      <i
+        attr:class="`${defaultIcon} flex-shrink-0`"
+        attr:style="`width: ${iconSize ?? defaultIconSize}px; height: ${iconSize ?? defaultIconSize}px`"
+      ></i>
     </x-if>
     <slot></slot>
   </button>
   <script type="module">
-    const loadIcon = "eos-icons:bubble-loading";
+    const loadIcon = "i-line-md:loading-alt-loop";
     const defaultSize = "medium";
     const iconSize = {
       tiny: 14,
@@ -44,10 +43,11 @@
           butCls: "",
           round: false,
           roundStyle,
+          defaultIcon: "",
         },
         watch: {
           loading(val) {
-            this.icon = !val ? this.icon : loadIcon;
+            this.defaultIcon = val === true ? loadIcon : this.icon;
           },
           size(val) {
             this.butCls = size[val] ?? size[defaultSize];

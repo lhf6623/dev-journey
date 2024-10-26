@@ -12,17 +12,16 @@
         class="peer op-0 w-0 h-0 focus-visible:outline-none"
         on:change="updateChecked"
         tabindex="-1"
-        attr:checked="checked"
+        sync:checked="checked"
       />
       <div
         attr:class="`flex-center text-#777d83 shadow left-2px top-2px absolute bg-#fff transition-all ${themeCls.button}`"
       >
         <x-if :value="loading">
-          <iconify-icon
-            icon="eos-icons:bubble-loading"
-            attr:width="iconSize"
-            attr:height="iconSize"
-          ></iconify-icon>
+          <i
+            class="i-line-md:loading-alt-loop"
+            attr:style="`width: ${iconSize}px; height: ${iconSize}px;`"
+          ></i>
         </x-if>
       </div>
     </div>

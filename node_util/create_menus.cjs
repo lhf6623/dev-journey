@@ -20,7 +20,8 @@ function create_menu(target_url, create_url, handleMenus) {
     if (handleMenus) {
       _files = handleMenus(files);
     }
-    const str_menu = `export default ['${_files.join("',\n'")}']`;
+    // 跟格式化样式保持一样
+    const str_menu = `export default [\n  "${_files.join('",\n  "')}",\n];\n`;
     fs.writeFile(outputFilePath, str_menu, (err) => {
       if (err) {
         return console.error("无法写入文件: " + err);
@@ -30,11 +31,15 @@ function create_menu(target_url, create_url, handleMenus) {
   });
 }
 create_menu("../leetcode", "../src/js/leetcode_menu.js", (files) => {
-  const menus = [...files].sort((a, b) => {
-    const [a_index] = a.split(".");
-    const [b_index] = b.split(".");
-    return Number(a_index) - Number(b_index);
-  });
+  const menus = [...files]
+    .sort((a, b) => {
+      const [a_index] = a.split(".");
+      const [b_index] = b.split(".");
+      return Number(a_index) - Number(b_index);
+    })
+    .filter((item) => item.endsWith(".js"));
   return menus;
 });
-create_menu("../mdbook", "../src/js/mdbook_menu.js");
+create_menu("../mdbook", "../src/js/mdbook_menu.js", (files) => {
+  return files.filter((item) => item.endsWith(".md"));
+});

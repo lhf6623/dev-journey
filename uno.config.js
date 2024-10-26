@@ -4,10 +4,21 @@ import {
   transformerVariantGroup,
   presetAttributify,
   presetUno,
+  presetIcons,
 } from "unocss";
 
 export default defineConfig({
-  presets: [presetUno(), presetAttributify()],
+  presets: [
+    presetUno(),
+    presetAttributify(),
+    presetIcons({
+      cdn: "https://esm.sh/",
+      extraProperties: {
+        display: "inline-block",
+        "vertical-align": "middle",
+      },
+    }),
+  ],
   cli: {
     entry: {
       patterns: ["src/**/*.html", "index.html"],

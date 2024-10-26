@@ -7,7 +7,7 @@
   >
     <x-if :value="is_small.val">
       <l-button
-        :icon="'typcn:th-menu'"
+        :icon="'i-typcn:th-menu'"
         on:on-click="setMenu"
         :size="'large'"
         :icon-size="24"
@@ -15,7 +15,7 @@
       </l-button>
     </x-if>
     <div
-      class="flex-center *:bg-transparent *:px-10px *:py-3px *:whitespace-nowrap *:text-12px"
+      class="flex-center ml-3px *:bg-transparent *:px-10px *:py-3px *:whitespace-nowrap *:text-12px"
     >
       <button
         b="1px solid menu-border"
@@ -34,13 +34,13 @@
       <button on:click="gopage">test</button>
     </div>
     <nav class="h-full w-full flex items-center justify-end">
-      <ul class="flex h-full list-none gap-x-8px m-0 flex-center">
+      <ul class="h-full gap-x-8px m-0 flex-center">
         <li>
           <l-search></l-search>
         </li>
         <li>
           <l-button
-            :icon="theme.val !== 'dark' ?'mage:moon-fill' : 'ph:sun-fill'"
+            :icon="theme.val !== 'dark' ?'i-mage:moon-fill' : 'i-ph:sun-fill'"
             on:on-click="toggleTheme"
             :round="true"
             :icon-size="24"
@@ -49,28 +49,18 @@
         </li>
         <li>
           <a
-            class="flex-center w-32px h-32px"
+            class="i-mdi:github h-24px w-24px"
             target="_blank"
             href="https://github.com/lhf6623/leetcode"
           >
-            <iconify-icon
-              icon="mdi:github"
-              width="24"
-              height="24"
-            ></iconify-icon>
           </a>
         </li>
         <li>
           <a
-            class="flex-center w-32px h-32px"
+            class="i-tabler:brand-leetcode w-24px h-24px"
             target="_blank"
             href="https://leetcode.cn/u/dalichuqiji/"
           >
-            <iconify-icon
-              icon="tabler:brand-leetcode"
-              width="24"
-              height="24"
-            ></iconify-icon>
           </a>
         </li>
       </ul>

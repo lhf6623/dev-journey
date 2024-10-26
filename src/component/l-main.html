@@ -1,5 +1,4 @@
 <template component>
-  <l-m src="./common/l-loading.html"></l-m>
   <l-m src="./l-load-md.html"></l-m>
   <l-m src="./l-leetcode.html"></l-m>
 
@@ -7,7 +6,13 @@
     b="l l-solid l-menu-hover-color"
     class="relative h-full bg-theme-bg-color"
   >
-    <l-loading :loading="loading.val"></l-loading>
+    <x-if :value="loading.val">
+      <div
+        class="absolute z-999 bg-#00000009 top-0 left-0 w-full h-full flex-center"
+      >
+        <i class="i-eos-icons:bubble-loading w-60px h-60px text-#3498db"></i>
+      </div>
+    </x-if>
     <x-if :value="document_type.val === 'leetcode'">
       <l-leetcode></l-leetcode>
     </x-if>
