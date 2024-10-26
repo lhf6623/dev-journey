@@ -87,15 +87,14 @@ export const theme = $.stanz({
   val: light,
 });
 
-function refreshTheme(theme = light) {
-  document.startViewTransition(() => {
-    document.documentElement.classList.toggle(dark, theme === dark);
-  });
-
-  Cache.setItem(THEME_KEY, theme);
-}
-
 function initTheme() {
+  function refreshTheme(theme = light) {
+    document.startViewTransition(() => {
+      document.documentElement.classList.toggle(dark, theme === dark);
+    });
+
+    Cache.setItem(THEME_KEY, theme);
+  }
   // 读取系统主题
   const os_theme = window.matchMedia("(prefers-color-scheme: dark)").matches
     ? dark

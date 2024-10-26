@@ -137,7 +137,9 @@
             const index = menus.val.findIndex((item) => item === title.val);
             this.preTitle = menus.val[index - 1] || "";
             this.nextTitle = menus.val[index + 1] || "";
-            this.is_run_interval.val = false;
+            if (this.is_run_interval) {
+              this.is_run_interval.val = false;
+            }
           },
         },
         proto: {

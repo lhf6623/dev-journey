@@ -35,4 +35,8 @@ const __dirname = path.dirname(__filename);
 <script type="module">
   console.log(import.meta.url); // 输出为服务器地址
 </script>
+
+<script>
+  console.log(window.location.href); // 输出为服务器地址
+</script>
 ```

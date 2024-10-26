@@ -53,6 +53,9 @@
             this.butCls = size[val] ?? size[defaultSize];
             this.defaultIconSize = iconSize[val] ?? iconSize[defaultSize];
           },
+          icon(val) {
+            this.defaultIcon = this.icon;
+          },
         },
         proto: {
           handleClick(e) {

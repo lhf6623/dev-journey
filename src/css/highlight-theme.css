@@ -4,6 +4,10 @@
   height: 100%;
   box-sizing: border-box;
 }
+
+.dark #pdf {
+  background-color: var(--theme-bg-color);
+}
 .bnts {
   position: absolute;
   right: 3px;
