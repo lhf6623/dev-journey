@@ -58,7 +58,7 @@
         </div>
         <div
           id="split-1"
-          class="cursor-col-resize flex-shrink-0 w-10px overflow-hidden bg-menu-hover-color flex-center"
+          class="group/cursor cursor-col-resize flex-shrink-0 w-6px overflow-hidden bg-menu-hover-color flex-center"
         >
           <i class="i-akar-icons:drag-vertical w-16px h-16px"></i>
         </div>
@@ -111,14 +111,13 @@
           is_run: {},
         },
         loaded() {
-          Split(
-            [
+          Split({
+            els: [
               this.shadow.ele.querySelector("#split-0"),
               this.shadow.ele.querySelector("#split-1"),
               this.shadow.ele.querySelector("#split-2"),
             ],
-            66
-          );
+          });
         },
         attached() {
           this.title = title;

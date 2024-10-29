@@ -105,11 +105,21 @@ export function createJsRunner() {
   };
 }
 /**
- *
- * @param {*} param0
- * @param {*} el1_defaultWidth
+ * @typedef SplitOptions 拖动元素
+ * @property {Object} a - 元素
+ * @property {Array} a.els - 元素
+ * @property {number} a.minWidth - 最小宽度
+ * @property {number} a.defaultWidth - 默认宽度
  */
-export function Split([el1, el2, el3], el1_defaultWidth) {
+
+/**
+ *
+ * @param {SplitOptions} opt
+ */
+export function Split(opt) {
+  const { els, minWidth = 10, defaultWidth = 66 } = opt;
+  const [el1, el2, el3] = els;
+
   const { parentElement } = el1;
   let { width: parentWidth, left: parentLeft } =
     parentElement.getBoundingClientRect();
@@ -121,12 +131,13 @@ export function Split([el1, el2, el3], el1_defaultWidth) {
     const { clientX } = event;
     const left = getInRange(clientX - parentLeft, parentWidth);
     const x = (left / parentWidth) * 100;
-
-    setStyle(x);
+    if (100 - minWidth >= x && x >= minWidth) {
+      setStyle(x);
+    }
   }
 
-  const defaultWidth = getInRange(el1_defaultWidth ?? 50, 100);
-  setStyle(defaultWidth);
+  const _defaultWidth = getInRange(defaultWidth ?? 50, 100 - minWidth);
+  setStyle(_defaultWidth);
 
   const resizeObserver = new ResizeObserver((entries) => {
     for (let entry of entries) {
@@ -143,15 +154,15 @@ export function Split([el1, el2, el3], el1_defaultWidth) {
 
   function setStyle(left_width) {
     // 百分百
-    const el1_w_str = `calc(${left_width}% - ${midWidth / 2}px)`;
-    const el3_w_str = `calc(${100 - left_width}% - ${midWidth / 2}px)`;
+    const el1_w_str = `calc(${left_width}% - ${midWidth}px)`;
+    const el3_w_str = `calc(${100 - left_width}% - ${midWidth}px)`;
 
-    el1.style.width = el1_w_str;
-    el3.style.width = el3_w_str;
+    el1.style.setProperty("width", el1_w_str);
+    el3.style.setProperty("width", el3_w_str);
   }
+
   el2.addEventListener("mousedown", (e) => {
     e.preventDefault();
-
     parentElement.classList.add("is-mouse");
     document.addEventListener("mousemove", mouse);
   });
