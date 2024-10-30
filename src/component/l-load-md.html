@@ -1,12 +1,37 @@
 <template component>
   <link rel="stylesheet" href="../css/public.css" />
-  <link rel="stylesheet" href="../css/highlight-theme.css" />
+  <style>
+    .md {
+      position: relative;
+      overflow: auto;
+      height: 100%;
+      box-sizing: border-box;
+    }
+
+    .dark #pdf {
+      background-color: var(--theme-bg-color);
+    }
+    .bnts {
+      position: absolute;
+      right: 3px;
+    }
+    .title {
+      text-align: center;
+      margin-bottom: 0;
+      letter-spacing: 2px;
+    }
+
+    #md {
+      padding: 0 40px 40px 40px;
+    }
+  </style>
+  <link rel="stylesheet" id="link" href="#" />
 
   <div attr:class="`md ${theme.val}`">
     <div class="bnts">
       <button title="下载文档为PDF" on:click="getPdf">PDF</button>
     </div>
-    <div id="pdf">
+    <div id="pdf" attr:style="`${loading.val ? 'display:none;': ''}`">
       <h1 class="title">{{title.val?.replace('.md', '')}}</h1>
       <div :html="mdTxt" id="md"></div>
     </div>
@@ -14,13 +39,15 @@
   <script type="module">
     import { Marked } from "https://esm.sh/marked@14.1.3";
     import { markedHighlight } from "https://esm.sh/marked-highlight@2.2.0";
-    import hljs from "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/es/highlight.min.js";
+    import hljs from "https://unpkg.com/@highlightjs/cdn-assets@11.10.0/es/highlight.min.js";
     import { jsPDF } from "https://esm.sh/jspdf@2.5.2";
     import html2canvas from "https://esm.sh/html2canvas@1.4.1";
 
     export const tag = "l-load-md";
     export default async function ({ load }) {
-      const { content, theme, title } = await load("../js/sys_store.js");
+      const { content, theme, title, loading } = await load(
+        "../js/sys_store.js"
+      );
       let marked = null;
       return {
         data: {
@@ -28,6 +55,7 @@
           content: {},
           theme: {},
           title: {},
+          loading: {},
         },
         watch: {
           content(data) {
@@ -36,16 +64,25 @@
               this.scrollToTop();
             }
           },
+          theme() {
+            let ele = this.shadow.ele;
+            const link = ele.querySelector("#link");
+            const _theme =
+              theme.val === "dark" ? "atom-one-dark" : "atom-one-light";
+            link.href = `https://unpkg.com/@highlightjs/cdn-assets@11.10.0/styles/${_theme}.min.css`;
+          },
         },
         detached() {
           this.content = null;
           this.theme = null;
           this.title = null;
+          this.loading = null;
         },
         attached() {
           this.content = content;
           this.theme = theme;
           this.title = title;
+          this.loading = loading;
           marked = new Marked(
             markedHighlight({
               emptyLangClass: "hljs",
