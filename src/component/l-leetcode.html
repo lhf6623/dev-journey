@@ -11,10 +11,10 @@
     >
       <!-- 功能区 -->
       <div class="p-3px pl-16px m-0 flex-between">
-        <p class="text-14px max-sm:hidden">{{title.val}}</p>
+        <p class="text-14px max-sm:hidden">{{sys_store.title}}</p>
         <div class="flex-between gap-x-10px *:flex-shrink-0">
           <l-button
-            :loading="is_reset.val"
+            :loading="editor_store.is_reset"
             :icon="'i-pepicons-pop:reload'"
             on:on-click="restoreCode"
           >
@@ -28,12 +28,12 @@
             <l-switch
               on:change="runCodeInterval"
               :size="'small'"
-              :checked="is_run_interval.val"
+              :checked="editor_store.is_run_interval"
             ></l-switch>
           </div>
           <l-button
-            :disabled="is_run_interval.val"
-            :loading="is_run.val"
+            :disabled="editor_store.is_run_interval"
+            :loading="editor_store.is_run"
             :icon="'i-solar:play-bold'"
             on:on-click="runCode"
           >
@@ -95,20 +95,16 @@
 
     export const tag = "l-leetcode";
     export default async function ({ load }) {
-      const { is_run, is_run_interval, is_reset } = await load(
-        "../js/store.js"
-      );
-      const { menus, title } = await load("../js/sys_store.js");
+      const { editor_store } = await load("../js/editor_store.js");
+      const { sys_store } = await load("../js/sys_store.js");
 
       return {
         data: {
-          title: {},
+          sys_store: {},
           preTitle: "",
           nextTitle: "",
           isFullscreen: false,
-          is_run_interval: {},
-          is_reset: {},
-          is_run: {},
+          editor_store: {},
         },
         loaded() {
           Split({
@@ -120,30 +116,31 @@
           });
         },
         attached() {
-          this.title = title;
-          this.is_run_interval = is_run_interval;
-          this.is_reset = is_reset;
-          this.is_run = is_run;
+          this.sys_store = sys_store;
+          this.editor_store = editor_store;
         },
         detached() {
-          this.title = null;
-          this.is_run_interval = null;
-          this.is_reset = null;
-          this.is_run = null;
+          this.sys_store = null;
+          this.editor_store = null;
         },
         watch: {
-          title() {
-            const index = menus.val.findIndex((item) => item === title.val);
-            this.preTitle = menus.val[index - 1] || "";
-            this.nextTitle = menus.val[index + 1] || "";
-            if (this.is_run_interval) {
-              this.is_run_interval.val = false;
+          "sys_store.title"() {
+            const { menus, title } = this.sys_store || {};
+            if (title) {
+              const { is_run_interval } = this.editor_store;
+              const index = menus.findIndex((item) => item === title);
+
+              this.preTitle = menus[index - 1] || "";
+              this.nextTitle = menus[index + 1] || "";
+              if (is_run_interval) {
+                this.editor_store.is_run_interval = false;
+              }
             }
           },
         },
         proto: {
           setNextTitle(_title) {
-            title.val = _title;
+            this.sys_store.title = _title;
           },
           toggleFullScreen() {
             const element = this.shadow.ele.querySelector("#main");
@@ -157,15 +154,15 @@
           },
           // 还原代码
           restoreCode() {
-            this.is_reset.val = true;
+            this.editor_store.is_reset = true;
           },
           // 运行代码
           runCode() {
-            this.is_run.val = true;
+            this.editor_store.is_run = true;
           },
           // 周期性运行代码
           runCodeInterval(e) {
-            this.is_run_interval.val = e.data;
+            this.editor_store.is_run_interval = e.data;
           },
         },
       };

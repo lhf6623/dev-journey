@@ -1,7 +1,7 @@
 <template component>
   <div
     id="console-list"
-    attr:class="`${theme.val} h-full relative overflow-auto`"
+    attr:class="`${sys_store.theme} h-full relative overflow-auto`"
   >
     <ul
       class="px-6px text-14px text-#1c1c1c dark:text-#fff bg-#fff !dark:bg-transparent"
@@ -28,10 +28,8 @@
 
     export const tag = "l-console-list";
     export default async function ({ load }) {
-      const { editor_code, is_run_interval, is_run, is_reset } = await load(
-        "../js/store.js"
-      );
-      const { content, theme } = await load("../js/sys_store.js");
+      const { editor_store } = await load("../js/editor_store.js");
+      const { sys_store } = await load("../js/sys_store.js");
       let timeout = null;
 
       const cls = {
@@ -41,30 +39,25 @@
       return {
         data: {
           list: [],
-          is_run: {},
-          is_run_interval: {},
           writeCode: null,
-          content: {},
-          theme: {},
-          is_reset: {},
+          editor_store: {},
+          sys_store: {},
         },
         watch: {
-          is_reset() {
+          "editor_store.is_reset"() {
             this.list = [];
           },
-          content() {
-            this.list = [];
-          },
-          async is_run(data) {
-            if (data?.val) {
+          "editor_store.is_run"() {
+            if (this.editor_store?.is_run) {
               this.list = [];
-              this.writeCode(editor_code.val);
-              is_run.val = false;
+              this.writeCode(this.editor_store.editor_code);
+              this.editor_store.is_run = false;
             }
           },
-          is_run_interval(data) {
-            if (data?.val) {
-              is_run.val = false;
+          "editor_store.is_run_interval"() {
+            const { is_run_interval } = this.editor_store || {};
+            if (is_run_interval) {
+              this.editor_store.is_run = false;
               // 如果在循环了就跳出
               if (timeout) return;
 
@@ -77,6 +70,9 @@
               }
             }
           },
+          "sys_store.content"() {
+            this.list = [];
+          },
         },
         attached() {
           const { writeCode, onMessage } = createJsRunner();
@@ -87,25 +83,19 @@
               time: dayjs().format("HH:mm:ss"),
               cls: cls[data.type] ?? "",
             });
-            this.scrollTop();
+            this.scrollBottom();
           });
           this.writeCode = writeCode;
 
-          this.is_run = is_run;
-          this.is_run_interval = is_run_interval;
-          this.content = content;
-          this.theme = theme;
-          this.is_reset = is_reset;
+          this.sys_store = sys_store;
+          this.editor_store = editor_store;
         },
         detached() {
-          this.is_run = null;
-          this.is_run_interval = null;
-          this.content = null;
-          this.theme = null;
-          this.is_reset = null;
+          this.sys_store = null;
+          this.editor_store = null;
         },
         proto: {
-          scrollTop() {
+          scrollBottom() {
             const ele = this.shadow.ele;
             // 滚动到底部
             setTimeout(() => {
@@ -124,7 +114,7 @@
             return false;
           },
           async runCode() {
-            this.writeCode(editor_code.val);
+            this.writeCode(this.editor_store.editor_code);
 
             timeout = setTimeout(() => {
               this.runCode();

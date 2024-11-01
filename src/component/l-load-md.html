@@ -27,12 +27,12 @@
   </style>
   <link rel="stylesheet" id="link" href="#" />
 
-  <div attr:class="`md ${theme.val}`">
+  <div attr:class="`md ${sys_store.theme}`">
     <div class="bnts">
       <button title="下载文档为PDF" on:click="getPdf">PDF</button>
     </div>
-    <div id="pdf" attr:style="`${loading.val ? 'display:none;': ''}`">
-      <h1 class="title">{{title.val?.replace('.md', '')}}</h1>
+    <div id="pdf" attr:style="`${sys_store.loading ? 'display:none;': ''}`">
+      <h1 class="title">{{sys_store.title?.replace('.md', '')}}</h1>
       <div :html="mdTxt" id="md"></div>
     </div>
   </div>
@@ -45,44 +45,36 @@
 
     export const tag = "l-load-md";
     export default async function ({ load }) {
-      const { content, theme, title, loading } = await load(
-        "../js/sys_store.js"
-      );
+      const { sys_store } = await load("../js/sys_store.js");
       let marked = null;
       return {
         data: {
           mdTxt: "加载中。。。",
-          content: {},
-          theme: {},
-          title: {},
-          loading: {},
+          sys_store: {},
         },
         watch: {
-          content(data) {
-            if (data?.val) {
-              this.renderMd(data.val);
+          "sys_store.content"(data) {
+            const { content } = this.sys_store || {};
+            if (content) {
+              this.renderMd(content);
               this.scrollToTop();
             }
           },
-          theme() {
+          "sys_store.theme"() {
             let ele = this.shadow.ele;
             const link = ele.querySelector("#link");
             const _theme =
-              theme.val === "dark" ? "atom-one-dark" : "atom-one-light";
+              this.sys_store?.theme === "dark"
+                ? "atom-one-dark"
+                : "atom-one-light";
             link.href = `https://unpkg.com/@highlightjs/cdn-assets@11.10.0/styles/${_theme}.min.css`;
           },
         },
         detached() {
-          this.content = null;
-          this.theme = null;
-          this.title = null;
-          this.loading = null;
+          this.sys_store = null;
         },
         attached() {
-          this.content = content;
-          this.theme = theme;
-          this.title = title;
-          this.loading = loading;
+          this.sys_store = sys_store;
           marked = new Marked(
             markedHighlight({
               emptyLangClass: "hljs",
@@ -96,7 +88,7 @@
           );
 
           setTimeout(() => {
-            this.renderMd(content.val);
+            this.renderMd(this.sys_store.content);
           }, 100);
         },
         proto: {
@@ -138,7 +130,7 @@
                 );
                 x += pdf_page_h;
               }
-              doc.save(`${this.title.val.replace("md", "pdf")}`);
+              doc.save(`${this.sys_store.title.replace("md", "pdf")}`);
             });
           },
         },

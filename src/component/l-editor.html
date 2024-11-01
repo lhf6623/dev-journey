@@ -138,8 +138,11 @@
       }
     }
   </style>
-  <div attr:class="`${loading.val ? '!h-0 overflow-hidden' : 'h-full'}`">
-    <div id="code" attr:class="`${theme.val} h-full relative *:h-full`"></div>
+  <div attr:class="`${sys_store.loading ? '!h-0 overflow-hidden' : 'h-full'}`">
+    <div
+      id="code"
+      attr:class="`${sys_store.theme} h-full relative *:h-full`"
+    ></div>
   </div>
 
   <script type="module">
@@ -147,46 +150,52 @@
     import { javascript } from "https://esm.sh/@codemirror/lang-javascript@6.0.1";
 
     export default async function ({ load } = 1) {
-      const { editor_code, setEditorCode, is_reset } = await load(
-        "../js/store.js"
+      const { setEditorCode, editor_store } = await load(
+        "../js/editor_store.js"
       );
-      const { content, theme, title, loading } = await load(
-        "../js/sys_store.js"
-      );
+      const { sys_store } = await load("../js/sys_store.js");
       let editor = null;
       let timeoutId = null;
 
       return {
         data: {
-          theme: {},
-          content: {},
-          editor_code: {},
-          is_reset: {},
-          loading: {},
+          sys_store: {},
+          editor_store: {},
         },
         watch: {
-          // 点击菜单时
-          content(_code) {
-            if (!editor) return;
-            if (!_code?.val) return;
-
-            setEditorCode(_code.val);
-            setTimeout(() => {
-              this.changeEditorCode(_code.val);
-            }, 100);
-          },
-          // 还原代码
-          is_reset(_isReset) {
-            if (_isReset?.val) {
-              setEditorCode(content.val);
-              this.changeEditorCode(editor_code.val);
-              is_reset.val = false;
+          "editor_store.is_reset"() {
+            if (this.editor_store?.is_reset) {
+              setEditorCode(this.sys_store.content);
+              this.changeEditorCode(this.editor_store.editor_code);
+              this.editor_store.is_reset = false;
             }
+          },
+          // 点击菜单时
+          "sys_store.content"(_code, data1) {
+            if (!editor) return;
+            if (!this.sys_store?.content) return;
+
+            const { oldValue, value } = data1.watchers[0];
+
+            if (
+              typeof value === "string" &&
+              typeof oldValue === "string" &&
+              oldValue !== value
+            ) {
+              setEditorCode(this.sys_store.content);
+            }
+            if (!this.editor_store.editor_code) {
+              setEditorCode(this.sys_store.content);
+            }
+
+            setTimeout(() => {
+              this.changeEditorCode(this.editor_store.editor_code);
+            }, 100);
           },
         },
         loaded() {
           editor = new EditorView({
-            doc: editor_code.val || content.val,
+            doc: this.editor_store.editor_code || this.sys_store.content,
             extensions: [
               basicSetup,
               javascript(),
@@ -207,18 +216,12 @@
           }, 300);
         },
         attached() {
-          this.theme = theme;
-          this.content = content;
-          this.editor_code = editor_code;
-          this.is_reset = is_reset;
-          this.loading = loading;
+          this.sys_store = sys_store;
+          this.editor_store = editor_store;
         },
         detached() {
-          this.theme = null;
-          this.content = null;
-          this.editor_code = null;
-          this.is_reset = null;
-          this.loading = null;
+          this.sys_store = null;
+          this.editor_store = null;
         },
         proto: {
           changeEditorCode(code) {

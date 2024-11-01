@@ -1,15 +1,15 @@
 <template component>
   <div
     on:click="setMenu"
-    attr:class="`${is_small.val && is_show_menu.val ? 'left-0' : 'left--100vw'} bg-#00000044 transition-all fixed w-100vw h-100vh top-0 z-300`"
+    attr:class="`${sys_store.is_small && sys_store.is_show_menu ? 'left-0' : 'left--100vw'} bg-#00000044 transition-all fixed w-100vw h-100vh top-0 z-300`"
   ></div>
   <aside
     attr:class="`${menuClass} transition-all w-280px text-theme-text bg-theme-bg-color overflow-y-auto h-full relative flex-shrink-0 z-1`"
   >
     <ul class="p-0 m-0 relative px-16px">
-      <x-fill :value="menus.val">
+      <x-fill :value="sys_store.menus">
         <li
-          attr:class="`${$host.title?.val === $data ? 'text-#0173ff' : ''} l-btn rounded-5px font-500 truncate`"
+          attr:class="`${$host.sys_store.title === $data ? 'text-#0173ff' : ''} l-btn rounded-5px font-500 truncate`"
           p="l-8px y-2px"
           m="y-5px x-0px"
           text="ellipsis 16px"
@@ -23,22 +23,18 @@
   </aside>
   <script type="module">
     export default async function ({ load }) {
-      const { menus, title, is_small, is_show_menu } = await load(
-        "../js/sys_store.js"
-      );
+      const { sys_store } = await load("../js/sys_store.js");
       return {
         data: {
-          is_small: {},
-          is_show_menu: {},
-          menus: [],
+          sys_store: {},
           menuClass: "",
-          title: {},
         },
         watch: {
-          is_show_menu() {
-            const show = is_small.val && is_show_menu.val;
+          "sys_store.is_show_menu"() {
+            const { is_small, is_show_menu } = this.sys_store;
+            const show = is_small && is_show_menu;
 
-            if (is_small.val) {
+            if (is_small) {
               this.menuClass = show
                 ? "!fixed z-400 !top-0 !h-100vh"
                 : "!fixed !w-0 overflow-hidden";
@@ -48,32 +44,27 @@
           },
         },
         attached() {
-          this.menus = menus;
-          this.is_small = is_small;
-          this.is_show_menu = is_show_menu;
-          this.title = title;
+          this.sys_store = sys_store;
         },
         detached() {
-          this.menus = null;
-          this.is_small = null;
-          this.is_show_menu = null;
-          this.title = null;
+          this.sys_store = null;
         },
         async loaded() {
-          const index = menus.val.indexOf(this.title.val);
+          const { menus, title } = this.sys_store;
+          const index = menus.indexOf(title);
           if (index >= 0) {
-            const _title = menus.val[index];
+            const _title = menus[index];
             this.toggle(_title);
           }
         },
         proto: {
           setMenu() {
-            is_show_menu.val = false;
+            this.sys_store.is_show_menu = false;
           },
           toggle(_title) {
             this.setMenu();
             setTimeout(() => {
-              title.val = _title;
+              this.sys_store.title = _title;
             }, 0);
           },
         },

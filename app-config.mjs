@@ -1,4 +1,4 @@
-import { theme } from "./src/js/sys_store.js";
+import { sys_store } from "./src/js/sys_store.js";
 export const home = "./src/pages/leetcode.html";
 
 export const loading = () => {

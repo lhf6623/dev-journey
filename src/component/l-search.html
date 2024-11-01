@@ -8,7 +8,7 @@
     class="caret-transparent relative w-168px box-border px-6px py-0px rounded placeholder:text-12px"
   />
   <datalist id="menus">
-    <x-fill :value="menus.val">
+    <x-fill :value="sys_store.menus">
       <option :value="$data" class="bg-red" />
     </x-fill>
   </datalist>
@@ -16,31 +16,31 @@
     const menu = "l-menu";
     export const tag = "l-search";
     export default async function ({ load }) {
-      const { menus, title } = await load("../js/sys_store.js");
+      const { sys_store } = await load("../js/sys_store.js");
       return {
         data: {
-          menus: [],
+          sys_store: {},
           inputValue: "",
         },
         attached() {
-          this.menus = menus;
+          this.sys_store = sys_store;
         },
         detached() {
-          this.menus = null;
+          this.sys_store = null;
         },
         proto: {
           toggle(e) {
             const _title = e.target.value.trim();
             if (!_title) return;
 
-            const inMenu = menus.val.reduce((pre, curr) => {
+            const inMenu = this.sys_store.menus.reduce((pre, curr) => {
               if (pre === true) return pre;
               return curr === _title;
             }, false);
             if (!inMenu) return;
 
             this.inputValue = e.target.value;
-            title.val = _title;
+            this.sys_store.title = _title;
             this.inputValue = "";
           },
         },

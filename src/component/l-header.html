@@ -5,7 +5,7 @@
   <header
     class="z-10 relative h-50px !px-18px flex-shrink-0 b b-menu-hover-color flex-center"
   >
-    <x-if :value="is_small.val">
+    <x-if :value="sys_store.is_small">
       <l-button
         :icon="'i-typcn:th-menu'"
         on:on-click="setMenu"
@@ -19,14 +19,14 @@
     >
       <button
         b="1px solid menu-border"
-        attr:class="`rounded-s-full l-btn ${document_type.val === 'leetcode' ? 'text-blue':''}`"
+        attr:class="`rounded-s-full l-btn ${sys_store.document_type === 'leetcode' ? 'text-blue':''}`"
         on:click="changeDocumentType('leetcode')"
       >
         力扣
       </button>
       <button
         b="1px solid menu-border l-0px"
-        attr:class="`rounded-e-full l-btn ${document_type.val === 'mdbook' ? 'text-blue':''}`"
+        attr:class="`rounded-e-full l-btn ${sys_store.document_type === 'mdbook' ? 'text-blue':''}`"
         on:click="changeDocumentType('mdbook')"
       >
         文档
@@ -40,7 +40,7 @@
         </li>
         <li>
           <l-button
-            :icon="theme.val !== 'dark' ?'i-mage:moon-fill' : 'i-ph:sun-fill'"
+            :icon="sys_store.theme !== 'dark' ?'i-mage:moon-fill' : 'i-ph:sun-fill'"
             on:on-click="toggleTheme"
             :round="true"
             :icon-size="24"
@@ -71,30 +71,18 @@
     import { getUrl } from "../js/util.js";
     export const tag = "l-header";
     export default async function ({ load }) {
-      const {
-        content,
-        theme,
-        title,
-        is_small,
-        is_show_menu,
-        changeDocumentType,
-        document_type,
-      } = await load("../js/sys_store.js");
+      const { changeDocumentType, sys_store } = await load(
+        "../js/sys_store.js"
+      );
       return {
         data: {
-          is_small: {},
-          theme: {},
-          document_type: {},
+          sys_store: {},
         },
         attached() {
-          this.is_small = is_small;
-          this.theme = theme;
-          this.document_type = document_type;
+          this.sys_store = sys_store;
         },
         detached() {
-          this.is_small = null;
-          this.theme = null;
-          this.document_type = null;
+          this.sys_store = null;
         },
         proto: {
           gopage() {
@@ -104,10 +92,12 @@
             changeDocumentType(type);
           },
           setMenu() {
-            is_show_menu.val = !is_show_menu.val;
+            const { is_show_menu } = this.sys_store;
+            this.sys_store.is_show_menu = !is_show_menu;
           },
           toggleTheme() {
-            theme.val = theme.val === "dark" ? "light" : "dark";
+            const { theme } = this.sys_store;
+            this.sys_store.theme = theme === "dark" ? "light" : "dark";
           },
         },
       };

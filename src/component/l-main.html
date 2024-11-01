@@ -6,39 +6,34 @@
     b="l l-solid l-menu-hover-color"
     class="relative h-full bg-theme-bg-color"
   >
-    <x-if :value="loading.val">
+    <x-if :value="sys_store.loading">
       <div
         class="absolute z-999 bg-#00000009 top-0 left-0 w-full h-full flex-center"
       >
         <i class="i-eos-icons:bubble-loading w-60px h-60px text-#3498db"></i>
       </div>
     </x-if>
-    <x-if :value="document_type.val === 'leetcode'">
+    <x-if :value="sys_store.document_type === 'leetcode'">
       <l-leetcode></l-leetcode>
     </x-if>
-    <x-if :value="document_type.val === 'mdbook'">
+    <x-if :value="sys_store.document_type === 'mdbook'">
       <l-load-md></l-load-md>
     </x-if>
   </main>
   <script type="module">
     export const tag = "l-main";
     export default async function ({ load }) {
-      const { title, loading, document_type } = await load(
-        "../js/sys_store.js"
-      );
+      const { sys_store } = await load("../js/sys_store.js");
 
       return {
         data: {
-          loading: {},
-          document_type: {},
+          sys_store: {},
         },
         attached() {
-          this.loading = loading;
-          this.document_type = document_type;
+          this.sys_store = sys_store;
         },
         detached() {
-          this.loading = null;
-          this.document_type = null;
+          this.sys_store = null;
         },
         proto: {},
       };
