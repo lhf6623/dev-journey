@@ -163,12 +163,12 @@ export function Split(opt) {
 
   el2.addEventListener("mousedown", (e) => {
     e.preventDefault();
-    parentElement.classList.add("is-mouse");
+    parentElement.classList.add("cursor-col-resize");
     document.addEventListener("mousemove", mouse);
   });
 
   document.addEventListener("mouseup", () => {
-    parentElement.classList.remove("is-mouse");
+    parentElement.classList.remove("cursor-col-resize");
     document.removeEventListener("mousemove", mouse);
   });
 }

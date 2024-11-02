@@ -1,7 +1,7 @@
 <template component>
   <div
     on:click="setMenu"
-    attr:class="`${sys_store.is_small && sys_store.is_show_menu ? 'left-0' : 'left--100vw'} bg-#00000044 transition-all fixed w-100vw h-100vh top-0 z-300`"
+    attr:class="`${sys_store.is_small && sys_store.is_show_menu ? 'op-100 z-300' : 'op-0 !z--1'} bg-#00000022 transition-all fixed w-100vw h-100vh top-0 left-0`"
   ></div>
   <aside
     attr:class="`${menuClass} transition-all w-280px text-theme-text bg-theme-bg-color overflow-y-auto h-full relative flex-shrink-0 z-1`"
