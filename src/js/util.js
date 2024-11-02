@@ -34,7 +34,7 @@ export function getUrl(url) {
  * 创建运行器
  * @returns
  */
-export function createJsRunner() {
+export function createJsRunner(fn) {
   let iframe, iframeDoc;
   const id = uuidv4();
 
@@ -59,49 +59,48 @@ export function createJsRunner() {
     createIframe();
     const _code = `
 		<script>
-		let consoleProxy = new Proxy(console, {
-			get(target, property, receiver) {
-				if (!(property in target)) {
-					const message = 'console. '+ property +' is not a function'
-					window.parent.postMessage({
-						message,
-						type: 'error',
-						id: 123456
-					}, '*');
-					return target[property];
-				}
+      let consoleProxy = new Proxy(console, {
+        get(target, property, receiver) {
+          if (!(property in target)) {
+            const message = 'console. '+ property +' is not a function'
+            window.parent.postMessage({
+              message,
+              type: 'error',
+              source: 'lhf6623_leetcode_runner'
+            }, '*');
+            return target[property];
+          }
 
-				return function (...args) {
-					window.parent.postMessage({
-						message: args.toString(),
-						type: property,
-						id: 123456
-					}, '*');
-					// Reflect.get(target, property, receiver)(...args);
-				};
-			},
-		});
-		console = consoleProxy
-		try {
-			${code}
-		} catch (error) {
-			console.error(error.message);
-		}
+          return function (...args) {
+            window.parent.postMessage({
+              message: args.toString(),
+              type: property,
+              source: 'lhf6623_leetcode_runner'
+            }, '*');
+            // Reflect.get(target, property, receiver)(...args);
+          };
+        },
+      });
+      console = consoleProxy
+      try {
+        ${code}
+      } catch (error) {
+        console.error(error.message);
+      }
 		<\/script>
 		`;
     iframeDoc.write(_code);
   }
 
-  function onMessage(fn) {
-    window.addEventListener("message", (event) => {
-      if (event.data.id === 123456) {
-        fn(event.data);
-      }
-    });
+  window.addEventListener("message", fn);
+  // 移除监听
+  function onDestroy() {
+    window.removeEventListener("message", fn);
   }
+
   return {
     writeCode,
-    onMessage,
+    onDestroy,
   };
 }
 /**

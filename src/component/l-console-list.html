@@ -30,6 +30,7 @@
     export default async function ({ load }) {
       const { editor_store } = await load("../js/editor_store.js");
       const { sys_store } = await load("../js/sys_store.js");
+
       let timeout = null;
 
       const cls = {
@@ -40,6 +41,7 @@
         data: {
           list: [],
           writeCode: null,
+          onDestroy: null,
           editor_store: {},
           sys_store: {},
         },
@@ -48,8 +50,13 @@
             this.list = [];
           },
           "editor_store.is_run"() {
-            if (this.editor_store?.is_run) {
+            if (
+              this.editor_store !== null &&
+              this.writeCode !== null &&
+              this.editor_store.is_run === true
+            ) {
               this.list = [];
+
               this.writeCode(this.editor_store.editor_code);
               this.editor_store.is_run = false;
             }
@@ -75,16 +82,10 @@
           },
         },
         attached() {
-          const { writeCode, onMessage } = createJsRunner();
-
-          onMessage((data) => {
-            this.list.push({
-              ...data,
-              time: dayjs().format("HH:mm:ss"),
-              cls: cls[data.type] ?? "",
-            });
-            this.scrollBottom();
-          });
+          const { writeCode, onDestroy } = createJsRunner(
+            this.getData.bind(this)
+          );
+          this.onDestroy = onDestroy;
           this.writeCode = writeCode;
 
           this.sys_store = sys_store;
@@ -93,8 +94,22 @@
         detached() {
           this.sys_store = null;
           this.editor_store = null;
+
+          this.onDestroy?.();
+          console.log(this);
         },
         proto: {
+          getData(event) {
+            if (event.data.source === "lhf6623_leetcode_runner") {
+              const data = event.data;
+              this.list.push({
+                ...data,
+                time: dayjs().format("HH:mm:ss"),
+                cls: cls[data.type] ?? "",
+              });
+              this.scrollBottom();
+            }
+          },
           scrollBottom() {
             const ele = this.shadow.ele;
             // 滚动到底部
