@@ -9,7 +9,7 @@
     <ul class="p-0 m-0 relative px-16px">
       <x-fill :value="sys_store.menus">
         <li
-          attr:class="`${$host.sys_store.title === $data ? 'text-#0173ff' : ''} l-btn rounded-5px font-500 truncate`"
+          attr:class="`${$host.sys_store?.title === $data ? 'text-#0173ff' : ''} l-btn rounded-5px font-500 truncate`"
           p="l-8px y-2px"
           m="y-5px x-0px"
           text="ellipsis 16px"
@@ -31,7 +31,7 @@
         },
         watch: {
           "sys_store.is_show_menu"() {
-            const { is_small, is_show_menu } = this.sys_store;
+            const { is_small, is_show_menu } = this.sys_store || {};
             const show = is_small && is_show_menu;
 
             if (is_small) {
