@@ -1,6 +1,6 @@
 <template component>
   <input
-    placeholder="快速查询"
+    attr:placeholder="`查询 ${isMac ? 'command':'ctrl'}+K`"
     list="menus"
     :value="inputValue"
     on:change="toggle"
@@ -9,7 +9,7 @@
   />
   <datalist id="menus">
     <x-fill :value="sys_store.menus">
-      <option :value="$data" class="bg-red" />
+      <option :value="$host.changeText($data)" />
     </x-fill>
   </datalist>
   <script type="module">
@@ -21,26 +21,42 @@
         data: {
           sys_store: {},
           inputValue: "",
+          isMac: navigator.platform.toUpperCase().indexOf("MAC") >= 0,
         },
         attached() {
+          window.addEventListener("keydown", this.focusInput.bind(this));
+
           this.sys_store = sys_store;
         },
         detached() {
           this.sys_store = null;
+          window.removeEventListener("keydown", this.focusInput.bind(this));
         },
         proto: {
+          // 监听按键 聚焦输入框
+          focusInput(e) {
+            // 监听 command k 键
+            if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
+              this.shadow.ele.querySelector("input").focus();
+            }
+          },
+          changeText(text) {
+            // 替换 字符串后缀比如 xxx.js => xxx
+            const reg = /\.js$/;
+            return text.replace(reg, "");
+          },
           toggle(e) {
             const _title = e.target.value.trim();
             if (!_title) return;
 
             const inMenu = this.sys_store.menus.reduce((pre, curr) => {
               if (pre === true) return pre;
-              return curr === _title;
+              return curr === `${_title}.js`;
             }, false);
             if (!inMenu) return;
 
             this.inputValue = e.target.value;
-            this.sys_store.title = _title;
+            this.sys_store.title = `${_title}.js`;
             this.inputValue = "";
           },
         },

@@ -9,14 +9,14 @@
     <ul class="p-0 m-0 relative px-16px">
       <x-fill :value="sys_store.menus">
         <li
-          attr:class="`${$host.sys_store?.title === $data ? 'text-#0173ff' : ''} l-btn rounded-5px font-500 truncate`"
+          attr:class="`${$host.sys_store?.title === $data ? 'text-#0173ff active' : ''} l-btn rounded-5px font-500 truncate`"
           p="l-8px y-2px"
           m="y-5px x-0px"
           text="ellipsis 16px"
           on:click="$host.toggle($data)"
-          attr:title="$data"
+          attr:title="$host.changeText($data)"
         >
-          {{$data}}
+          {{$host.changeText($data)}}
         </li>
       </x-fill>
     </ul>
@@ -30,6 +30,9 @@
           menuClass: "",
         },
         watch: {
+          "sys_store.title"() {
+            this.scrollToViewport();
+          },
           "sys_store.is_show_menu"() {
             const { is_small, is_show_menu } = this.sys_store || {};
             const show = is_small && is_show_menu;
@@ -58,6 +61,26 @@
           }
         },
         proto: {
+          scrollToViewport() {
+            setTimeout(() => {
+              const scroll = this.shadow.ele.querySelector("aside");
+              const active = this.shadow.ele.querySelector(".active");
+              const { offsetTop: a_o_t, offsetHeight: a_o_h } = active;
+              const { scrollTop: s_s_t, offsetHeight: s_o_h } = scroll;
+
+              if (a_o_t + a_o_h - s_s_t > s_o_h || a_o_t < s_s_t) {
+                scroll.scroll({
+                  top: a_o_t - s_o_h / 2,
+                  behavior: "smooth",
+                });
+              }
+            }, 300);
+          },
+          changeText(text) {
+            // 替换 字符串后缀比如 xxx.js => xxx
+            const reg = /\.js$/;
+            return text.replace(reg, "");
+          },
           setMenu() {
             this.sys_store.is_show_menu = false;
           },

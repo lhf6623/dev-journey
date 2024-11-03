@@ -11,7 +11,7 @@
     >
       <!-- 功能区 -->
       <div class="p-3px pl-16px m-0 flex-between">
-        <p class="text-14px max-sm:hidden">{{sys_store.title}}</p>
+        <p class="text-14px max-sm:hidden">{{changeText(sys_store.title)}}</p>
         <div class="flex-between gap-x-10px *:flex-shrink-0">
           <l-button
             :loading="editor_store.is_reset"
@@ -77,12 +77,12 @@
       <button class="l-btn" on:click="setNextTitle(preTitle)">
         <x-if :value="preTitle">
           <i class="i-mingcute:left-fill w-24px h-24px"></i>
-          <span>{{preTitle}}</span>
+          <span>{{changeText(preTitle)}}</span>
         </x-if>
       </button>
       <button class="l-btn" on:click="setNextTitle(nextTitle)">
         <x-if :value="nextTitle">
-          <span>{{nextTitle}}</span>
+          <span>{{changeText(nextTitle)}}</span>
           <i class="i-mingcute:right-fill w-24px h-24px"></i>
         </x-if>
       </button>
@@ -139,6 +139,11 @@
           },
         },
         proto: {
+          changeText(text) {
+            // 替换 字符串后缀比如 xxx.js => xxx
+            const reg = /\.js$/;
+            return text?.replace(reg, "");
+          },
           setNextTitle(_title) {
             this.sys_store.title = _title;
           },
