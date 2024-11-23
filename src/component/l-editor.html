@@ -149,7 +149,7 @@
     import { basicSetup, EditorView } from "https://esm.sh/codemirror@6.0.1";
     import { javascript } from "https://esm.sh/@codemirror/lang-javascript@6.0.1";
 
-    export default async function ({ load } = 1) {
+    export default async function ({ load }) {
       const { setEditorCode, editor_store } = await load(
         "../js/editor_store.js"
       );

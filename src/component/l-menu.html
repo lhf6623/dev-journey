@@ -65,8 +65,8 @@
             setTimeout(() => {
               const scroll = this.shadow.ele.querySelector("aside");
               const active = this.shadow.ele.querySelector(".active");
-              const { offsetTop: a_o_t, offsetHeight: a_o_h } = active;
-              const { scrollTop: s_s_t, offsetHeight: s_o_h } = scroll;
+              const { offsetTop: a_o_t, offsetHeight: a_o_h } = active || {};
+              const { scrollTop: s_s_t, offsetHeight: s_o_h } = scroll || {};
 
               if (a_o_t + a_o_h - s_s_t > s_o_h || a_o_t < s_s_t) {
                 scroll.scroll({
