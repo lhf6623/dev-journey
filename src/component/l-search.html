@@ -42,15 +42,12 @@
           },
           changeText(text) {
             // 替换 字符串后缀比如 xxx.js => xxx
-            if (this.sys_store.document_type == mdbook) {
-              const reg = /\.md$/;
-              return text.replace(reg, "");
+            let reg = /\.md$/;
+
+            if (this.sys_store.document_type == leetcode) {
+              reg = /\.js$/;
             }
-            if (this.sys_store.leetcode == leetcode) {
-              const reg = /\.js$/;
-              return text.replace(reg, "");
-            }
-            return "";
+            return text.replace(reg, "");
           },
           toggle(e) {
             const _title = e.target.value.trim();
