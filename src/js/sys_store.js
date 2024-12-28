@@ -7,8 +7,8 @@ import Cache from "./cache.js";
 const THEME_KEY = "theme";
 const DOCUMENT_TYPE = "document_type";
 const TITLE = "title";
-const mdbook = "mdbook";
-const leetcode = "leetcode";
+export const mdbook = "mdbook";
+export const leetcode = "leetcode";
 const dark = "dark";
 const light = "light";
 
@@ -95,9 +95,7 @@ async function setContent() {
       console.error(e);
     }
 
-    setTimeout(() => {
-      sys_store.loading = false;
-    }, 500);
+    sys_store.loading = false;
   }
 }
 

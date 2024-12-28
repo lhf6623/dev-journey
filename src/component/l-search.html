@@ -1,6 +1,6 @@
 <template component>
   <input
-    attr:placeholder="`查询 ${isMac ? 'command':'ctrl'}+K`"
+    attr:placeholder="`搜索 ${isMac ? '⌘':'ctrl'} K`"
     list="menus"
     :value="inputValue"
     on:change="toggle"
@@ -16,7 +16,7 @@
     const menu = "l-menu";
     export const tag = "l-search";
     export default async function ({ load }) {
-      const { sys_store } = await load("../js/sys_store.js");
+      const { sys_store, mdbook, leetcode } = await load("../js/sys_store.js");
       return {
         data: {
           sys_store: {},
@@ -42,21 +42,30 @@
           },
           changeText(text) {
             // 替换 字符串后缀比如 xxx.js => xxx
-            const reg = /\.js$/;
-            return text.replace(reg, "");
+            if (this.sys_store.document_type == mdbook) {
+              const reg = /\.md$/;
+              return text.replace(reg, "");
+            }
+            if (this.sys_store.leetcode == leetcode) {
+              const reg = /\.js$/;
+              return text.replace(reg, "");
+            }
+            return "";
           },
           toggle(e) {
             const _title = e.target.value.trim();
             if (!_title) return;
+            const suffix =
+              this.sys_store.document_type == mdbook ? ".md" : ".js";
 
             const inMenu = this.sys_store.menus.reduce((pre, curr) => {
               if (pre === true) return pre;
-              return curr === `${_title}.js`;
+              return curr === `${_title}${suffix}`;
             }, false);
             if (!inMenu) return;
 
             this.inputValue = e.target.value;
-            this.sys_store.title = `${_title}.js`;
+            this.sys_store.title = `${_title}${suffix}`;
             this.inputValue = "";
           },
         },

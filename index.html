@@ -4,8 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" href="./public/favicon.ico" type="image/x-icon" />
-    <title>leetcode刷题库</title>
-    <script src="https://cdn.jsdelivr.net/gh/kirakiray/ofa.js@4.5.23/dist/ofa.js"></script>
+    <title>lhf6623个人小站</title>
+    <script src="https://cdn.jsdelivr.net/gh/kirakiray/ofa.js@4.5.26/dist/ofa.min.js"></script>
     <!-- <script src="https://cdn.jsdelivr.net/gh/kirakiray/ofa.js@4.5.23/libs/global-link/dist/global-link.min.js"></script> -->
     <script src="https://cdn.jsdelivr.net/gh/kirakiray/ofa.js@4.5.21/libs/router/dist/router.min.js"></script>
     <link rel="stylesheet" href="./src/css/tailwind-compat.css?v=0.2.3" />
@@ -59,7 +59,7 @@
           this._removeOld();
         },
       });
-      const white_list = ["l-load-md"];
+      const white_list = [];
       $.extensions.afterAttached = (el) => {
         if (
           el.tag !== "o-global-link" &&
@@ -80,7 +80,7 @@
     <o-global-link href="./src/css/public.css?v=0.2.3"></o-global-link>
     <o-global-link href="./src/css/uno.css?v=0.2.3"></o-global-link>
     <o-router fix-body>
-      <o-app src="./app-config.mjs"> </o-app>
+      <o-app src="./src/js/app-config.mjs"> </o-app>
     </o-router>
   </body>
 </html>

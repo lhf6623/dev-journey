@@ -1,14 +1,180 @@
 <template page>
-  <link rel="stylesheet" href="../css/uno.css?v=0.2.3" />
-  <div class="flex flex-col h-100vh relative">
-    <l-m src="../component/l-header.html"></l-m>
-    <l-m src="../component/l-menu.html"></l-m>
-    <l-m src="../component/l-main.html"></l-m>
+  <link rel="stylesheet" href="../css/tailwind-compat.css" />
+  <link rel="stylesheet" href="../css/public.css" />
+  <link rel="stylesheet" href="../css/uno.css" />
+  <l-m src="../component/common/l-switch.html"></l-m>
+  <l-m src="../component/common/l-button.html"></l-m>
 
-    <l-header></l-header>
-    <div class="flex-1 flex relative flex-shrink-0 overflow-hidden">
-      <l-menu class="relative h-full"></l-menu>
-      <l-main class="relative flex-1 overflow-hidden"></l-main>
+  <l-m src="../component/l-console-list.html"></l-m>
+  <l-m src="../component/l-editor.html"></l-m>
+  <div class="aaa relative h-full flex flex-col">
+    <div
+      id="main"
+      class="flex w-full relative flex-col overflow-hidden flex-1 bg-theme-bg-color"
+    >
+      <!-- 功能区 -->
+      <div class="p-3px pl-16px m-0 flex-between">
+        <p class="text-14px max-sm:hidden">{{changeText(sys_store.title)}}</p>
+        <div class="flex-between gap-x-10px *:flex-shrink-0">
+          <l-button
+            :loading="editor_store.is_reset"
+            :icon="'i-pepicons-pop:reload'"
+            on:on-click="restoreCode"
+          >
+            还原代码
+          </l-button>
+
+          <div
+            class="l-btn rounded-3px overflow-hidden px-14px h-34px flex-center gap-x-6px"
+          >
+            <p class="text-14px">实时运行</p>
+            <l-switch
+              on:change="runCodeInterval"
+              :size="'small'"
+              :checked="editor_store.is_run_interval"
+            ></l-switch>
+          </div>
+          <l-button
+            :disabled="editor_store.is_run_interval"
+            :loading="editor_store.is_run"
+            :icon="'i-solar:play-bold'"
+            on:on-click="runCode"
+          >
+            运行
+          </l-button>
+        </div>
+        <l-button
+          :icon="!isFullscreen ? 'i-tabler:arrows-maximize':'i-tabler:arrows-minimize'"
+          on:on-click="toggleFullScreen"
+        >
+        </l-button>
+      </div>
+      <!-- 编辑区 -->
+      <div
+        class="flex-1 group relative flex b overflow-hidden b-solid b-menu-hover-color"
+      >
+        <div
+          id="split-0"
+          class="relative flex-shrink-0 h-full overflow-hidden group-[.cursor-col-resize]:select-none group-[.cursor-col-resize]:pointer-events-none"
+        >
+          <l-editor></l-editor>
+        </div>
+        <div
+          id="split-1"
+          class="cursor-col-resize flex-shrink-0 w-6px overflow-hidden bg-menu-hover-color flex-center"
+        >
+          <i class="i-akar-icons:drag-vertical w-16px h-16px"></i>
+        </div>
+        <div
+          id="split-2"
+          class="group-[.cursor-col-resize]:select-none flex-shrink-0 group-[.cursor-col-resize]:pointer-events-none"
+        >
+          <l-console-list></l-console-list>
+        </div>
+      </div>
     </div>
+
+    <footer
+      class="flex-shrink-0 flex-row flex-between !*:text-#0073ff *:flex *:items-center *:cursor-pointer !*:my-8px"
+    >
+      <button class="l-btn" on:click="setNextTitle(preTitle)">
+        <x-if :value="preTitle">
+          <i class="i-mingcute:left-fill w-24px h-24px"></i>
+          <span>{{changeText(preTitle)}}</span>
+        </x-if>
+      </button>
+      <button class="l-btn" on:click="setNextTitle(nextTitle)">
+        <x-if :value="nextTitle">
+          <span>{{changeText(nextTitle)}}</span>
+          <i class="i-mingcute:right-fill w-24px h-24px"></i>
+        </x-if>
+      </button>
+    </footer>
   </div>
+
+  <script>
+    import screenfull from "https://esm.sh/screenfull@6.0.0";
+    import { Split } from "../js/util.js";
+    export default async ({ load }) => {
+      const { editor_store } = await load("../js/editor_store.js");
+      const { sys_store, changeDocumentType } = await load(
+        "../js/sys_store.js"
+      );
+      return {
+        parent: "../layout-page.html",
+        data: {
+          sys_store: {},
+          preTitle: "",
+          nextTitle: "",
+          isFullscreen: false,
+          editor_store: {},
+        },
+        loaded() {
+          changeDocumentType("leetcode");
+          Split({
+            els: [
+              this.shadow.ele.querySelector("#split-0"),
+              this.shadow.ele.querySelector("#split-1"),
+              this.shadow.ele.querySelector("#split-2"),
+            ],
+          });
+        },
+        attached() {
+          this.sys_store = sys_store;
+          this.editor_store = editor_store;
+        },
+        detached() {
+          this.sys_store = null;
+          this.editor_store = null;
+        },
+        watch: {
+          "sys_store.title"() {
+            const { menus, title } = this.sys_store || {};
+            if (title) {
+              const { is_run_interval } = this.editor_store;
+              const index = menus.findIndex((item) => item === title);
+
+              this.preTitle = menus[index - 1] || "";
+              this.nextTitle = menus[index + 1] || "";
+              if (is_run_interval) {
+                this.editor_store.is_run_interval = false;
+              }
+            }
+          },
+        },
+        proto: {
+          changeText(text) {
+            // 替换 字符串后缀比如 xxx.js => xxx
+            const reg = /\.js$/;
+            return text?.replace(reg, "");
+          },
+          setNextTitle(_title) {
+            this.sys_store.title = _title;
+          },
+          toggleFullScreen() {
+            const element = this.shadow.ele.querySelector("#main");
+
+            if (screenfull.isEnabled) {
+              screenfull.toggle(element);
+              setTimeout(() => {
+                this.isFullscreen = screenfull.isFullscreen;
+              }, 100);
+            }
+          },
+          // 还原代码
+          restoreCode() {
+            this.editor_store.is_reset = true;
+          },
+          // 运行代码
+          runCode() {
+            this.editor_store.is_run = true;
+          },
+          // 周期性运行代码
+          runCodeInterval(e) {
+            this.editor_store.is_run_interval = !e.data;
+          },
+        },
+      };
+    };
+  </script>
 </template>
