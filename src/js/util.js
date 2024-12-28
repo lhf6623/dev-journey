@@ -26,7 +26,7 @@ function getInRange(value, start, end) {
 export function getUrl(url) {
   const { origin, protocol } = location;
   if (protocol === "https:") {
-    return `https://lhf6623.github.io/leetcode/${url}`;
+    return `https://lhf6623.github.io/dev-journey/${url}`;
   }
   return `${origin}/${url}`;
 }
