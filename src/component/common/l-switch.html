@@ -102,6 +102,7 @@
         proto: {
           keydown(event) {
             if (event.keyCode === 13) {
+              this.checked = !this.checked;
               this.updateChecked();
             }
           },

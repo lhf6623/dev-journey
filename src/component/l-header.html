@@ -50,7 +50,7 @@
           <a
             class="i-mdi:github h-24px w-24px"
             target="_blank"
-            href="https://github.com/lhf6623/leetcode"
+            href="https://github.com/lhf6623/dev-journey"
           >
           </a>
         </li>
@@ -83,6 +83,7 @@
         },
         proto: {
           changeDocumentType(type) {
+            if (this.sys_store.document_type === type) return;
             this.app.goto(getUrl(`src/pages/${type}.html`));
           },
           setMenu() {
