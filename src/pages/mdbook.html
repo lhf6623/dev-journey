@@ -1,42 +1,18 @@
 <template page>
-  <!-- <link rel="stylesheet" href="../css/tailwind-compat.css" /> -->
-  <link rel="stylesheet" href="../css/public.css" />
   <link rel="stylesheet" href="../css/uno.css" />
-  <link rel="stylesheet" href="../css/highlightjs.css" />
-  <style>
-    .md {
-      position: relative;
-      overflow: auto;
-      height: 100%;
-      box-sizing: border-box;
-    }
+  <link rel="stylesheet" href="../css/highlightjs.css?v=0.2.3" />
 
-    .dark #pdf {
-      background-color: var(--theme-bg-color);
-    }
-    .bnts {
-      position: absolute;
-      right: 3px;
-    }
-    .title {
-      text-align: center;
-      margin-bottom: 0;
-      letter-spacing: 2px;
-    }
-
-    #md {
-      padding: 0 40px 40px 40px;
-    }
-  </style>
-  <link rel="stylesheet" id="link" href="#" />
-
-  <div attr:class="`md ${sys_store.theme}`">
-    <div class="bnts">
-      <button title="下载文档为PDF" on:click="getPdf">PDF</button>
-    </div>
+  <div
+    attr:class="`md ${sys_store.theme} relative overflow-auto h-full box-border`"
+  >
+    <button title="下载文档为PDF" class="fixed right-3px" on:click="getPdf">
+      PDF
+    </button>
     <div id="pdf" attr:style="`${sys_store.loading ? 'display:none;': ''}`">
-      <h1 class="title">{{sys_store.title?.replace('.md', '')}}</h1>
-      <div :html="mdTxt" id="md"></div>
+      <h1 class="title text-center mb-2px tracking-2px">
+        {{sys_store.title?.replace('.md', '')}}
+      </h1>
+      <div :html="mdTxt" id="md" class="p-40px pt-0px"></div>
     </div>
   </div>
 

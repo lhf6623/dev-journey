@@ -1,5 +1,5 @@
-// 便于管理 localStorage key 的版本
 import pkg from "../../package.json" with { type: "json" };
+
 const version = pkg.version;
 const loc = window.localStorage || localStorage
 const {parse, stringify} = JSON

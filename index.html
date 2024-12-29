@@ -5,80 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" href="./public/favicon.ico" type="image/x-icon" />
     <title>My Coding Journey</title>
-    <script src="https://cdn.jsdelivr.net/gh/kirakiray/ofa.js@4.5.26/dist/ofa.min.js"></script>
-    <!-- <script src="https://cdn.jsdelivr.net/gh/kirakiray/ofa.js@4.5.23/libs/global-link/dist/global-link.min.js"></script> -->
-    <script src="https://cdn.jsdelivr.net/gh/kirakiray/ofa.js@4.5.21/libs/router/dist/router.min.js"></script>
-    <link rel="stylesheet" href="./src/css/tailwind-compat.css?v=0.2.3" />
-    <link rel="stylesheet" href="./src/css/public.css?v=0.2.3" />
-    <link rel="stylesheet" href="./src/css/uno.css?v=0.2.3" />
-
-    <script>
-      const globalLinks = []; // 需要添加的 global style link
-
-      const OLDHREF = Symbol("oldHref");
-
-      $.register({
-        tag: "o-global-link",
-        attrs: {
-          href: "",
-        },
-        watch: {
-          href() {
-            this._adjustLink();
-          },
-        },
-        proto: {
-          _removeOld() {
-            if (this[OLDHREF]) {
-              // 去掉旧的份额
-              const oldIndex = globalLinks.indexOf(this[OLDHREF]);
-
-              if (oldIndex > -1) {
-                globalLinks.splice(oldIndex, 1);
-              }
-            }
-          },
-          _adjustLink() {
-            const fixedHref = new URL(this.href, location).href;
-
-            if (this[OLDHREF] === fixedHref) {
-              return;
-            }
-
-            this._removeOld();
-
-            this[OLDHREF] = fixedHref;
-
-            globalLinks.push(fixedHref); // 添加到份额内
-          },
-        },
-        attached() {
-          this._adjustLink();
-        },
-        detached() {
-          this._removeOld();
-        },
-      });
-      const white_list = [];
-      $.extensions.afterAttached = (el) => {
-        if (
-          el.tag !== "o-global-link" &&
-          !white_list.includes(el.tag) &&
-          el.shadow
-        ) {
-          // 添加 globalLink
-          globalLinks.forEach((href) => {
-            el.shadow.push(`<link rel="stylesheet" href="${href}">`);
-          });
-        }
-      };
-    </script>
+    <script src="https://cdn.jsdelivr.net/gh/kirakiray/ofa.js@4.5.27/dist/ofa.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/kirakiray/ofa.js@4.5.27/libs/router/dist/router.min.js"></script>
+    <link rel="stylesheet" href="./src/css/public.css?v=0.2.4" />
+    <script src="./src/js/global-link.mjs" type="module"></script>
   </head>
 
   <body>
-    <o-global-link href="./src/css/tailwind-compat.css?v=0.2.3"></o-global-link>
-    <o-global-link href="./src/css/public.css?v=0.2.3"></o-global-link>
-    <o-global-link href="./src/css/uno.css?v=0.2.3"></o-global-link>
+    <o-global-link href="./src/css/tailwind-compat.css"></o-global-link>
+    <o-global-link href="./src/css/public.css"></o-global-link>
+    <o-global-link href="./src/css/uno.css"></o-global-link>
     <o-router fix-body>
       <o-app src="./src/js/app-config.mjs"> </o-app>
     </o-router>

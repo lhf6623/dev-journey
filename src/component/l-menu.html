@@ -54,10 +54,13 @@
         },
         async loaded() {
           const { menus, title } = this.sys_store;
-          const index = menus.indexOf(title);
-          if (index >= 0) {
-            const _title = menus[index];
-            this.toggle(_title);
+
+          if (menus) {
+            const index = menus.indexOf(title);
+            if (index >= 0) {
+              const _title = menus[index];
+              this.toggle(_title);
+            }
           }
         },
         proto: {
