@@ -1,4 +1,7 @@
 <template component>
+  <link href="../css/codemirror/codemirror.css" rel="stylesheet" />
+  <link href="../css/codemirror/monokai.css" rel="stylesheet" />
+  <link href="../css/codemirror/foldgutter.css" rel="stylesheet" />
   <style>
     /** 注释 */
     .ͼ24 {
@@ -146,9 +149,6 @@
   </div>
 
   <script type="module">
-    import { basicSetup, EditorView } from "https://esm.sh/codemirror@6.0.1";
-    import { javascript } from "https://esm.sh/@codemirror/lang-javascript@6.0.1";
-
     export const tag = "l-editor";
     export default async function ({ load }) {
       const { setEditorCode, editor_store } = await load(
@@ -164,6 +164,15 @@
           editor_store: {},
         },
         watch: {
+          "sys_store.theme"(value) {
+            if (editor) {
+              console.log(this.sys_store.theme, value);
+              const isDark = this.sys_store.theme == "dark";
+              console.log(isDark);
+
+              editor.setOption("theme", isDark ? "monokai" : "default");
+            }
+          },
           "editor_store.is_reset"() {
             if (this.editor_store?.is_reset) {
               setEditorCode(this.sys_store.content);
@@ -195,26 +204,32 @@
           },
         },
         loaded() {
-          editor = new EditorView({
-            doc: this.editor_store.editor_code || this.sys_store.content,
-            extensions: [
-              basicSetup,
-              javascript(),
-              EditorView.updateListener.of((update) => {
-                if (update.changes) {
-                  clearTimeout(timeoutId);
-                  timeoutId = setTimeout(() => {
-                    setEditorCode(editor.state.doc.toString());
-                  }, 300);
-                }
-              }),
-            ],
-            parent: this.shadow.ele.querySelector("#code"),
+          const value = this.editor_store.editor_code || this.sys_store.content;
+          editor = CodeMirror(this.shadow.ele.querySelector("#code"), {
+            value,
+            mode: "javascript",
+            autoCloseBrackets: true,
+            // 行号
+            lineNumbers: true,
+            // 活动行
+            styleActiveLine: true,
+            // 匹配括号
+            matchBrackets: true,
+            // 自动换行
+            // lineWrapping: true,
+            // 折叠
+            extraKeys: {
+              "Ctrl-Q": function (cm) {
+                cm.foldCode(cm.getCursor());
+              },
+            },
+            foldGutter: true,
+            gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
           });
-          // 网页一打开就聚焦到编辑器
-          setTimeout(() => {
-            editor.focus();
-          }, 300);
+
+          this.selectTheme();
+          // 自动聚焦
+          editor.focus();
         },
         attached() {
           this.sys_store = sys_store;
@@ -225,15 +240,15 @@
           this.editor_store = null;
         },
         proto: {
+          selectTheme() {
+            const isDark = this.sys_store.theme == "dark";
+
+            editor.setOption("theme", isDark ? "monokai" : "default");
+          },
           changeEditorCode(code) {
-            let transaction = editor.state.update({
-              changes: {
-                from: 0,
-                to: editor.state.doc.length,
-                insert: code ?? "",
-              },
-            });
-            editor.dispatch(transaction);
+            if (editor) {
+              editor.setValue(code);
+            }
           },
         },
       };

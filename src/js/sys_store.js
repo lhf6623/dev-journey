@@ -52,6 +52,8 @@ export const handleFileSuffix = (textName) => {
 };
 
 export const changeDocumentType = (val) => {
+  if (sys_store.document_type === val) return;
+
   const is_md = val === mdbook;
   const _menu = is_md ? mdbook_menu : leetcode_menu;
   const _title = _menu[0];

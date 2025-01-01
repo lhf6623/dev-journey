@@ -7,7 +7,11 @@
   },
   "devDependencies": {
     "@unocss/cli": "^0.65.3",
-    "unocss": "^0.65.3"
+    "unocss": "^0.65.3",
+    "@codemirror/lang-javascript": "^6.2.2",
+    "@codemirror/state": "^6.5.0",
+    "@uiw/codemirror-theme-vscode": "^4.23.7",
+    "codemirror": "^6.0.1"
   },
   "dependencies": {
     "@unocss/reset": "^0.65.3"
