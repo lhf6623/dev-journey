@@ -39,6 +39,18 @@ export const sys_store = $.stanz({
   theme: Cache.getItem(THEME_KEY) ?? sys_theme,
 });
 
+export const handleFileSuffix = (textName) => {
+  if (!textName) return "";
+
+  // 替换 字符串后缀比如 xxx.js => xxx
+  let reg = /\.md$/;
+
+  if (sys_store.document_type == leetcode) {
+    reg = /\.js$/;
+  }
+  return textName.replace(reg, "");
+};
+
 export const changeDocumentType = (val) => {
   const is_md = val === mdbook;
   const _menu = is_md ? mdbook_menu : leetcode_menu;

@@ -13,10 +13,11 @@
     </x-fill>
   </datalist>
   <script type="module">
-    const menu = "l-menu";
     export const tag = "l-search";
     export default async function ({ load }) {
-      const { sys_store, mdbook, leetcode } = await load("../js/sys_store.js");
+      const { sys_store, mdbook, leetcode, handleFileSuffix } = await load(
+        "../js/sys_store.js"
+      );
       return {
         data: {
           sys_store: {},
@@ -40,15 +41,7 @@
               this.shadow.ele.querySelector("input").focus();
             }
           },
-          changeText(text) {
-            // 替换 字符串后缀比如 xxx.js => xxx
-            let reg = /\.md$/;
-
-            if (this.sys_store.document_type == leetcode) {
-              reg = /\.js$/;
-            }
-            return text.replace(reg, "");
-          },
+          changeText: handleFileSuffix,
           toggle(e) {
             const _title = e.target.value.trim();
             if (!_title) return;

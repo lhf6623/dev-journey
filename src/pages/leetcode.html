@@ -97,7 +97,7 @@
     import { Split } from "../js/util.js";
     export default async ({ load }) => {
       const { editor_store } = await load("../js/editor_store.js");
-      const { sys_store, changeDocumentType } = await load(
+      const { sys_store, changeDocumentType, handleFileSuffix } = await load(
         "../js/sys_store.js"
       );
       return {
@@ -143,11 +143,7 @@
           },
         },
         proto: {
-          changeText(text) {
-            // 替换 字符串后缀比如 xxx.js => xxx
-            const reg = /\.js$/;
-            return text?.replace(reg, "");
-          },
+          changeText: handleFileSuffix,
           setNextTitle(_title) {
             this.sys_store.title = _title;
           },

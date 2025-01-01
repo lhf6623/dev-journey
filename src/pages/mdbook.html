@@ -1,13 +1,19 @@
 <template page>
   <link rel="stylesheet" href="../css/uno.css" />
   <link rel="stylesheet" href="../css/highlightjs.css?v=0.2.3" />
+  <l-m src="../component/common/l-button.html"></l-m>
 
   <div
     attr:class="`md ${sys_store.theme} relative overflow-auto h-full box-border`"
   >
-    <button title="下载文档为PDF" class="fixed right-3px" on:click="getPdf">
-      PDF
-    </button>
+    <l-button
+      title="下载文档为PDF"
+      class="fixed right-3px mt-3px bg-amber dark:bg-blue rounded-3px"
+      :icon="'i-tabler:pdf'"
+      on:on-click="getPdf"
+    >
+    </l-button>
+
     <div id="pdf" attr:style="`${sys_store.loading ? 'display:none;': ''}`">
       <h1 class="title text-center mb-2px tracking-2px">
         {{sys_store.title?.replace('.md', '')}}

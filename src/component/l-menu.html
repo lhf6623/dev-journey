@@ -22,8 +22,9 @@
     </ul>
   </aside>
   <script type="module">
+    export const tag = "l-menu";
     export default async function ({ load }) {
-      const { sys_store } = await load("../js/sys_store.js");
+      const { sys_store, handleFileSuffix } = await load("../js/sys_store.js");
       return {
         data: {
           sys_store: {},
@@ -79,11 +80,7 @@
               }
             }, 300);
           },
-          changeText(text) {
-            // 替换 字符串后缀比如 xxx.js => xxx
-            const reg = /\.js$/;
-            return text.replace(reg, "");
-          },
+          changeText: handleFileSuffix,
           setMenu() {
             this.sys_store.is_show_menu = false;
           },
