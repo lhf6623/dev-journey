@@ -91,6 +91,13 @@
           this.selectTheme();
           // 自动聚焦
           editor.focus();
+
+          // 监听内容变化
+          editor.on("change", (instance, changeObj) => {
+            const content = editor.getValue();
+
+            setEditorCode(content);
+          });
         },
         attached() {
           this.sys_store = sys_store;
