@@ -2,10 +2,10 @@
   <link href="../css/codemirror/codemirror.css" rel="stylesheet" />
   <link href="../css/codemirror/monokai.css" rel="stylesheet" />
   <link href="../css/codemirror/foldgutter.css" rel="stylesheet" />
-  <div attr:class="`${sys_store.loading ? '!h-0 overflow-hidden' : 'h-full'}`">
+  <div attr:class="`${sys_store.loading ? '!h0 overflow-hidden' : 'hfull'}`">
     <div
       id="code"
-      attr:class="`${sys_store.theme} h-full relative *:h-full`"
+      attr:class="`${sys_store.theme} hfull relative *:hfull`"
     ></div>
   </div>
 
@@ -26,10 +26,8 @@
         },
         watch: {
           "sys_store.theme"(value) {
-            if (editor) {
-              console.log(this.sys_store.theme, value);
+            if (editor && this.sys_store) {
               const isDark = this.sys_store.theme == "dark";
-              console.log(isDark);
 
               editor.setOption("theme", isDark ? "monokai" : "default");
             }

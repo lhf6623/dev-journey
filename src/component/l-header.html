@@ -3,7 +3,7 @@
   <l-m src="./common/l-button.html"></l-m>
 
   <header
-    class="z-10 relative h-50px !px-18px flex-shrink-0 b b-menu-hover-color flex-center"
+    class="z10 relative h50px !px18px flex-shrink-0 b b-menu-hover-color flex-center"
   >
     <x-if :value="sys_store.is_small">
       <l-button
@@ -15,7 +15,7 @@
       </l-button>
     </x-if>
     <div
-      class="flex-center ml-3px *:bg-transparent *:px-10px *:py-3px *:whitespace-nowrap *:text-12px"
+      class="flex-center ml3px *:bg-transparent *:px10px *:py3px *:whitespace-nowrap *:text-12px"
     >
       <button
         b="1px solid menu-border"
@@ -31,9 +31,12 @@
       >
         文档
       </button>
+      <span class="text-blueGray">
+        共【{{sys_store.menus?.length || 0}}】篇
+      </span>
     </div>
-    <nav class="h-full w-full flex items-center justify-end">
-      <ul class="h-full gap-x-8px m-0 flex-center">
+    <nav class="hfull wfull flex items-center justify-end">
+      <ul class="hfull gap-x-8px m0 flex-center">
         <li>
           <l-search></l-search>
         </li>
@@ -48,18 +51,22 @@
         </li>
         <li>
           <a
-            class="i-mdi:github h-24px w-24px"
+            class="rounded-full overflow-hidden flex-center h24px w24px"
             target="_blank"
+            tabindex="0"
             href="https://github.com/lhf6623/dev-journey"
           >
+            <i class="i-mdi:github h24px w24px inline-block"></i>
           </a>
         </li>
         <li>
           <a
-            class="i-tabler:brand-leetcode w-24px h-24px"
+            class="rounded-full overflow-hidden flex-center h24px w24px"
             target="_blank"
+            tabindex="0"
             href="https://leetcode.cn/u/dalichuqiji/"
           >
+            <i class="i-tabler:brand-leetcode h24px w24px inline-block"></i>
           </a>
         </li>
       </ul>

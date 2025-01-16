@@ -1,10 +1,6 @@
 [un-cloak] {
   display: none;
 }
-html,
-body {
-  height: 100%;
-}
 
 html {
   --theme-bg-color: #fff;
@@ -15,15 +11,12 @@ html {
 }
 
 html.dark {
+  color-scheme: dark;
   --theme-bg-color: #222;
   --text-base-color: #fff;
   --text-color: #dedede;
   --border-color: #767676;
   --bg-hover-color: rgb(50, 50, 50);
-}
-
-.dark {
-  color-scheme: dark;
 }
 
 [tabindex]:focus-visible,

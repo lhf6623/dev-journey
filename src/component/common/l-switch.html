@@ -9,7 +9,7 @@
       <input
         type="checkbox"
         attr:disabled="loading || disabled"
-        class="peer op-0 w-0 h-0 focus-visible:outline-none"
+        class="peer op0 w0 h0 focus-visible:outline-none"
         on:change="updateChecked"
         tabindex="-1"
         sync:checked="checked"
@@ -36,18 +36,18 @@
     const size = {
       small: {
         button:
-          "h-14px w-14px active:w-20px peer-checked:active:translate-x-8px rounded-14px peer-checked:translate-x-14px",
-        rail: "h-18px w-32px rounded-18px",
+          "h14px w14px active:w20px peer-checked:active:translate-x-8px rounded-14px peer-checked:translate-x-14px",
+        rail: "h18px w32px rounded-18px",
       },
       medium: {
         button:
-          "h-18px w-18px active:w-24px peer-checked:active:translate-x-12px rounded-18px peer-checked:translate-x-18px",
-        rail: "h-22px w-40px rounded-22px",
+          "h18px w18px active:w24px peer-checked:active:translate-x-12px rounded-18px peer-checked:translate-x-18px",
+        rail: "h22px w40px rounded-22px",
       },
       large: {
         button:
-          "h-22px w-22px active:w-28px peer-checked:active:translate-x-16px rounded-22px peer-checked:translate-x-22px",
-        rail: "h-26px w-48px rounded-26px",
+          "h22px w22px active:w28px peer-checked:active:translate-x-16px rounded-22px peer-checked:translate-x-22px",
+        rail: "h26px w48px rounded-26px",
       },
     };
     export const tag = "l-switch";

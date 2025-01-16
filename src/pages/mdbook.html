@@ -4,21 +4,22 @@
   <l-m src="../component/common/l-button.html"></l-m>
 
   <div
-    attr:class="`md ${sys_store.theme} relative overflow-auto h-full box-border`"
+    attr:class="`md ${sys_store.theme} flex justify-center relative overflow-auto hfull box-border flex`"
   >
     <l-button
       title="下载文档为PDF"
-      class="fixed right-3px mt-3px bg-amber dark:bg-blue rounded-3px"
+      class="fixed right-3px mt3px bg-amber dark:bg-blue rounded-3px"
       :icon="'i-tabler:pdf'"
       on:on-click="getPdf"
     >
     </l-button>
-
-    <div id="pdf" attr:style="`${sys_store.loading ? 'display:none;': ''}`">
-      <h1 class="title text-center mb-2px tracking-2px">
-        {{sys_store.title?.replace('.md', '')}}
-      </h1>
-      <div :html="mdTxt" id="md" class="p-40px pt-0px"></div>
+    <div
+      id="pdf"
+      class="bg-theme-bg-color max-w794px"
+      attr:style="`${sys_store.loading ? 'display:none;': ''}`"
+    >
+      <h1 class="text-center mb2px tracking-2px">{{getTitle()}}</h1>
+      <div :html="mdTxt" id="md" class="p40px pt0px"></div>
     </div>
   </div>
 
@@ -75,6 +76,9 @@
           }, 100);
         },
         proto: {
+          getTitle() {
+            return this.sys_store.title?.replace(".md", "");
+          },
           // 滚动到顶
           scrollToTop() {
             const ele = this.shadow.ele;
@@ -113,7 +117,8 @@
                 );
                 x += pdf_page_h;
               }
-              doc.save(`${this.sys_store.title.replace("md", "pdf")}`);
+              const title = `${this.getTitle()}.pdf`;
+              doc.save(title);
             });
           },
         },

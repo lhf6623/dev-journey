@@ -7,13 +7,13 @@
 
   <l-m src="../component/l-console-list.html"></l-m>
   <l-m src="../component/l-editor.html"></l-m>
-  <div class="relative h-full flex flex-col">
+  <div class="relative hfull flex flex-col">
     <div
       id="main"
-      class="flex w-full relative flex-col overflow-hidden flex-1 bg-theme-bg-color"
+      class="flex wfull relative flex-col overflow-hidden flex-1 bg-theme-bg-color"
     >
       <!-- 功能区 -->
-      <div class="p-3px pl-16px m-0 flex-between">
+      <div class="p3px pl16px m0 flex-between">
         <p class="text-14px max-sm:hidden">{{changeText(sys_store.title)}}</p>
         <div class="flex-between gap-x-10px *:flex-shrink-0">
           <l-button
@@ -25,7 +25,7 @@
           </l-button>
 
           <div
-            class="l-btn rounded-3px overflow-hidden px-14px h-34px flex-center gap-x-6px"
+            class="l-btn rounded-3px overflow-hidden px14px h34px flex-center gap-x-6px"
           >
             <p class="text-14px">实时运行</p>
             <l-switch
@@ -55,15 +55,15 @@
       >
         <div
           id="split-0"
-          class="relative flex-shrink-0 h-full overflow-hidden group-[.cursor-col-resize]:select-none group-[.cursor-col-resize]:pointer-events-none"
+          class="relative flex-shrink-0 hfull overflow-hidden group-[.cursor-col-resize]:select-none group-[.cursor-col-resize]:pointer-events-none"
         >
           <l-editor></l-editor>
         </div>
         <div
           id="split-1"
-          class="cursor-col-resize flex-shrink-0 w-6px overflow-hidden bg-menu-hover-color flex-center"
+          class="cursor-col-resize flex-shrink-0 w6px overflow-hidden bg-menu-hover-color flex-center"
         >
-          <i class="i-akar-icons:drag-vertical w-16px h-16px"></i>
+          <i class="i-akar-icons:drag-vertical w16px h16px"></i>
         </div>
         <div
           id="split-2"
@@ -75,18 +75,18 @@
     </div>
 
     <footer
-      class="flex-shrink-0 flex-row flex-between !*:text-#0073ff *:flex *:items-center *:cursor-pointer !*:my-8px"
+      class="flex-shrink-0 flex-row flex-between !*:text-#0073ff *:flex *:items-center *:cursor-pointer !*:my8px"
     >
       <button class="l-btn" on:click="setNextTitle(preTitle)">
         <x-if :value="preTitle">
-          <i class="i-mingcute:left-fill w-24px h-24px"></i>
+          <i class="i-mingcute:left-fill w24px h24px"></i>
           <span>{{changeText(preTitle)}}</span>
         </x-if>
       </button>
       <button class="l-btn" on:click="setNextTitle(nextTitle)">
         <x-if :value="nextTitle">
           <span>{{changeText(nextTitle)}}</span>
-          <i class="i-mingcute:right-fill w-24px h-24px"></i>
+          <i class="i-mingcute:right-fill w24px h24px"></i>
         </x-if>
       </button>
     </footer>

@@ -12,7 +12,7 @@ export default defineConfig({
     presetUno(),
     presetAttributify(),
     presetIcons({
-      cdn: "https://esm.sh/",
+      // cdn: "https://esm.sh/",  unocss 提示会被阻塞，使用本地图标
       extraProperties: {
         display: "inline-block",
         "vertical-align": "middle",
