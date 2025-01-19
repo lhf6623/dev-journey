@@ -158,3 +158,49 @@
     text-decoration: underline;
   }
 }
+
+.hljs {
+  padding-top: 54px !important;
+  border: 1px solid rgb(209 209 209);
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+}
+.cus-title {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 9px 16px;
+  height: 24px;
+
+  color: rgb(12 12 12);
+  background: rgb(232 232 232);
+  border-bottom: 1px solid rgb(209 209 209);
+
+  .copy-btn {
+    display: none;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+  }
+}
+.hljs:hover {
+  .copy-btn {
+    /* display: block; */
+  }
+}
+
+.dark {
+  .hljs {
+    border: 1px solid rgb(59 59 59);
+  }
+  .cus-title {
+    color: rgb(255 255 255);
+    background: rgb(37 37 38);
+    border-bottom: 1px solid rgb(59 59 59);
+  }
+}

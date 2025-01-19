@@ -1,5 +1,3 @@
-# sse 实现
-
 ### 后端代码
 
 ```js
@@ -59,7 +57,7 @@ app.listen(PORT, () => {
     <div id="messages"></div>
 
     <script>
-      const eventSource = new EventSource("http://localhost:3300/sse1");
+      const eventSource = new EventSource("http://localhost:3300/sse");
 
       eventSource.onmessage = function (event) {
         console.log("Received data:", event.data);

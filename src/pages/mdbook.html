@@ -2,21 +2,18 @@
   <link rel="stylesheet" href="../css/uno.css" />
   <link rel="stylesheet" href="../css/highlightjs.css?v=0.2.3" />
   <l-m src="../component/common/l-button.html"></l-m>
-
-  <div
-    attr:class="`md ${sys_store.theme} flex justify-center relative overflow-auto hfull box-border flex`"
-  >
+  <div attr:class="`md ${sys_store.theme} relative hfull overflow-auto`">
     <l-button
       title="下载文档为PDF"
-      class="fixed right-3px mt3px bg-amber dark:bg-blue rounded-3px"
+      class="fixed right-3px mt3px bg-amber dark:bg-blue rounded-3px z100"
       :icon="'i-tabler:pdf'"
       on:on-click="getPdf"
     >
     </l-button>
     <div
       id="pdf"
-      class="bg-theme-bg-color max-w794px"
-      attr:style="`${sys_store.loading ? 'display:none;': ''}`"
+      class="bg-theme-bg-color relative max-w794px mx-auto"
+      attr:style="`display: ${sys_store.loading ? 'none': 'inherit'}`"
     >
       <h1 class="text-center mb2px tracking-2px">{{getTitle()}}</h1>
       <div :html="mdTxt" id="md" class="p40px pt0px"></div>
@@ -57,6 +54,16 @@
         detached() {
           this.sys_store = null;
         },
+        ready() {
+          const copy = "i-ci:copy";
+          const complete = "i-ci:check";
+
+          // 给按钮添加事件
+          const dom = this.shadow.ele.querySelector(".md");
+          dom.addEventListener("click", (e) => {
+            console.log(e);
+          });
+        },
         attached() {
           this.sys_store = sys_store;
           marked = new Marked(
@@ -65,8 +72,11 @@
               langPrefix: "hljs language-",
               highlight(code, lang, info) {
                 const language = hljs.getLanguage(lang) ? lang : "plaintext";
-
-                return hljs.highlight(code, { language }).value;
+                const value = hljs.highlight(code, { language }).value;
+                // 把特殊字符 比如 < 转义一下
+                const _code = encodeURI(code);
+                const _value = `<div class="cus-title"><span>${language}</span><button data-code="${_code}" class="copy-btn"><i class="i-ci:copy mr6px"></i>复制</button></div>${value}`;
+                return _value;
               },
             })
           );
