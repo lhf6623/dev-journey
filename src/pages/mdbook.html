@@ -8,6 +8,7 @@
       class="fixed right-3px mt3px bg-amber dark:bg-blue rounded-3px z100"
       :icon="'i-tabler:pdf'"
       on:on-click="getPdf"
+      :loading="pdfLoading"
     >
     </l-button>
     <div
@@ -16,7 +17,7 @@
       attr:style="`display: ${sys_store.loading ? 'none': 'inherit'}`"
     >
       <h1 class="text-center mb2px tracking-2px">{{getTitle()}}</h1>
-      <div :html="mdTxt" id="md" class="p40px pt0px"></div>
+      <div :html="mdTxt" id="md" class="p40px pt0px all:transition-200"></div>
     </div>
   </div>
 
@@ -33,11 +34,13 @@
       );
 
       let marked = null;
+      let tim = null;
       return {
         parent: "../layout-page.html",
         data: {
           mdTxt: "加载中。。。",
           sys_store: {},
+          pdfLoading: false,
         },
         watch: {
           "sys_store.content"(data) {
@@ -53,16 +56,10 @@
         },
         detached() {
           this.sys_store = null;
+          this.shadow.off("click", this.copyCode);
         },
         ready() {
-          const copy = "i-ci:copy";
-          const complete = "i-ci:check";
-
-          // 给按钮添加事件
-          const dom = this.shadow.ele.querySelector(".md");
-          dom.addEventListener("click", (e) => {
-            console.log(e);
-          });
+          this.shadow.on("click", this.copyCode);
         },
         attached() {
           this.sys_store = sys_store;
@@ -75,7 +72,7 @@
                 const value = hljs.highlight(code, { language }).value;
                 // 把特殊字符 比如 < 转义一下
                 const _code = encodeURI(code);
-                const _value = `<div class="cus-title"><span>${language}</span><button data-code="${_code}" class="copy-btn"><i class="i-ci:copy mr6px"></i>复制</button></div>${value}`;
+                const _value = `<div class="cus-title"><span>${language}</span><button data-code="${_code}" class="copy-btn">复制</button></div>${value}`;
                 return _value;
               },
             })
@@ -86,6 +83,32 @@
           }, 100);
         },
         proto: {
+          copyCode(e) {
+            const color = "text-#18a058";
+            let el = e.target;
+
+            const isButton = (_el) =>
+              _el.tagName === "BUTTON" && _el.className.includes("copy-btn");
+
+            if (!isButton(el)) return;
+
+            const code = decodeURI(el.dataset.code);
+            if (tim) {
+              clearTimeout(tim);
+              tim = null;
+            }
+
+            navigator.clipboard.writeText(code).then(() => {
+              el.textContent = "已复制";
+              el.classList.toggle(color);
+
+              tim = setTimeout(() => {
+                el.textContent = "复制";
+                el.classList.toggle(color);
+                tim = null;
+              }, 2000);
+            });
+          },
           getTitle() {
             return this.sys_store.title?.replace(".md", "");
           },
@@ -102,6 +125,7 @@
             let ele = this.shadow.ele;
             let mdDom = ele.querySelector("#pdf");
             let doc = new jsPDF();
+            this.pdfLoading = true;
 
             html2canvas(mdDom).then((canvas) => {
               let imgData = canvas.toDataURL("image/png");
@@ -129,6 +153,7 @@
               }
               const title = `${this.getTitle()}.pdf`;
               doc.save(title);
+              this.pdfLoading = false;
             });
           },
         },

@@ -177,9 +177,9 @@
   padding: 9px 16px;
   height: 24px;
 
-  color: rgb(12 12 12);
-  background: rgb(232 232 232);
-  border-bottom: 1px solid rgb(209 209 209);
+  color: #0c0c0c;
+  background: #e8e8e8;
+  border-bottom: 1px solid #d1d1d1;
 
   .copy-btn {
     display: none;
@@ -190,17 +190,17 @@
 }
 .hljs:hover {
   .copy-btn {
-    /* display: block; */
+    display: block;
   }
 }
 
 .dark {
   .hljs {
-    border: 1px solid rgb(59 59 59);
+    border: 1px solid #3b3b3b;
   }
   .cus-title {
-    color: rgb(255 255 255);
-    background: rgb(37 37 38);
-    border-bottom: 1px solid rgb(59 59 59);
+    color: #ffffff;
+    background: #252526;
+    border-bottom: 1px solid #3b3b3b;
   }
 }
