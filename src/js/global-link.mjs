@@ -1,4 +1,4 @@
-import pkg from "../../package.json" with { type: "json" };
+import { version } from "./util.js";
 
 const globalLinks = []; // 需要添加的 global style link
 
@@ -28,7 +28,7 @@ $.register({
       }
     },
     _adjustLink() {
-      const fixedHref = `${new URL(this.href, location).href}?v=${pkg.version}`;
+      const fixedHref = `${new URL(this.href, location).href}?v=${version}`;
 
       if (this[OLDHREF] === fixedHref) {
         return;

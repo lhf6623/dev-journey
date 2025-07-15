@@ -4,29 +4,27 @@
 
 - 默认插槽
 
-```vue
+```html
 <!-- <MyComponent> 的模板 -->
 <div>
   <slot :text="greetingMessage" :count="1"></slot>
 </div>
 ```
 
-```vue
-<MyComponent v-slot="{ text, count }">
-  {{ text }} {{ count }}
-</MyComponent>
+```html
+<MyComponent v-slot="{ text, count }"> {{ text }} {{ count }} </MyComponent>
 ```
 
 - 具名插槽
 
-```vue
+```html
 <!-- <MyComponent> 的模板 -->
 <div>
   <slot name="footer" :text="greetingMessage" :count="1"></slot>
 </div>
 ```
 
-```vue
+```html
 <MyComponent>
   <template #footer="{text, count}">
     <p>{{ text }}{{ count }}</p>

@@ -1,6 +1,9 @@
 import { v4 as uuidv4 } from "https://esm.sh/uuid@10.0.0";
 import { inRange } from "https://esm.sh/lodash-es@4.17.21";
+import pkg from "../../package.json" with { type: "json" };
 
+
+export const { version, name } = pkg;
 /**
  * 获取开始到结束的值，如果大于或小于 start 或 end，则返回 start 或 end
  * @param {Number} start

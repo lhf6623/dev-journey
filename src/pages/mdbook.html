@@ -11,11 +11,7 @@
       :loading="pdfLoading"
     >
     </l-button>
-    <div
-      id="pdf"
-      class="bg-theme-bg-color relative max-w794px mx-auto"
-      attr:style="`display: ${sys_store.loading ? 'none': 'inherit'}`"
-    >
+    <div id="pdf" class="bg-theme-bg-color relative max-w794px mx-auto">
       <h1 class="text-center mb2px tracking-2px">{{getTitle()}}</h1>
       <div :html="mdTxt" id="md" class="p40px pt0px all:transition-200"></div>
     </div>

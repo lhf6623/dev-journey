@@ -149,13 +149,11 @@
           },
           toggleFullScreen() {
             const element = this.shadow.ele.querySelector("#main");
+            if (!screenfull.isEnabled) return;
 
-            if (screenfull.isEnabled) {
-              screenfull.toggle(element);
-              setTimeout(() => {
-                this.isFullscreen = screenfull.isFullscreen;
-              }, 100);
-            }
+            screenfull.toggle(element).then(() => {
+              this.isFullscreen = screenfull.isFullscreen;
+            });
           },
           // 还原代码
           restoreCode() {
