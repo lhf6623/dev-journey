@@ -8,19 +8,18 @@
   <div class="flex flex-col h100vh relative">
     <l-header></l-header>
     <div class="flex-1 wfull flex relative flex-shrink-0 overflow-hidden">
+      <x-if :value="sys_store.loading">
+        <div
+          class="absolute z-999 bg-#00000009 top-0 left-0 wfull hfull flex-center"
+        >
+          <i class="i-eos-icons:bubble-loading w60px h60px text-#3498db"></i>
+        </div>
+      </x-if>
       <l-menu class="relative hfull"></l-menu>
       <main
         b="l l-solid l-menu-hover-color"
         class="relative hfull wfull bg-theme-bg-color"
       >
-        <x-if :value="sys_store.loading">
-          <div
-            class="absolute z-999 bg-#00000009 top-0 left-0 wfull hfull flex-center"
-          >
-            <i class="i-eos-icons:bubble-loading w60px h60px text-#3498db"></i>
-          </div>
-        </x-if>
-
         <slot></slot>
       </main>
     </div>
@@ -28,7 +27,7 @@
 
   <script type="module">
     export default async ({ load }) => {
-      const { sys_store } = await load("./js/sys_store.js");
+      const { sys_store, refreshTheme } = await load("./store/system.js");
       return {
         data: {
           currentPage: "",
@@ -36,10 +35,19 @@
         },
         attached() {
           this.sys_store = sys_store;
+          // 监听浏览器颜色主题变化
+          window
+            .matchMedia("(prefers-color-scheme: dark)")
+            .addEventListener("change", ({ matches }) => {
+              refreshTheme(matches ? dark : light);
+            });
+
+          refreshTheme();
         },
         detached() {
           this.sys_store = null;
         },
+        proto: {},
       };
     };
   </script>

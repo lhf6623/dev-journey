@@ -24,9 +24,11 @@
     </ul>
   </aside>
   <script type="module">
+    import { throttle } from "https://esm.sh/lodash-es@4.17.21";
     export const tag = "l-menu";
     export default async function ({ load }) {
-      const { sys_store, handleFileSuffix } = await load("../js/sys_store.js");
+      const { sys_store, handleFileSuffix, setContent, setSysTitle } =
+        await load("../store/system.js");
       return {
         data: {
           sys_store: {},
@@ -51,6 +53,8 @@
         },
         attached() {
           this.sys_store = sys_store;
+          window.addEventListener("resize", throttle(this.setShowMenu, 300));
+          this.setShowMenu();
         },
         detached() {
           this.sys_store = null;
@@ -67,6 +71,11 @@
           }
         },
         proto: {
+          setShowMenu: () => {
+            const width = window.innerWidth;
+            sys_store.is_small = width < 960;
+            sys_store.is_show_menu = width >= 960;
+          },
           scrollToViewport() {
             setTimeout(() => {
               const scroll = this.shadow.ele.querySelector("aside");
@@ -94,7 +103,7 @@
           toggle(_title) {
             this.setMenu();
             setTimeout(() => {
-              this.sys_store.title = _title;
+              setSysTitle(_title);
             }, 0);
           },
         },

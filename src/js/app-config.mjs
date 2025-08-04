@@ -1,5 +1,3 @@
-import { sys_store } from "./sys_store.js";
-
 export const home = "../pages/leetcode.html";
 
 export const fail = ({ src, error }) => {

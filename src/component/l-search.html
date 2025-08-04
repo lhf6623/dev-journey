@@ -1,6 +1,6 @@
 <template component>
   <input
-    attr:placeholder="`搜索 ${isMac ? '⌘':'ctrl'} K`"
+    attr:placeholder="`搜索 ${isMac ? '⌘':'Ctrl'} K`"
     list="menus"
     :value="inputValue"
     on:change="toggle"
@@ -15,9 +15,8 @@
   <script type="module">
     export const tag = "l-search";
     export default async function ({ load }) {
-      const { sys_store, mdbook, leetcode, handleFileSuffix } = await load(
-        "../js/sys_store.js"
-      );
+      const { sys_store, mdbook, leetcode, handleFileSuffix, setSysTitle } =
+        await load("../store/system.js");
       return {
         data: {
           sys_store: {},
@@ -42,7 +41,7 @@
             }
           },
           changeText: handleFileSuffix,
-          toggle(e) {
+          async toggle(e) {
             const _title = e.target.value.trim();
             if (!_title) return;
             const suffix =
@@ -52,11 +51,12 @@
               if (pre === true) return pre;
               return curr === `${_title}${suffix}`;
             }, false);
+
             if (!inMenu) return;
 
             this.inputValue = e.target.value;
-            this.sys_store.title = `${_title}${suffix}`;
             this.inputValue = "";
+            setSysTitle(`${_title}${suffix}`);
           },
         },
       };

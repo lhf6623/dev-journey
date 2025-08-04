@@ -12,60 +12,34 @@
   <script type="module">
     export const tag = "l-editor";
     export default async function ({ load }) {
-      const { setEditorCode, editor_store } = await load(
-        "../js/editor_store.js"
+      const { setLeetcodeCode, page_store } = await load(
+        "../store/page-store.js"
       );
-      const { sys_store } = await load("../js/sys_store.js");
+      const { sys_store } = await load("../store/system.js");
       let editor = null;
       let timeoutId = null;
-
       return {
         data: {
           sys_store: {},
-          editor_store: {},
+          page_store: {},
+          code: "",
+          updateCode: "",
         },
         watch: {
           "sys_store.theme"(value) {
-            if (editor && this.sys_store) {
-              const isDark = this.sys_store.theme == "dark";
-
-              editor.setOption("theme", isDark ? "monokai" : "default");
-            }
+            this.selectTheme();
           },
-          "editor_store.is_reset"() {
-            if (this.editor_store?.is_reset) {
-              setEditorCode(this.sys_store.content);
-              this.changeEditorCode(this.editor_store.editor_code);
-              this.editor_store.is_reset = false;
-            }
-          },
-          // 点击菜单时
-          "sys_store.content"(_code, data1) {
-            if (!editor) return;
-            if (!this.sys_store?.content) return;
+          updateCode(time) {
+            if (!time) return;
+            if (!this.code) return;
+            if (editor && this.code === editor.getValue()) return;
 
-            const { oldValue, value } = data1.watchers[0];
-
-            if (
-              typeof value === "string" &&
-              typeof oldValue === "string" &&
-              oldValue !== value
-            ) {
-              setEditorCode(this.sys_store.content);
-            }
-            if (!this.editor_store.editor_code) {
-              setEditorCode(this.sys_store.content);
-            }
-
-            setTimeout(() => {
-              this.changeEditorCode(this.editor_store.editor_code);
-            }, 100);
+            this.changeEditorCode(this.code ?? "");
           },
         },
         loaded() {
-          const value = this.editor_store.editor_code || this.sys_store.content;
           editor = CodeMirror(this.shadow.ele.querySelector("#code"), {
-            value,
+            value: "",
             mode: "javascript",
             autoCloseBrackets: true,
             // 行号
@@ -91,25 +65,30 @@
           editor.focus();
 
           // 监听内容变化
-          editor.on("change", (instance, changeObj) => {
+          editor.on("change", () => {
             const content = editor.getValue();
-
-            setEditorCode(content);
+            setLeetcodeCode(content);
           });
+
+          editor.setValue(this.code);
         },
         attached() {
           this.sys_store = sys_store;
-          this.editor_store = editor_store;
+          this.page_store = page_store;
         },
         detached() {
           this.sys_store = null;
-          this.editor_store = null;
+          this.page_store = null;
+          editor = null;
         },
         proto: {
           selectTheme() {
-            const isDark = this.sys_store.theme == "dark";
-
-            editor.setOption("theme", isDark ? "monokai" : "default");
+            if (editor && this.sys_store) {
+              editor.setOption(
+                "theme",
+                this.sys_store.theme == "dark" ? "monokai" : "default"
+              );
+            }
           },
           changeEditorCode(code) {
             if (editor) {

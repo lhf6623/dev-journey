@@ -3,13 +3,13 @@ import {
   transformerDirectives,
   transformerVariantGroup,
   presetAttributify,
-  presetUno,
+  presetMini,
   presetIcons,
 } from "unocss";
 
 export default defineConfig({
   presets: [
-    presetUno(),
+    presetMini(),
     presetAttributify(),
     presetIcons({
       // cdn: "https://esm.sh/",  unocss 提示会被阻塞，使用本地图标

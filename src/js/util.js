@@ -1,7 +1,6 @@
-import { v4 as uuidv4 } from "https://esm.sh/uuid@10.0.0";
 import { inRange } from "https://esm.sh/lodash-es@4.17.21";
 import pkg from "../../package.json" with { type: "json" };
-
+import dayjs from "https://esm.sh/dayjs@1.11.13";
 
 export const { version, name } = pkg;
 /**
@@ -39,59 +38,79 @@ export function getUrl(url) {
  */
 export function createJsRunner(fn) {
   let iframe, iframeDoc;
-  const id = uuidv4();
+  const id = crypto.randomUUID();
 
   function createIframe() {
-    const oldIframe = document.getElementById(id);
 
-    if (oldIframe) {
-      // 清除旧的iframe
-      document.body.removeChild(oldIframe);
+    if (iframe) {
+      document.body.removeChild(iframe);
     }
 
     iframe = document.createElement("iframe");
     iframe.style.display = "none";
+    iframe.src = `about:blank`; // 或同源 URL
     iframe.id = id;
     document.body.appendChild(iframe);
 
     iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+
+    return new Promise(resolve => {
+      iframe.onload = () => {
+        resolve(true);
+      }
+    })
   }
 
   // 写入运行代码
-  function writeCode(code) {
-    createIframe();
-    const _code = `
-		<script>
-      let consoleProxy = new Proxy(console, {
-        get(target, property, receiver) {
-          if (!(property in target)) {
-            const message = 'console. '+ property +' is not a function'
-            window.parent.postMessage({
-              message,
-              type: 'error',
-              source: 'lhf6623_leetcode_runner'
-            }, '*');
-            return target[property];
+  async function writeCode(code) {
+    await createIframe()
+    const _code = `<script id='${id}'>
+      const id = '${id}';
+      console = new Proxy(console, {
+        get(target, prop) {
+          if (typeof target[prop] === "function") {
+            return function (...args) {
+              const info = args
+                .map((item) => {
+                  // object null array
+                  if (typeof item === "object") {
+                    return JSON.stringify(item, (key, value) => {
+                      return value === undefined ? "undefined" : value;
+                    });
+                  }
+                  if (item === undefined) {
+                    return 'undefined';
+                  }
+                  if(typeof item === 'string' && item.trim() === '') {
+                    return '""';
+                  }
+                  // BigInt
+                  if(typeof item === 'bigint') {
+                    return item.toString() + 'n';
+                  }
+                  // symbol function number
+                  return item.toString();
+                })
+                .join(" ");
+              
+              window.parent.postMessage({
+                type: prop,
+                info: info,
+                source: id,
+                time: Date.now()
+              }, '*');
+              return target[prop].apply(target, args);
+            };
           }
-
-          return function (...args) {
-            window.parent.postMessage({
-              message: args.toString(),
-              type: property,
-              source: 'lhf6623_leetcode_runner'
-            }, '*');
-            // Reflect.get(target, property, receiver)(...args);
-          };
+          return target[prop];
         },
       });
-      console = consoleProxy
       try {
         ${code}
       } catch (error) {
         console.error(error.message);
       }
-		<\/script>
-		`;
+		<\/script>`;
     iframeDoc.write(_code);
   }
 
@@ -99,19 +118,22 @@ export function createJsRunner(fn) {
   // 移除监听
   function onDestroy() {
     window.removeEventListener("message", fn);
+    // 移除iframe
+    document.body.removeChild(iframe);
   }
 
   return {
     writeCode,
     onDestroy,
+    id
   };
 }
 /**
  * @typedef SplitOptions 拖动元素
- * @property {Object} a - 元素
- * @property {Array} a.els - 元素
- * @property {number} a.minWidth - 最小宽度
- * @property {number} a.defaultWidth - 默认宽度
+ * @property {Object} opt - 元素
+ * @property {Array} opt.els - 元素
+ * @property {number} opt.minWidth - 最小宽度
+ * @property {number} opt.defaultWidth - 左边节点默认宽度
  */
 
 /**
@@ -156,8 +178,8 @@ export function Split(opt) {
 
   function setStyle(left_width) {
     // 百分百
-    const el1_w_str = `calc(${left_width}% - ${midWidth}px)`;
-    const el3_w_str = `calc(${100 - left_width}% - ${midWidth}px)`;
+    const el1_w_str = `calc(${left_width}% - ${midWidth / 2}px)`;
+    const el3_w_str = `calc(${100 - left_width}% - ${midWidth / 2}px)`;
 
     el1.style.setProperty("width", el1_w_str);
     el3.style.setProperty("width", el3_w_str);

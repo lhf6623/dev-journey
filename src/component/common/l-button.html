@@ -3,7 +3,7 @@
     on:click="handleClick"
     type="button"
     attr:disabled="loading || disabled"
-    attr:class="`l-btn l-btn-disabled flex items-center gap-x-6px ${butCls} ${round ? roundStyle : ''}`"
+    attr:class="`l-btn l-btn-disabled flex items-center ${defaultIcon ? 'gap-x-6px': ''} ${butCls} ${round ? roundStyle : ''}`"
   >
     <x-if :value="defaultIcon">
       <i

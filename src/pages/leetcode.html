@@ -14,10 +14,10 @@
     >
       <!-- 功能区 -->
       <div class="p3px pl16px m0 flex-between">
-        <p class="text-14px max-sm:hidden">{{changeText(sys_store.title)}}</p>
+        <p class="text-14px max-sm:hidden">{{getTitle(title)}}</p>
         <div class="flex-between gap-x-10px *:flex-shrink-0">
           <l-button
-            :loading="editor_store.is_reset"
+            :loading="sys_store.loading"
             :icon="'i-pepicons-pop:reload'"
             on:on-click="restoreCode"
           >
@@ -31,12 +31,11 @@
             <l-switch
               on:change="runCodeInterval"
               :size="'small'"
-              :checked="editor_store.is_run_interval"
+              :checked="!!timer"
             ></l-switch>
           </div>
           <l-button
-            :disabled="editor_store.is_run_interval"
-            :loading="editor_store.is_run"
+            :disabled="!!timer"
             :icon="'i-solar:play-bold'"
             on:on-click="runCode"
           >
@@ -44,24 +43,24 @@
           </l-button>
         </div>
         <l-button
-          :icon="!isFullscreen ? 'i-tabler:arrows-maximize':'i-tabler:arrows-minimize'"
+          :icon="!is_fullscreen ? 'i-tabler:arrows-maximize':'i-tabler:arrows-minimize'"
           on:on-click="toggleFullScreen"
         >
         </l-button>
       </div>
       <!-- 编辑区 -->
       <div
-        class="flex-1 group relative flex b overflow-hidden b-solid b-menu-hover-color"
+        class="flex-1 group relative flex b-y overflow-hidden b-menu-hover-color"
       >
         <div
           id="split-0"
           class="relative flex-shrink-0 hfull overflow-hidden group-[.cursor-col-resize]:select-none group-[.cursor-col-resize]:pointer-events-none"
         >
-          <l-editor></l-editor>
+          <l-editor :code="leetcode_code" :update-code="updateCode"></l-editor>
         </div>
         <div
           id="split-1"
-          class="cursor-col-resize flex-shrink-0 w6px overflow-hidden bg-menu-hover-color flex-center"
+          class="cursor-col-resize flex-shrink-0 !w6px overflow-hidden bg-menu-hover-color flex-center"
         >
           <i class="i-akar-icons:drag-vertical w16px h16px"></i>
         </div>
@@ -69,7 +68,10 @@
           id="split-2"
           class="group-[.cursor-col-resize]:select-none flex-shrink-0 group-[.cursor-col-resize]:pointer-events-none"
         >
-          <l-console-list></l-console-list>
+          <l-console-list
+            :log-list="logList"
+            on:clear="clearLog"
+          ></l-console-list>
         </div>
       </div>
     </div>
@@ -77,15 +79,15 @@
     <footer
       class="flex-shrink-0 flex-row flex-between !*:text-#0073ff *:flex *:items-center *:cursor-pointer !*:my8px"
     >
-      <button class="l-btn" on:click="setNextTitle(preTitle)">
-        <x-if :value="preTitle">
+      <button class="l-btn" on:click="setNextTitle(pre_title)">
+        <x-if :value="pre_title">
           <i class="i-mingcute:left-fill w24px h24px"></i>
-          <span>{{changeText(preTitle)}}</span>
+          <span>{{getTitle(pre_title)}}</span>
         </x-if>
       </button>
-      <button class="l-btn" on:click="setNextTitle(nextTitle)">
-        <x-if :value="nextTitle">
-          <span>{{changeText(nextTitle)}}</span>
+      <button class="l-btn" on:click="setNextTitle(next_title)">
+        <x-if :value="next_title">
+          <span>{{getTitle(next_title)}}</span>
           <i class="i-mingcute:right-fill w24px h24px"></i>
         </x-if>
       </button>
@@ -94,23 +96,39 @@
 
   <script>
     import screenfull from "https://esm.sh/screenfull@6.0.0";
-    import { Split } from "../js/util.js";
+    import dayjs from "https://esm.sh/dayjs@1.11.13";
+    import { Split, createJsRunner } from "../js/util.js";
     export default async ({ load }) => {
-      const { editor_store } = await load("../js/editor_store.js");
-      const { sys_store, changeDocumentType, handleFileSuffix } = await load(
-        "../js/sys_store.js"
+      const {
+        sys_store,
+        changeType,
+        handleFileSuffix,
+        setSysTitle,
+        getContent,
+        leetcode,
+      } = await load("../store/system.js");
+      const { page_store, setLeetcodeCode, setLeetcodeTitle } = await load(
+        "../store/page-store.js"
       );
+
       return {
         parent: "../layout-page.html",
         data: {
+          page_store: {},
           sys_store: {},
-          preTitle: "",
-          nextTitle: "",
-          isFullscreen: false,
-          editor_store: {},
+          pre_title: "",
+          next_title: "",
+          is_fullscreen: false,
+          leetcode_code: "",
+          updateCode: null,
+          title: "",
+          logList: [],
+          /** 定时器 */
+          timer: null,
+          writeCode: null,
+          onDestroy: null,
         },
         loaded() {
-          changeDocumentType("leetcode");
           Split({
             els: [
               this.shadow.ele.querySelector("#split-0"),
@@ -119,53 +137,96 @@
             ],
           });
         },
-        attached() {
+        async attached() {
+          changeType("leetcode", page_store.leetcode_title);
+
           this.sys_store = sys_store;
-          this.editor_store = editor_store;
+          this.page_store = page_store;
+          this.leetcode_code = this.page_store.leetcode_code;
+          this.setFooterTitle();
+          this.updateCode = Date.now();
+
+          const { id, writeCode, onDestroy } = createJsRunner(({ data }) => {
+            if (data?.source && data.source == id) {
+              this.logList.push(data);
+            }
+          });
+
+          this.writeCode = writeCode;
+          this.onDestroy = onDestroy;
         },
         detached() {
           this.sys_store = null;
-          this.editor_store = null;
+          this.page_store = null;
+          if (this.onDestroy) {
+            this.onDestroy();
+          }
         },
         watch: {
-          "sys_store.title"() {
-            const { menus, title } = this.sys_store || {};
-            if (title) {
-              const { is_run_interval } = this.editor_store;
-              const index = menus.findIndex((item) => item === title);
+          async "sys_store.title"(val) {
+            if (!this.sys_store || this.sys_store.document_type !== leetcode) {
+              return;
+            }
+            const { title } = this.sys_store || {};
 
-              this.preTitle = menus[index - 1] || "";
-              this.nextTitle = menus[index + 1] || "";
-              if (is_run_interval) {
-                this.editor_store.is_run_interval = false;
-              }
+            if (title && title !== this.page_store.leetcode_title) {
+              setLeetcodeTitle(title ?? "");
+
+              this.setFooterTitle();
+              this.restoreCode();
             }
           },
         },
         proto: {
-          changeText: handleFileSuffix,
-          setNextTitle(_title) {
-            this.sys_store.title = _title;
+          clearLog() {
+            this.logList = [];
           },
+          // 运行代码
+          runCode() {
+            const { leetcode_code } = this.page_store;
+            if (this.writeCode) {
+              this.logList = [];
+              this.writeCode(leetcode_code);
+            }
+          },
+          setFooterTitle() {
+            const { menus, title } = this.sys_store || {};
+
+            this.title = this.page_store.leetcode_title;
+            const index = menus.findIndex((item) => item === this.title);
+
+            this.pre_title = menus[index - 1] || "";
+            this.next_title = menus[index + 1] || "";
+          },
+          getTitle: handleFileSuffix,
+          setNextTitle: setSysTitle,
           toggleFullScreen() {
             const element = this.shadow.ele.querySelector("#main");
             if (!screenfull.isEnabled) return;
 
             screenfull.toggle(element).then(() => {
-              this.isFullscreen = screenfull.isFullscreen;
+              this.is_fullscreen = screenfull.is_fullscreen;
             });
           },
           // 还原代码
-          restoreCode() {
-            this.editor_store.is_reset = true;
-          },
-          // 运行代码
-          runCode() {
-            this.editor_store.is_run = true;
+          async restoreCode() {
+            const leetcode_code = await getContent();
+            setLeetcodeCode(leetcode_code);
+            this.leetcode_code = leetcode_code;
+            this.updateCode = Date.now();
           },
           // 周期性运行代码
-          runCodeInterval(e) {
-            this.editor_store.is_run_interval = e.data;
+          async runCodeInterval(e) {
+            const is_run_interval = e.data;
+            if (is_run_interval) {
+              this.runCode();
+              this.timer = setInterval(async () => {
+                this.runCode();
+              }, 3000);
+            } else {
+              this.timer && clearInterval(this.timer);
+              this.timer = null;
+            }
           },
         },
       };

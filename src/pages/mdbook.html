@@ -5,14 +5,14 @@
   <div attr:class="`md ${sys_store.theme} relative hfull overflow-auto`">
     <l-button
       title="下载文档为PDF"
-      class="fixed right-3px mt3px bg-amber dark:bg-blue rounded-3px z100"
+      class="fixed right-18px mt3px bg-amber dark:bg-blue rounded-3px z100"
       :icon="'i-tabler:pdf'"
       on:on-click="getPdf"
       :loading="pdfLoading"
     >
     </l-button>
     <div id="pdf" class="bg-theme-bg-color relative max-w794px mx-auto">
-      <h1 class="text-center mb2px tracking-2px">{{getTitle()}}</h1>
+      <h1 class="text-center mb2px tracking-2px">{{getTitle(title)}}</h1>
       <div :html="mdTxt" id="md" class="p40px pt0px all:transition-200"></div>
     </div>
   </div>
@@ -25,8 +25,16 @@
     import html2canvas from "https://esm.sh/html2canvas@1.4.1";
 
     export default async ({ load }) => {
-      const { sys_store, changeDocumentType } = await load(
-        "../js/sys_store.js"
+      const {
+        sys_store,
+        changeType,
+        handleFileSuffix,
+        setSysTitle,
+        getContent,
+        mdbook,
+      } = await load("../store/system.js");
+      const { page_store, setMdContent, setMdTitle } = await load(
+        "../store/page-store.js"
       );
 
       let marked = null;
@@ -37,28 +45,36 @@
           mdTxt: "加载中。。。",
           sys_store: {},
           pdfLoading: false,
+          title: "",
         },
         watch: {
-          "sys_store.content"(data) {
-            const { content } = this.sys_store || {};
-            if (content) {
+          async "sys_store.title"(data) {
+            if (!this.sys_store || this.sys_store.document_type !== mdbook) {
+              return;
+            }
+            const { title } = this.sys_store || {};
+
+            if (title && title !== this.page_store.md_title) {
+              setMdTitle(title ?? "");
+              const content = await getContent();
+              setMdContent(content);
               this.renderMd(content);
-              this.scrollToTop();
+              this.title = title;
             }
           },
         },
-        loaded() {
-          changeDocumentType("mdbook");
-        },
         detached() {
           this.sys_store = null;
+          this.page_store = null;
           this.shadow.off("click", this.copyCode);
         },
         ready() {
           this.shadow.on("click", this.copyCode);
         },
         attached() {
+          changeType("mdbook", page_store.md_title);
           this.sys_store = sys_store;
+          this.page_store = page_store;
           marked = new Marked(
             markedHighlight({
               emptyLangClass: "hljs",
@@ -74,11 +90,23 @@
             })
           );
 
-          setTimeout(() => {
-            this.renderMd(this.sys_store.content);
+          setTimeout(async () => {
+            let content = "";
+            if (this.page_store.md_content) {
+              content = page_store.md_content;
+              this.title = page_store.md_title;
+            } else {
+              content = await getContent();
+              setMdContent(content);
+              setMdTitle(this.sys_store.title);
+              this.title = this.sys_store.title;
+            }
+
+            this.renderMd(content);
           }, 100);
         },
         proto: {
+          getTitle: handleFileSuffix,
           copyCode(e) {
             const color = "text-#18a058";
             let el = e.target;
@@ -105,18 +133,17 @@
               }, 2000);
             });
           },
-          getTitle() {
-            return this.sys_store.title?.replace(".md", "");
-          },
           // 滚动到顶
           scrollToTop() {
             const ele = this.shadow.ele;
             const mdDom = ele.querySelector(".md");
             mdDom.scrollTo({ top: 0, behavior: "smooth" });
           },
+          /** 渲染md */
           renderMd(mdTxt) {
             this.mdTxt = marked.parse(mdTxt);
           },
+          /** 下载PDF */
           getPdf() {
             let ele = this.shadow.ele;
             let mdDom = ele.querySelector("#pdf");
@@ -147,7 +174,8 @@
                 );
                 x += pdf_page_h;
               }
-              const title = `${this.getTitle()}.pdf`;
+
+              const title = `${this.title}.pdf`;
               doc.save(title);
               this.pdfLoading = false;
             });

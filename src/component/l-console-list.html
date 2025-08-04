@@ -1,20 +1,68 @@
 <template component>
+  <l-m src="../component/common/l-button.html"></l-m>
   <div
     id="console-list"
     attr:class="`${sys_store.theme} hfull relative overflow-auto`"
   >
+    <div b-b px-6px text-sm flex items-center flex-wrap gap-6px>
+      <l-button on:on-click="clear" title="清空运行结果">
+        <i i-tabler-clear-formatting></i>
+      </l-button>
+      <div class="relative min-w-100px">
+        <l-button
+          gap-0
+          on:click="showSelect = !showSelect"
+          title="选择日志级别"
+        >
+          <span text-xs>所有级别</span>
+          <i text-3xl i-mingcute-down-small-fill></i>
+        </l-button>
+        <div
+          on:click="showSelect = false"
+          attr:class="`${showSelect ? 'inline-block' : 'hidden'} fixed inset-0 top-0 left-0`"
+        ></div>
+        <ul
+          attr:class="`${showSelect ? 'inline-block' : 'hidden'} *:text-center  z-100 py-4px absolute top-100% left-0 shadow b rounded overflow-hidden bg-theme-bg-color b-menuHoverColor`"
+        >
+          <x-fill :value="logLevel">
+            <li
+              attr:class="$data.value == 'default' ? 'b-b b-menuHoverColor pb-4px mb-4px' : ''"
+            >
+              <l-button
+                :size="'medium'"
+                on:click="$host.changeLogLevel($data.value)"
+                :icon="$host.getLevel($data.value) ? 'i-line-md-confirm':'-'"
+                butCls="wfull"
+              >
+                <span text-sm> {{$data.label}} </span>
+              </l-button>
+            </li>
+          </x-fill>
+        </ul>
+      </div>
+      <x-if :value="logList.length - filterLogList.length > 0">
+        <p text-xs text-menu-border>
+          {{logList.length - filterLogList.length}}个已隐藏
+        </p>
+      </x-if>
+    </div>
     <ul
       class="px6px text-14px text-#1c1c1c dark:text-#fff bg-#fff !dark:bg-transparent"
     >
-      <x-fill :value="list">
-        <li attr:class="`${$data.cls}`" relative rounded p="x22px" m="y3px">
+      <x-fill :value="filterLogList">
+        <li
+          attr:class="`${$host.getCls($data)}`"
+          relative
+          rounded
+          p="x22px"
+          m="y3px"
+        >
           <p
             overflow-hidden
-            b="b-solid b-1px b-#cadbfd dark:b-#4c4c4c"
-            attr:class="`${$host.isBorder($data, $index) ? '!b-none' : ''}`"
+            b="b-solid b-1px b-#cadbfd dark:b-#4c4c4c "
+            attr:class="`${$host.getCls($data) ? '!b-none' : ''}`"
           >
-            <!-- <span class="">[{{$data.time}}]</span> -->
-            <span class="">{{$data.message}}&nbsp;</span>
+            <span>{{$data.info}}</span>
           </p>
         </li>
       </x-fill>
@@ -23,13 +71,11 @@
 
   <script type="module">
     import dayjs from "https://esm.sh/dayjs@1.11.13";
-    import { stringify } from "https://esm.sh/flatted@3.3.1";
-    import { createJsRunner } from "../js/util.js";
 
     export const tag = "l-console-list";
     export default async function ({ load }) {
-      const { editor_store } = await load("../js/editor_store.js");
-      const { sys_store } = await load("../js/sys_store.js");
+      const { page_store } = await load("../store/page-store.js");
+      const { sys_store } = await load("../store/system.js");
 
       let timeout = null;
 
@@ -39,75 +85,84 @@
       };
       return {
         data: {
-          list: [],
-          writeCode: null,
-          onDestroy: null,
-          editor_store: {},
+          page_store: {},
           sys_store: {},
+          /**
+           * 日志列表
+           * {
+           *  type: typeof console,
+           *  time: '12:00:00',
+           *  info: '日志信息',
+           * }
+           */
+          logList: [],
+          filterLogList: [],
+          showSelect: false,
+          logLevelValue: ["verbose", "info", "warn", "error"],
+          logLevel: [
+            {
+              label: "详细",
+              value: "verbose",
+            },
+            {
+              label: "信息",
+              value: "info",
+            },
+            {
+              label: "警告",
+              value: "warn",
+            },
+            {
+              label: "错误",
+              value: "error",
+            },
+          ],
         },
+
         watch: {
-          "editor_store.is_reset"() {
-            this.list = [];
+          logList(val) {
+            this.handleLogList();
           },
-          "editor_store.is_run"() {
-            if (
-              this.editor_store !== null &&
-              this.writeCode !== null &&
-              this.editor_store.is_run === true
-            ) {
-              this.list = [];
-
-              this.writeCode(this.editor_store.editor_code);
-              this.editor_store.is_run = false;
-            }
-          },
-          "editor_store.is_run_interval"() {
-            const { is_run_interval } = this.editor_store || {};
-            if (is_run_interval) {
-              this.editor_store.is_run = false;
-              // 如果在循环了就跳出
-              if (timeout) return;
-
-              this.list = [];
-              this.runCode();
-            } else {
-              if (timeout) {
-                clearTimeout(timeout);
-                timeout = null;
-              }
-            }
-          },
-          "sys_store.content"() {
-            this.list = [];
+          logLevelValue(val) {
+            this.handleLogList();
           },
         },
         attached() {
-          const { writeCode, onDestroy } = createJsRunner(
-            this.getData.bind(this)
-          );
-          this.onDestroy = onDestroy;
-          this.writeCode = writeCode;
-
           this.sys_store = sys_store;
-          this.editor_store = editor_store;
+          this.page_store = page_store;
         },
         detached() {
           this.sys_store = null;
-          this.editor_store = null;
-
-          this.onDestroy?.();
+          this.page_store = null;
         },
         proto: {
-          getData(event) {
-            if (event.data.source === "lhf6623_leetcode_runner") {
-              const data = event.data;
-              this.list.push({
-                ...data,
-                time: dayjs().format("HH:mm:ss"),
-                cls: cls[data.type] ?? "",
-              });
-              this.scrollBottom();
+          handleLogList() {
+            // 不知道怎么过滤，先这样
+            this.filterLogList = this.logList.filter((item) => {
+              if (["info", "warn", "error"].includes(item.type)) {
+                return this.logLevelValue.includes(item.type);
+              }
+              return this.logLevelValue.includes("verbose");
+            });
+          },
+          changeLogLevel(val) {
+            this.showSelect = false;
+            if (val === "default") return;
+
+            if (this.logLevelValue.includes(val)) {
+              this.logLevelValue = this.logLevelValue.filter(
+                (item) => item !== val
+              );
+            } else {
+              this.logLevelValue.push(val);
             }
+          },
+          getLevel(val) {
+            return this.logLevelValue.includes(val);
+          },
+          // 清空
+          clear() {
+            this.emit("clear");
           },
           scrollBottom() {
             const ele = this.shadow.ele;
@@ -120,19 +175,8 @@
               });
             }, 300);
           },
-          isBorder(data, index) {
-            if (data.cls) return true;
-            // ($data.cls || $host.list[$index + 1]?.cls) || $host.list.length == ($index - 1)
-            if (this.list[index + 1]?.cls) return true;
-            if (this.list.length === index + 1) return true;
-            return false;
-          },
-          async runCode() {
-            this.writeCode(this.editor_store.editor_code);
-
-            timeout = setTimeout(() => {
-              this.runCode();
-            }, 1300);
+          getCls(data) {
+            return cls[data.type];
           },
         },
       };
