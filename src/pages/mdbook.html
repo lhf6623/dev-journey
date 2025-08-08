@@ -11,10 +11,14 @@
       :loading="pdfLoading"
     >
     </l-button>
-    <div id="pdf" class="bg-theme-bg-color relative max-w794px mx-auto">
+    <div
+      id="pdf"
+      class="bg-theme-bg-color relative max-w794px min-w-595px mx-auto"
+    >
       <h1 class="text-center mb2px tracking-2px">{{getTitle(title)}}</h1>
-      <div :html="mdTxt" id="md" class="p40px pt0px all:transition-200"></div>
+      <div :html="mdTxt" id="md" class="px40px all:transition-200"></div>
     </div>
+    <div h-40px></div>
   </div>
 
   <script>
@@ -23,6 +27,11 @@
     import hljs from "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/es/highlight.min.js";
     import { jsPDF } from "https://esm.sh/jspdf@2.5.2";
     import html2canvas from "https://esm.sh/html2canvas@1.4.1";
+    import {
+      imgClipByPage,
+      checkImgEmptyLine,
+      colorDistance,
+    } from "../js/util.js";
 
     export default async ({ load }) => {
       const {
@@ -143,39 +152,101 @@
           renderMd(mdTxt) {
             this.mdTxt = marked.parse(mdTxt);
           },
+          /** 向上寻找最近的空行 */
+          findNearestEmptyLine(canvas, ctx, findY, page) {
+            const step = 4; // 向上搜索的步长
+            let currentY = findY;
+            while (currentY >= 0) {
+              const isEmpty = checkImgEmptyLine(canvas, ctx, currentY, page);
+              if (isEmpty) {
+                return currentY;
+              }
+              currentY -= step;
+            }
+            return currentY;
+          },
           /** 下载PDF */
           getPdf() {
             let ele = this.shadow.ele;
             let mdDom = ele.querySelector("#pdf");
-            let doc = new jsPDF();
+            let doc = new jsPDF({
+              orientation: "p", // 纵向（portrait）或横向（landscape）
+              unit: "pt", // 单位：pt、mm、cm、in
+              format: "a4", // 纸张格式：a4、a3、letter 等
+            });
+
             this.pdfLoading = true;
 
-            html2canvas(mdDom).then((canvas) => {
-              let imgData = canvas.toDataURL("image/png");
+            html2canvas(mdDom).then(async (canvas) => {
+              const ctx = canvas.getContext("2d", { willReadFrequently: true });
+              /** 图片宽度 */
               const c_w = canvas.width;
+              /** 图片高度 */
               const c_h = canvas.height;
+
+              const margin_top = 30;
               /** pdf 一页的页面宽度 */
               const pdf_page_w = doc.internal.pageSize.getWidth();
               /** pdf 一页的页面高度 */
-              let pdf_page_h = doc.internal.pageSize.getHeight();
-              /** pdf 页面总高度 */
-              let pdf_page_total_h = c_h * (pdf_page_w / c_w);
+              const pdf_page_h = doc.internal.pageSize.getHeight();
 
-              let x = 0;
-              while (x < pdf_page_total_h) {
-                x > 0 && doc.addPage();
-                doc.addImage(
-                  imgData,
-                  "PNG",
-                  0,
-                  x * -1,
-                  pdf_page_w,
-                  pdf_page_total_h
+              /** pdf 页面总高度, 根据宽度比利缩放高度 */
+              const pdf_page_total_h = pdf_page_w * (c_h / c_w);
+
+              const height_ratio = pdf_page_total_h / c_h;
+              const width_ratio = pdf_page_w / c_w;
+
+              let y = 0;
+              let page = 0;
+              while (y < pdf_page_total_h) {
+                y > 0 && doc.addPage();
+                let page_content_height = pdf_page_h - margin_top * 2;
+                const ratio = page_content_height / pdf_page_total_h;
+                // 图片一个页面实际高度
+                let img_height = c_h * ratio;
+                // 找到适合的图片高度
+                const empty_height = this.findNearestEmptyLine(
+                  canvas,
+                  ctx,
+                  img_height,
+                  page
                 );
-                x += pdf_page_h;
+
+                if (Math.round(empty_height) !== Math.round(img_height)) {
+                  // 图片高度减去 找到的适合的图片高度 就是 需要去除的高度 图片实际高度
+                  const diff = img_height - empty_height;
+                  // 图片实际高度 和 PDF 高度不一样，需要转换一下
+                  const page_diff = pdf_page_total_h / c_h;
+
+                  img_height = empty_height;
+
+                  const diff_height = diff * page_diff;
+
+                  page_content_height = page_content_height - diff_height;
+                }
+                // 最后一页可能有空白
+                let _img_height = img_height;
+                const _y = y / height_ratio;
+                if (_y + img_height > canvas.height) {
+                  _img_height = canvas.height - _y;
+                }
+
+                const { base64 } = await imgClipByPage(canvas, _y, _img_height);
+
+                doc.addImage(
+                  base64,
+                  "JEPG",
+                  0,
+                  margin_top,
+                  pdf_page_w,
+                  // 最后一页的空白处理
+                  _img_height * height_ratio
+                );
+                y += page_content_height;
+                page += 1;
               }
 
-              const title = `${this.title}.pdf`;
+              const title = `${this.getTitle(this.title)}.pdf`;
               doc.save(title);
               this.pdfLoading = false;
             });
