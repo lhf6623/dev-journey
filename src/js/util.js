@@ -55,17 +55,18 @@ export function createJsRunner(fn) {
     iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
 
     return new Promise(resolve => {
-      iframe.onload = () => {
+      setTimeout(() => {
         resolve(true);
-      }
+      }, 100);
     })
   }
 
   // 写入运行代码
   async function writeCode(code) {
     await createIframe()
-    const _code = `<script id='${id}'>
+    let _code = `<script id='${id}'>
       const id = '${id}';
+      const code = '${encodeURIComponent(code)}';
       console = new Proxy(console, {
         get(target, prop) {
           if (typeof target[prop] === "function") {
@@ -106,12 +107,16 @@ export function createJsRunner(fn) {
         },
       });
       try {
-        ${code}
+        new Function(decodeURIComponent(code))();
       } catch (error) {
         console.error(error.message);
       }
 		<\/script>`;
-    iframeDoc.write(_code);
+    try {
+      iframeDoc.write(_code);
+    } catch (e) {
+      console.log(e);
+    }
   }
 
   window.addEventListener("message", fn);
