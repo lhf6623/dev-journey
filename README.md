@@ -1,10 +1,10 @@
-# [dev-journey](https://lhf6623.github.io/dev-journey)
+## [dev-journey](https://lhf6623.github.io/dev-journey)
 
-#### 介绍
+### 介绍
 
 个人知识仓库
 
-#### 开发环境
+### 开发环境
 
 - leetcode 题库：vscode 的插件 LeetCode
 - md 文档编写：vscode 的插件 Markdown All in One
@@ -18,6 +18,13 @@
   ```shell
   pnpm dev
   ```
+
+### 增加 leetcode 或者 mdbook 文件后的操作
+
+```shell
+cd node_util
+node node create_menus.cjs
+```
 
 ### npm 依赖使用
 
