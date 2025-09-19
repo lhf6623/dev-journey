@@ -3,22 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <style id="dark-theme-style">
-      @media (prefers-color-scheme: dark) {
-        html {
-          background-color: #121212;
-          color: #fff;
-        }
-      }
-    </style>
     <script type="module">
-      import { version, name } from "./src/js/util.js";
-      const key = `${name}_${version}`;
-      const theme = JSON.parse(localStorage.getItem(key)).sys_theme;
-      document.startViewTransition(() => {
-        document.documentElement.classList.toggle("dark", theme === "dark");
-        document.getElementById("dark-theme-style").remove();
-      });
+      import Cache from "./src/js/cache.js";
+      const theme = Cache.getItem("sys_theme");
+      document.documentElement.classList.toggle("dark", theme === "dark");
     </script>
     <title>Coding Journey - 编码之旅</title>
     <link rel="stylesheet" href="./src/css/public.css?v=0.2.5" />
