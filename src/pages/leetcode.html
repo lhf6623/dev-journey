@@ -56,7 +56,11 @@
           id="split-0"
           class="relative flex-shrink-0 hfull overflow-hidden group-[.cursor-col-resize]:select-none group-[.cursor-col-resize]:pointer-events-none"
         >
-          <l-editor :code="leetcode_code" :update-code="updateCode"></l-editor>
+          <l-editor
+            :code="leetcode_code"
+            :update-code="updateCode"
+            on:load="editorLoad"
+          ></l-editor>
         </div>
         <div
           id="split-1"
@@ -170,14 +174,17 @@
             const { title } = this.sys_store || {};
 
             if (title && title !== this.page_store.leetcode_title) {
-              setLeetcodeTitle(title ?? "");
-
-              this.setFooterTitle();
               this.restoreCode();
             }
           },
         },
         proto: {
+          editorLoad() {
+            const { title } = this.sys_store || {};
+
+            setLeetcodeTitle(title ?? "");
+            this.setFooterTitle();
+          },
           clearLog() {
             this.logList = [];
           },

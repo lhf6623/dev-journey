@@ -71,6 +71,7 @@
           });
 
           editor.setValue(this.code);
+          this.emit("load");
         },
         attached() {
           this.sys_store = sys_store;
@@ -93,6 +94,8 @@
           changeEditorCode(code) {
             if (editor) {
               editor.setValue(code);
+
+              this.emit("load");
             }
           },
         },
