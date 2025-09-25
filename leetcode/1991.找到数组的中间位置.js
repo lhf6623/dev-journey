@@ -1,0 +1,23 @@
+/*
+ * @lc app=leetcode.cn id=1991 lang=javascript
+ *
+ * [1991] 找到数组的中间位置
+ */
+
+// @lc code=start
+/**
+ * @param {number[]} nums
+ * @return {number}
+ */
+var findMiddleIndex = function (nums) {
+  const total = nums.reduce((a, b) => a + b, 0);
+  let sum = 0;
+  for (let i = 0; i < nums.length; i++) {
+    if (2 * sum + nums[i] === total) {
+      return i;
+    }
+    sum += nums[i];
+  }
+  return -1;
+};
+// @lc code=end
