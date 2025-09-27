@@ -15,7 +15,7 @@
       id="pdf"
       class="bg-theme-bg-color relative max-w794px min-w-595px mx-auto"
     >
-      <h1 class="text-center mb2px tracking-2px">{{getTitle(title)}}</h1>
+      <h1 class="text-center tracking-2px">{{getTitle(title)}}</h1>
       <div :html="mdTxt" id="md" class="px40px all:transition-200"></div>
     </div>
     <div h-40px></div>
@@ -232,6 +232,11 @@
                 }
 
                 const { base64 } = await imgClipByPage(canvas, _y, _img_height);
+
+                // PDF底部颜色跟随主题色
+                const color = this.sys_store.theme === "dark" ? "#222" : "#fff";
+                doc.setFillColor(color);
+                doc.rect(0, 0, pdf_page_w, pdf_page_h, "F"); // "F" 表示填充
 
                 doc.addImage(
                   base64,

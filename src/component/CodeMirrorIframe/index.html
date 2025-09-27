@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="hfull">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CodeMirror 5</title>
+    <link rel="stylesheet" href="../../css/public.css?v=0.2.5" />
+    <link rel="stylesheet" href="../../css/uno.css?v=0.2.5" />
+    <link rel="stylesheet" href="../../css/tailwind-compat.css" />
+    <link href="./css/codemirror.css" rel="stylesheet" />
+    <link href="./css/monokai.css" rel="stylesheet" />
+    <link href="./css/foldgutter.css" rel="stylesheet" />
+    <link href="./css/show-hint.css" rel="stylesheet" />
+
+    <script src="./js/codemirror.js"></script>
+    <script src="./js/javascript.js"></script>
+    <!-- 活动行 -->
+    <script src="./js/active-line.js"></script>
+    <!-- 匹配括号 -->
+    <script src="./js/matchbrackets.js"></script>
+    <!-- 折叠 -->
+    <script src="./js/foldcode.js"></script>
+    <script src="./js/foldgutter.js"></script>
+    <script src="./js/brace-fold.js"></script>
+    <!-- 代码提示 -->
+    <script src="./js/show-hint.js"></script>
+    <script src="./js/javascript-hint.js"></script>
+    <!--  -->
+    <script src="./js/closebrackets.js"></script>
+  </head>
+  <body class="hfull relative">
+    <form class="hfull">
+      <textarea id="code" name="code" class="monokai"> </textarea>
+    </form>
+    <script type="module">
+      import Cache from "../../js/cache.js";
+
+      const editor = CodeMirror.fromTextArea(document.getElementById("code"), {
+        mode: { name: "javascript", globalVars: true },
+        // 自动关闭括号和引号
+        autoCloseBrackets: true,
+        // 行号
+        lineNumbers: true,
+        // 活动行
+        styleActiveLine: true,
+        // 匹配括号
+        matchBrackets: true,
+        // 自动换行
+        // lineWrapping: true,
+        // 折叠
+        extraKeys: {
+          "Ctrl-Q": function (cm) {
+            cm.foldCode(cm.getCursor());
+          },
+          "Ctrl-Space": "autocomplete", // 按 Shift-Space 触发提示
+        },
+        foldGutter: true,
+        gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+      });
+      setTheme();
+
+      editor.on("inputRead", function (cm, change) {
+        if (change.text[0].match(/[\w\.]/)) {
+          cm.showHint({
+            hint: CodeMirror.hint.javascript,
+            completeSingle: false, // 不要自动选中第一个
+          });
+        }
+      });
+      // 监听内容变化
+      editor.on("change", () => {
+        const content = editor.getValue();
+        _postMessage("setCode", [content]);
+      });
+
+      function setTheme() {
+        const theme = Cache.getItem("sys_theme");
+        const _theme = theme === "dark" ? "monokai" : "default";
+        document.documentElement.classList.toggle("dark", theme === "dark");
+
+        editor.setOption("theme", _theme);
+      }
+      function setValue(code) {
+        editor.setValue(code);
+      }
+      function getValue() {
+        return editor.getValue();
+      }
+      function _postMessage(fn, ags) {
+        parent.postMessage({ id: "codemirror", fn, ags }, "*");
+      }
+
+      _postMessage("load", []);
+
+      const fns = {
+        setTheme,
+        setValue,
+        getValue,
+      };
+
+      window.addEventListener("message", (event) => {
+        if (event.data?.id === "codemirror") {
+          const { fn, ags } = event.data;
+
+          if (fn && typeof fns[fn] === "function") fns[fn](...(ags || []));
+        }
+      });
+    </script>
+  </body>
+</html>

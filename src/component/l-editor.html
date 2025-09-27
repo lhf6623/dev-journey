@@ -1,12 +1,10 @@
 <template component>
-  <link href="../css/codemirror/codemirror.css" rel="stylesheet" />
-  <link href="../css/codemirror/monokai.css" rel="stylesheet" />
-  <link href="../css/codemirror/foldgutter.css" rel="stylesheet" />
   <div class="hfull overflow-hidden">
-    <div
-      id="code"
-      attr:class="`${sys_store.theme} hfull relative *:hfull`"
-    ></div>
+    <iframe
+      id="iframe"
+      src="./CodeMirrorIframe/index.html"
+      attr:class="`hfull relative ${loading ? 'w-0': 'w-full'}`"
+    ></iframe>
   </div>
 
   <script type="module">
@@ -16,7 +14,6 @@
         "../store/page-store.js"
       );
       const { sys_store } = await load("../store/system.js");
-      let editor = null;
       let timeoutId = null;
       return {
         data: {
@@ -24,6 +21,8 @@
           page_store: {},
           code: "",
           updateCode: "",
+          iframe: null,
+          loading: true,
         },
         watch: {
           "sys_store.theme"(value) {
@@ -32,46 +31,28 @@
           updateCode(time) {
             if (!time) return;
             if (!this.code) return;
-            if (editor && this.code === editor.getValue()) return;
 
             this.changeEditorCode(this.code ?? "");
           },
         },
         loaded() {
-          editor = CodeMirror(this.shadow.ele.querySelector("#code"), {
-            value: "",
-            mode: "javascript",
-            autoCloseBrackets: true,
-            // 行号
-            lineNumbers: true,
-            // 活动行
-            styleActiveLine: true,
-            // 匹配括号
-            matchBrackets: true,
-            // 自动换行
-            // lineWrapping: true,
-            // 折叠
-            extraKeys: {
-              "Ctrl-Q": function (cm) {
-                cm.foldCode(cm.getCursor());
-              },
-            },
-            foldGutter: true,
-            gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+          this.iframe = this.shadow.ele.querySelector("#iframe");
+
+          window.addEventListener("message", (event) => {
+            if (event.data?.id === "codemirror") {
+              const { fn, ags } = event.data;
+              // 元素初次加载
+              if (fn === "load") {
+                this.emit("load");
+                this.changeEditorCode(this.code ?? "");
+                this.loading = false;
+              } else {
+                if (this[fn] && typeof this[fn] === "function") {
+                  this[fn](...(ags || []));
+                }
+              }
+            }
           });
-
-          this.selectTheme();
-          // 自动聚焦
-          editor.focus();
-
-          // 监听内容变化
-          editor.on("change", () => {
-            const content = editor.getValue();
-            setLeetcodeCode(content);
-          });
-
-          editor.setValue(this.code);
-          this.emit("load");
         },
         attached() {
           this.sys_store = sys_store;
@@ -80,23 +61,29 @@
         detached() {
           this.sys_store = null;
           this.page_store = null;
-          editor = null;
+          this.iframe = null;
         },
         proto: {
+          postMessage(fn, ags) {
+            if (!this.iframe) return;
+            this.iframe.contentWindow.postMessage(
+              { id: "codemirror", fn, ags },
+              "*"
+            );
+          },
           selectTheme() {
-            if (editor && this.sys_store) {
-              editor.setOption(
-                "theme",
-                this.sys_store.theme == "dark" ? "monokai" : "default"
-              );
-            }
+            if (!this.sys_store) return;
+            this.postMessage("setTheme");
           },
           changeEditorCode(code) {
-            if (editor) {
-              editor.setValue(code);
+            if (this.iframe) {
+              this.postMessage("setValue", [code]);
 
               this.emit("load");
             }
+          },
+          setCode(code) {
+            setLeetcodeCode(code);
           },
         },
       };

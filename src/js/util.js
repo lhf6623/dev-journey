@@ -32,6 +32,95 @@ export function getUrl(url) {
   }
   return `${origin}/${url}`;
 }
+
+
+function proxyConsole(id) {
+  // 循环结构需要剔除
+  const loopObject = new Map();
+  function anyToString(arr, space = 0) {
+    // 空格
+    space += 2;
+
+    return arr.map((item) => {
+      if (item === null) return "null"
+      if (item === undefined) return "undefined"
+      if (item instanceof Map) {
+        return anyToString([Object.fromEntries(item)], space - 2)
+      }
+      if (item instanceof Set) {
+        return anyToString([Array.from(item)], space)
+      }
+      if (Array.isArray(item)) {
+        return `[${item.map((arr) => anyToString([arr], space))}]`
+      }
+      if (typeof item === 'bigint') {
+        return item.toString() + 'n';
+      }
+      if (typeof item === 'symbol') {
+        return 'Symbol'
+      }
+      if (typeof item === "object") {
+
+        if (loopObject.has(item)) return "循环引用";
+        loopObject.set(item, true);
+        const space_string = Array.from({ length: space }).fill(' ').join('');
+        const last_space_string = Array.from({ length: space - 2 }).fill(' ').join('');
+        return `{\n${Object.keys(item).map(key => `${space_string}${key}: ${anyToString([item[key]], space)}`).join(', \n')}\n${last_space_string}}`
+      }
+
+      // function number
+      return item;
+    }).join("\n");
+  }
+  const timers = new Map();
+  const counters = new Map();
+  console = new Proxy(console, {
+    get(target, prop) {
+      if (typeof target[prop] === "function") {
+        return function (...args) {
+          let info = anyToString(args)
+
+          if (prop === "time") {
+            const label = args[0] || "default";
+            timers.set(label, performance.now());
+            return
+          } else if (prop === "timeEnd") {
+            const label = args[0] || "default";
+            if (timers.has(label)) {
+              const elapsed = performance.now() - timers.get(label);
+              timers.delete(label);
+              info = `${label}: ${elapsed.toFixed(2)} ms`;
+            } else {
+              info = `${label}: 计时器不存在`;
+            }
+          } else if (prop === "count") {
+            const label = args[0] || "default";
+            const count = (counters.get(label) || 0) + 1;
+            counters.set(label, count);
+            info = `${label}: ${count}`;
+          } else if (prop === "countReset") {
+            const label = args[0] || "default";
+            counters.set(label, 0);
+            return;
+          }
+
+          if (id) {
+            window.parent.postMessage({
+              type: prop,
+              info: info,
+              source: id,
+              time: Date.now()
+            }, '*');
+
+          }
+          // return target[prop].apply(target, args);
+        };
+      }
+      return target[prop];
+    },
+  });
+}
+
 /**
  * 创建运行器
  * @returns
@@ -64,59 +153,21 @@ export function createJsRunner(fn) {
   // 写入运行代码
   async function writeCode(code) {
     await createIframe()
-    let _code = `<script id='${id}'>
+
+    const runCode = `
       const id = '${id}';
-      const code = '${encodeURIComponent(code)}';
-      console = new Proxy(console, {
-        get(target, prop) {
-          if (typeof target[prop] === "function") {
-            return function (...args) {
-              const info = args
-                .map((item) => {
-                  // object null array
-                  if (typeof item === "object") {
-                    return JSON.stringify(item, (key, value) => {
-                      return value === undefined ? "undefined" : value;
-                    });
-                  }
-                  if (item === undefined) {
-                    return 'undefined';
-                  }
-                  if(typeof item === 'string' && item.trim() === '') {
-                    return '""';
-                  }
-                  // BigInt
-                  if(typeof item === 'bigint') {
-                    return item.toString() + 'n';
-                  }
-                  // symbol function number
-                  return item.toString();
-                })
-                .join(" ");
-              
-              window.parent.postMessage({
-                type: prop,
-                info: info,
-                source: id,
-                time: Date.now()
-              }, '*');
-              return target[prop].apply(target, args);
-            };
-          }
-          return target[prop];
-        },
-      });
+      ${proxyConsole.toString()}
+      proxyConsole(id);
+
       try {
-        new Function(decodeURIComponent(code))();
-      } catch (error) {
-        console.error(error.message);
+        ${code}
+      } catch (e) {
+        console.error(e.message);
       }
-		<\/script>`;
-    try {
-      iframeDoc.write(_code);
-    } catch (e) {
-      console.log(e);
-    }
+    `;
+    const script = document.createElement("script");
+    script.textContent = runCode;
+    iframeDoc.body.appendChild(script);
   }
 
   window.addEventListener("message", fn);
@@ -214,6 +265,10 @@ export async function imgClipByPage(canvas, y, img_height, quality = 0.8) {
   const _ctx = _canvas.getContext("2d", { willReadFrequently: true });
   _canvas.width = canvas.width;
   _canvas.height = img_height;
+  // html2canvas 图片底部有 1px 的白边
+  if (canvas.height === y + img_height) {
+    _canvas.height -= 1
+  }
 
   _ctx.drawImage(canvas, 0, y, canvas.width, img_height, 0, 0, canvas.width, img_height);
 

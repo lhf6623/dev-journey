@@ -4,9 +4,9 @@
     id="console-list"
     attr:class="`${sys_store.theme} hfull relative overflow-auto`"
   >
-    <div b-b px-6px text-sm flex items-center flex-wrap gap-6px>
+    <div b-b b-b-menuHoverColor text-sm flex items-center flex-wrap gap-6px>
       <l-button on:on-click="clear" title="清空运行结果">
-        <i i-tabler-clear-formatting></i>
+        <i i-lsicon-disable-outline></i>
       </l-button>
       <div class="relative min-w-100px">
         <l-button
@@ -51,19 +51,14 @@
     >
       <x-fill :value="filterLogList">
         <li
-          attr:class="`${$host.getCls($data)}`"
-          relative
-          rounded
-          p="x22px"
-          m="y3px"
+          attr:class="`${$host.getCls($data)} relative rounded p-x22px m-y3px`"
         >
-          <p
-            overflow-hidden
+          <div
             b="b-solid b-1px b-#cadbfd dark:b-#4c4c4c "
-            attr:class="`${$host.getCls($data) ? '!b-none' : ''}`"
+            attr:class="`${$host.getCls($data) ? '!b-none' : ''} overflow-hidden`"
           >
-            <span>{{$data.info}}</span>
-          </p>
+            <pre>{{$data.info}}</pre>
+          </div>
         </li>
       </x-fill>
     </ul>

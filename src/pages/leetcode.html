@@ -197,6 +197,7 @@
             }
           },
           setFooterTitle() {
+            if (!this.page_store) return;
             const { menus, title } = this.sys_store || {};
 
             this.title = this.page_store.leetcode_title;
