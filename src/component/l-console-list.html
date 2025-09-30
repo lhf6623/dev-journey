@@ -44,12 +44,7 @@
 
     export const tag = "l-console-list";
     export default async function ({ load }) {
-      const { page_store } = await load("../store/page-store.js");
-      const { sys_store } = await load("../store/system.js");
       const { watchHtmlTheme } = await load("../js/util.js");
-
-      let timeout = null;
-
       const cls = {
         warn: "bg-#fef4cb text-#2f2400 dark:bg-#322e1d dark:text-#efe591",
         error: "bg-#fae6e6 text-#492222 dark:bg-#3c2728 dark:text-#eececd",
@@ -58,8 +53,6 @@
         data: {
           theme: "light",
           observer: null,
-          page_store: {},
-          sys_store: {},
           /**
            * 日志列表
            * {
@@ -100,15 +93,11 @@
           },
         },
         attached() {
-          this.sys_store = sys_store;
-          this.page_store = page_store;
           this.observer = watchHtmlTheme((theme) => {
             this.theme = theme;
           });
         },
         detached() {
-          this.sys_store = null;
-          this.page_store = null;
           this.observer && this.observer();
           this.observer = null;
         },
