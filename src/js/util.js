@@ -2,6 +2,32 @@ import { inRange } from "https://esm.sh/lodash-es@4.17.21";
 import pkg from "../../package.json" with { type: "json" };
 
 export const { version, name } = pkg;
+
+export const watchHtmlTheme = (fn) => {
+
+  const targetNode = document.documentElement;
+  const theme = targetNode.className.includes("dark") ? "dark" : "light"
+  fn(theme);
+  const config = {
+    attributes: true, // 监听属性变化
+    attributeFilter: ["class"], // 只监听class属性的变化
+    childList: false, // 不监听子节点的增减
+    subtree: false, // 不监听后代节点
+  };
+  const callback = (mutationsList) => {
+    const { type, target } = mutationsList[0] || {};
+    if (type === "attributes") {
+      const theme = target.className.includes("dark") ? "dark" : "light"
+      fn(theme);
+    }
+  };
+  const observer = new MutationObserver(callback);
+  observer.observe(targetNode, config);
+
+  return () => {
+    observer.disconnect();
+  };
+}
 /**
  * 获取开始到结束的值，如果大于或小于 start 或 end，则返回 start 或 end
  * @param {Number} start
@@ -45,12 +71,15 @@ function proxyConsole(id) {
       if (item === null) return "null"
       if (item === undefined) return "undefined"
       if (item instanceof Map) {
+        if (item.size === 0) return "{}"
         return anyToString([Object.fromEntries(item)], space - 2)
       }
       if (item instanceof Set) {
+        if (item.size === 0) return "[]"
         return anyToString([Array.from(item)], space)
       }
       if (Array.isArray(item)) {
+        if (item.length === 0) return "[]"
         return `[${item.map((arr) => anyToString([arr], space))}]`
       }
       if (typeof item === 'bigint') {
@@ -60,6 +89,8 @@ function proxyConsole(id) {
         return 'Symbol'
       }
       if (typeof item === "object") {
+        // 判断空对象
+        if (Object.keys(item).length === 0) return "{}"
 
         if (loopObject.has(item)) return "循环引用";
         loopObject.set(item, true);
@@ -70,7 +101,7 @@ function proxyConsole(id) {
 
       // function number
       return item;
-    }).join("\n");
+    }).join(", ");
   }
   const timers = new Map();
   const counters = new Map();
@@ -329,7 +360,7 @@ export function checkImgEmptyLine(canvas, ctx, y, page) {
     }
   });
 
-  return maxCount / totalPixels > 0.99;
+  return maxCount / totalPixels > 0.85;
 }
 /**
  * 两个颜色的差值

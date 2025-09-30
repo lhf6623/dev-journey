@@ -1,9 +1,10 @@
 <template component>
   <l-m src="./l-search.html"></l-m>
   <l-m src="./common/l-button.html"></l-m>
+  <l-m src="./common/l-select.html"></l-m>
 
   <header
-    class="z10 relative h50px !px18px flex-shrink-0 b-b b-menu-hover-color flex-center"
+    class="z10 relative h50px !px18px flex-shrink-0 b-b b-theme-hover flex-center"
   >
     <x-if :value="sys_store.is_small">
       <l-button
@@ -18,14 +19,14 @@
       class="flex-center ml3px *:bg-transparent *:px10px *:py3px *:whitespace-nowrap *:text-12px"
     >
       <button
-        b="1px solid menu-border"
+        b="1px solid theme-border"
         attr:class="`rounded-s-full l-btn ${sys_store.document_type === 'leetcode' ? 'text-#0173ff':''}`"
         on:click="toPage('leetcode')"
       >
         力扣
       </button>
       <button
-        b="1px solid menu-border l-0px"
+        b="1px solid theme-border l-0px"
         attr:class="`rounded-e-full l-btn ${sys_store.document_type === 'mdbook' ? 'text-#0173ff':''}`"
         on:click="toPage('mdbook')"
       >
@@ -41,13 +42,11 @@
           <l-search></l-search>
         </li>
         <li>
-          <l-button
-            :icon="sys_store.theme !== 'dark' ?'i-mage:moon-fill' : 'i-ph:sun-fill'"
-            on:on-click="toggleTheme"
-            :round="true"
-            :icon-size="24"
-          >
-          </l-button>
+          <l-select :options="themeList" on:select="toggleTheme">
+            <l-button :icon="getThemeIcon()" text-nowrap bg-red :icon-size="24"
+              >主题</l-button
+            >
+          </l-select>
         </li>
         <li>
           <a
@@ -77,10 +76,29 @@
     import { getUrl } from "../js/util.js";
     export const tag = "l-header";
     export default async function ({ load }) {
-      const { sys_store, refreshTheme } = await load("../store/system.js");
+      const { sys_store, refreshTheme, system, light, dark } = await load(
+        "../store/system.js"
+      );
       return {
         data: {
           sys_store: {},
+          themeList: [
+            {
+              label: "系统",
+              value: system,
+              icon: "i-fluent-mdl2:system",
+            },
+            {
+              label: "浅色",
+              value: light,
+              icon: "i-ph:sun-fill",
+            },
+            {
+              label: "深色",
+              value: dark,
+              icon: "i-mage:moon-fill",
+            },
+          ],
         },
         attached() {
           this.sys_store = sys_store;
@@ -97,9 +115,15 @@
             const { is_show_menu } = this.sys_store;
             this.sys_store.is_show_menu = !is_show_menu;
           },
-          toggleTheme() {
-            const { theme } = this.sys_store;
-            refreshTheme(theme === "dark" ? "light" : "dark");
+          toggleTheme({ data }) {
+            refreshTheme(data);
+          },
+          getThemeIcon() {
+            if (!this.sys_store) return "";
+            return (
+              this.themeList.find((item) => item.value === this.sys_store.theme)
+                ?.icon || ""
+            );
           },
         },
       };

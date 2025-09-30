@@ -4,12 +4,12 @@
     attr:class="`${sys_store.is_small && sys_store.is_show_menu ? 'op100 z300' : 'op0 !z--1'} bg-#00000022 transition-all fixed w100vw h100vh top-0 left-0`"
   ></div>
   <aside
-    attr:class="`${menuClass} hfull transition-all w280px text-theme-text bg-theme-bg-color overflow-y-auto relative flex-shrink-0 z1`"
+    attr:class="`${menuClass} hfull transition-all w280px text-theme-text bg-theme-bg overflow-y-auto relative flex-shrink-0 z1`"
   >
     <ul class="p0 m0 relative px16px">
       <x-fill :value="sys_store.menus">
         <li
-          attr:class="`${$host.sys_store?.title === $data ? 'text-#0173ff active bg-menu-hover-color' : ''} l-btn rounded-5px font500 truncate`"
+          attr:class="`${$host.sys_store?.title === $data ? 'text-#0173ff active bg-theme-hover' : ''} l-btn rounded-5px font500 truncate`"
           p="l8px y2px"
           m="y5px x0px"
           text="ellipsis 16px"

@@ -1,0 +1,100 @@
+<template component>
+  <l-m src="./l-button.html"></l-m>
+  <div attr:class="`${theme} relative`" attr:id="id">
+    <div on:click="show = !show" class="select__btn">
+      <x-if :value="!defaultSlot">
+        <l-button gap-0>
+          <span text-xs>{{label}}</span>
+          <i text-3xl i-mingcute-down-small-fill></i>
+        </l-button>
+      </x-if>
+      <slot></slot>
+    </div>
+    <ul
+      attr:class="`${show ? 'inline-block' : 'hidden'} z-200 absolute top-100% left-50% transform-translate-x-[-50%] shadow b b-#f0f0f0 dark:b-#323232 rounded overflow-hidden bg-#fff !dark:bg-#222 select__ul`"
+    >
+      <x-fill :value="options">
+        <li>
+          <l-button
+            :size="'medium'"
+            on:click="$host.changeValue($data.value)"
+            :icon="!$host.multiple ? $data.icon : $host.inValues($data.value) ? $host.optionIcon :'-'"
+            butCls="wfull"
+          >
+            <span text-sm text-nowrap inline-block> {{$data.label}} </span>
+          </l-button>
+        </li>
+      </x-fill>
+    </ul>
+  </div>
+
+  <script type="module">
+    // TODO: slot 里面需要放 l-button
+    export const tag = "l-select";
+    export default async function ({ load }) {
+      const { watchHtmlTheme } = await load("../../js/util.js");
+      return {
+        data: {
+          id: crypto.randomUUID(),
+          // 多选
+          multiple: false,
+          show: false,
+          options: [],
+          optionIcon: "",
+          value: [],
+          label: "",
+          defaultSlot: false,
+          listenerFn: null,
+          theme: "light",
+          observer: null,
+        },
+        proto: {
+          inValues(value) {
+            return this.value.includes(value);
+          },
+          changeValue(value) {
+            this.show = false;
+
+            this.emit("select", {
+              data: value,
+            });
+          },
+        },
+        attached() {
+          // TODO: 这里判断是否有子项
+          this.shadow.$("slot").on("slotchange", () => {
+            this.defaultSlot = !!this.$("l-button");
+          });
+          const inSelect = (x, y, dom_str) => {
+            const rect = this.shadow.$(dom_str).ele.getBoundingClientRect();
+            return (
+              x >= rect.left &&
+              x <= rect.right &&
+              y >= rect.top &&
+              y <= rect.bottom
+            );
+          };
+          this.listenerFn = (e) => {
+            if (this.show) {
+              if (
+                !inSelect(e.clientX, e.clientY, ".select__btn") &&
+                !inSelect(e.clientX, e.clientY, ".select__ul")
+              ) {
+                this.show = false;
+              }
+            }
+          };
+          document.addEventListener("click", this.listenerFn);
+          this.observer = watchHtmlTheme((theme) => {
+            this.theme = theme;
+          });
+        },
+        detached() {
+          document.removeEventListener("click", this.listenerFn);
+          this.observer && this.observer();
+          this.observer = null;
+        },
+      };
+    }
+  </script>
+</template>

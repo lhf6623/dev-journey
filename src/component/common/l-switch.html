@@ -52,6 +52,7 @@
     };
     export const tag = "l-switch";
     export default async function ({ load }) {
+      const { watchHtmlTheme } = await load("../../js/util.js");
       return {
         data: {
           cursor: "cursor-pointer",
@@ -62,28 +63,16 @@
           iconSize: iconSize[defaultSize],
           themeCls: size[defaultSize],
           checked: false,
+          observer: null,
         },
-        loaded() {
-          const targetNode = document.documentElement; // 这里选择的是html元素
-          this.setTheme(targetNode.className);
-
-          const config = {
-            attributes: true, // 监听属性变化
-            attributeFilter: ["class"], // 只监听class属性的变化
-            childList: false, // 不监听子节点的增减
-            subtree: false, // 不监听后代节点
-          };
-
-          const callback = (mutationsList, observer) => {
-            for (const mutation of mutationsList) {
-              if (mutation.type === "attributes") {
-                this.setTheme(mutation.target.className);
-              }
-            }
-          };
-
-          const observer = new MutationObserver(callback);
-          observer.observe(targetNode, config);
+        attached() {
+          this.observer = watchHtmlTheme((theme) => {
+            this.theme = theme;
+          });
+        },
+        detached() {
+          this.observer && this.observer();
+          this.observer = null;
         },
         watch: {
           size(val) {
@@ -105,9 +94,6 @@
               this.checked = !this.checked;
               this.updateChecked();
             }
-          },
-          setTheme(_theme = "") {
-            this.theme = _theme.includes("dark") ? "dark" : "light";
           },
           updateChecked() {
             this.emit("change", {

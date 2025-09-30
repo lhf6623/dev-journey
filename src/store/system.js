@@ -6,8 +6,9 @@ import Cache from "../js/cache.js";
 const THEME_KEY = "sys_theme";
 const DOCUMENT_TYPE = "sys_document_type";
 const TITLE = "sys_title";
-const dark = "dark";
-const light = "light";
+export const dark = "dark";
+export const light = "light";
+export const system = "system";
 export const mdbook = "mdbook";
 export const leetcode = "leetcode";
 
@@ -70,17 +71,25 @@ export const changeType = (type, file_name) => {
 };
 
 export function refreshTheme(theme) {
-  const _theme = window.matchMedia("(prefers-color-scheme: dark)").matches
-    ? dark
-    : light;
+  const local_theme = Cache.getItem(THEME_KEY);
 
-  theme = !theme ? Cache.getItem(THEME_KEY) ?? _theme : theme;
+  theme = theme ?? local_theme ?? system
+  sys_store.theme = theme
+  Cache.setItem(THEME_KEY, theme);
+  function setTheme() {
+    const scheme_theme = window.matchMedia("(prefers-color-scheme: dark)").matches
+      ? "dark"
+      : "light"
 
-  document.startViewTransition(() => {
-    sys_store.theme = theme;
-    Cache.setItem(THEME_KEY, theme);
-    document.documentElement.classList.toggle(dark, theme === dark);
-  });
+    const _theme = theme === system ? scheme_theme : theme
+    document.documentElement.classList.toggle(dark, _theme === dark);
+  }
+  // Firefox 兼容性判断
+  if (document.startViewTransition) {
+    document.startViewTransition(setTheme);
+  } else {
+    setTheme();
+  }
 }
 
 export async function getContent() {

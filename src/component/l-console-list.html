@@ -1,47 +1,22 @@
 <template component>
-  <l-m src="../component/common/l-button.html"></l-m>
-  <div
-    id="console-list"
-    attr:class="`${sys_store.theme} hfull relative overflow-auto`"
-  >
-    <div b-b b-b-menuHoverColor text-sm flex items-center flex-wrap gap-6px>
+  <l-m src="./common/l-button.html"></l-m>
+  <l-m src="./common/l-select.html"></l-m>
+  <div id="console-list" attr:class="`${theme} hfull relative overflow-auto`">
+    <div b-b b-b-theme-hover text-sm flex items-center flex-wrap gap-6px>
       <l-button on:on-click="clear" title="清空运行结果">
         <i i-lsicon-disable-outline></i>
       </l-button>
-      <div class="relative min-w-100px">
-        <l-button
-          gap-0
-          on:click="showSelect = !showSelect"
-          title="选择日志级别"
-        >
-          <span text-xs>所有级别</span>
-          <i text-3xl i-mingcute-down-small-fill></i>
-        </l-button>
-        <div
-          on:click="showSelect = false"
-          attr:class="`${showSelect ? 'inline-block' : 'hidden'} fixed inset-0 top-0 left-0`"
-        ></div>
-        <ul
-          attr:class="`${showSelect ? 'inline-block' : 'hidden'} *:text-center  z-100 py-4px absolute top-100% left-0 shadow b rounded overflow-hidden bg-theme-bg-color b-menuHoverColor`"
-        >
-          <x-fill :value="logLevel">
-            <li
-              attr:class="$data.value == 'default' ? 'b-b b-menuHoverColor pb-4px mb-4px' : ''"
-            >
-              <l-button
-                :size="'medium'"
-                on:click="$host.changeLogLevel($data.value)"
-                :icon="$host.getLevel($data.value) ? 'i-line-md-confirm':'-'"
-                butCls="wfull"
-              >
-                <span text-sm> {{$data.label}} </span>
-              </l-button>
-            </li>
-          </x-fill>
-        </ul>
-      </div>
+      <l-select
+        :multiple="true"
+        :options="logLevel"
+        :option-icon="'i-line-md-confirm'"
+        :value="logLevelValue"
+        on:select="changeLogLevel"
+        :label="'所有级别'"
+      >
+      </l-select>
       <x-if :value="logList.length - filterLogList.length > 0">
-        <p text-xs text-menu-border>
+        <p text-xs text-theme-text>
           {{logList.length - filterLogList.length}}个已隐藏
         </p>
       </x-if>
@@ -71,6 +46,7 @@
     export default async function ({ load }) {
       const { page_store } = await load("../store/page-store.js");
       const { sys_store } = await load("../store/system.js");
+      const { watchHtmlTheme } = await load("../js/util.js");
 
       let timeout = null;
 
@@ -80,6 +56,8 @@
       };
       return {
         data: {
+          theme: "light",
+          observer: null,
           page_store: {},
           sys_store: {},
           /**
@@ -92,7 +70,6 @@
            */
           logList: [],
           filterLogList: [],
-          showSelect: false,
           logLevelValue: ["verbose", "info", "warn", "error"],
           logLevel: [
             {
@@ -125,10 +102,15 @@
         attached() {
           this.sys_store = sys_store;
           this.page_store = page_store;
+          this.observer = watchHtmlTheme((theme) => {
+            this.theme = theme;
+          });
         },
         detached() {
           this.sys_store = null;
           this.page_store = null;
+          this.observer && this.observer();
+          this.observer = null;
         },
         proto: {
           handleLogList() {
@@ -140,16 +122,15 @@
               return this.logLevelValue.includes("verbose");
             });
           },
-          changeLogLevel(val) {
-            this.showSelect = false;
-            if (val === "default") return;
+          changeLogLevel({ data }) {
+            if (data === "default") return;
 
-            if (this.logLevelValue.includes(val)) {
+            if (this.logLevelValue.includes(data)) {
               this.logLevelValue = this.logLevelValue.filter(
-                (item) => item !== val
+                (item) => item !== data
               );
             } else {
-              this.logLevelValue.push(val);
+              this.logLevelValue.push(data);
             }
           },
           getLevel(val) {

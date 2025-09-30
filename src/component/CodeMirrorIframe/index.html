@@ -57,6 +57,14 @@
         foldGutter: true,
         gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
       });
+
+      document.addEventListener("keydown", function (e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+          e.preventDefault();
+          _postMessage("saveCode");
+        }
+      });
+
       setTheme();
 
       editor.on("inputRead", function (cm, change) {
@@ -73,12 +81,20 @@
         _postMessage("setCode", [content]);
       });
 
-      function setTheme() {
-        const theme = Cache.getItem("sys_theme");
-        const _theme = theme === "dark" ? "monokai" : "default";
-        document.documentElement.classList.toggle("dark", theme === "dark");
+      function setTheme(theme) {
+        const scheme_theme = window.matchMedia("(prefers-color-scheme: dark)")
+          .matches
+          ? "dark"
+          : "light";
+        let local_theme = Cache.getItem("sys_theme");
+        theme = theme ?? local_theme ?? scheme_theme;
 
-        editor.setOption("theme", _theme);
+        if (theme === "system") {
+          theme = scheme_theme;
+        }
+
+        document.documentElement.classList.toggle("dark", theme === "dark");
+        editor.setOption("theme", theme === "dark" ? "monokai" : "default");
       }
       function setValue(code) {
         editor.setValue(code);

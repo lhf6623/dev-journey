@@ -11,6 +11,7 @@
     "unocss": "^66.5.2"
   },
   "dependencies": {
+    "@iconify-json/fluent-mdl2": "^1.2.1",
     "@iconify-json/lsicon": "^1.2.5",
     "@iconify-json/akar-icons": "^1.2.7",
     "@iconify-json/eos-icons": "^1.2.4",

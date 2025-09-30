@@ -4,9 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script type="module">
-      import Cache from "./src/js/cache.js";
-      const theme = Cache.getItem("sys_theme");
-      document.documentElement.classList.toggle("dark", theme === "dark");
+      import { refreshTheme } from "./src/store/system.js";
+      refreshTheme();
     </script>
     <title>Coding Journey - 编码之旅</title>
     <link rel="stylesheet" href="./src/css/public.css?v=0.2.5" />

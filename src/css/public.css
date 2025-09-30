@@ -7,7 +7,7 @@ html {
   --text-base-color: #333;
   --text-color: #606770;
   --border-color: #858585;
-  --bg-hover-color: rgb(240, 240, 240);
+  --bg-hover-color: #f0f0f0;
 }
 
 html.dark {
@@ -16,7 +16,7 @@ html.dark {
   --text-base-color: #fff;
   --text-color: #dedede;
   --border-color: #767676;
-  --bg-hover-color: rgb(50, 50, 50);
+  --bg-hover-color: #323232;
 }
 
 [tabindex]:focus-visible,

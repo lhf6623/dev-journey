@@ -9,25 +9,20 @@
 
   <script type="module">
     export const tag = "l-editor";
+    import Toast from "./common/Toast.js";
     export default async function ({ load }) {
-      const { setLeetcodeCode, page_store } = await load(
-        "../store/page-store.js"
-      );
-      const { sys_store } = await load("../store/system.js");
-      let timeoutId = null;
+      const { setLeetcodeCode } = await load("../store/page-store.js");
+      const { watchHtmlTheme } = await load("../js/util.js");
+      const toast = new Toast(3);
       return {
         data: {
-          sys_store: {},
-          page_store: {},
           code: "",
           updateCode: "",
           iframe: null,
           loading: true,
+          observer: null,
         },
         watch: {
-          "sys_store.theme"(value) {
-            this.selectTheme();
-          },
           updateCode(time) {
             if (!time) return;
             if (!this.code) return;
@@ -35,7 +30,7 @@
             this.changeEditorCode(this.code ?? "");
           },
         },
-        loaded() {
+        attached() {
           this.iframe = this.shadow.ele.querySelector("#iframe");
 
           window.addEventListener("message", (event) => {
@@ -53,17 +48,21 @@
               }
             }
           });
-        },
-        attached() {
-          this.sys_store = sys_store;
-          this.page_store = page_store;
+          document.addEventListener("keydown", (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+              e.preventDefault();
+              this.saveCode();
+            }
+          });
+          this.observer = watchHtmlTheme(this.selectTheme.bind(this));
         },
         detached() {
-          this.sys_store = null;
-          this.page_store = null;
           this.iframe = null;
+          this.observer && this.observer();
+          this.observer = null;
         },
         proto: {
+          setCode: setLeetcodeCode,
           postMessage(fn, ags) {
             if (!this.iframe) return;
             this.iframe.contentWindow.postMessage(
@@ -71,9 +70,8 @@
               "*"
             );
           },
-          selectTheme() {
-            if (!this.sys_store) return;
-            this.postMessage("setTheme");
+          selectTheme(theme) {
+            this.postMessage("setTheme", [theme]);
           },
           changeEditorCode(code) {
             if (this.iframe) {
@@ -82,8 +80,8 @@
               this.emit("load");
             }
           },
-          setCode(code) {
-            setLeetcodeCode(code);
+          saveCode() {
+            toast.show("代码已经存储到本地，点击 还原代码 按钮立即还原");
           },
         },
       };

@@ -10,7 +10,7 @@
   <div class="relative hfull flex flex-col">
     <div
       id="main"
-      class="flex wfull relative flex-col overflow-hidden flex-1 bg-theme-bg-color"
+      class="flex wfull relative flex-col overflow-hidden flex-1 bg-theme-bg"
     >
       <!-- 功能区 -->
       <div class="p3px pl16px m0 flex-between">
@@ -49,9 +49,7 @@
         </l-button>
       </div>
       <!-- 编辑区 -->
-      <div
-        class="flex-1 group relative flex b-y overflow-hidden b-menu-hover-color"
-      >
+      <div class="flex-1 group relative flex b-y overflow-hidden b-theme-hover">
         <div
           id="split-0"
           class="relative flex-shrink-0 hfull overflow-hidden group-[.cursor-col-resize]:select-none group-[.cursor-col-resize]:pointer-events-none"
@@ -64,7 +62,7 @@
         </div>
         <div
           id="split-1"
-          class="cursor-col-resize flex-shrink-0 !w6px overflow-hidden bg-menu-hover-color flex-center"
+          class="cursor-col-resize flex-shrink-0 !w6px overflow-hidden bg-theme-hover flex-center"
         >
           <i class="i-akar-icons:drag-vertical w16px h16px"></i>
         </div>
@@ -213,7 +211,7 @@
             if (!screenfull.isEnabled) return;
 
             screenfull.toggle(element).then(() => {
-              this.is_fullscreen = screenfull.is_fullscreen;
+              this.is_fullscreen = screenfull.isFullscreen;
             });
           },
           // 还原代码

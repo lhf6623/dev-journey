@@ -17,8 +17,8 @@
       </x-if>
       <l-menu class="relative hfull"></l-menu>
       <main
-        b="l l-solid l-menu-hover-color"
-        class="relative hfull wfull bg-theme-bg-color"
+        b="l l-solid l-theme-hover"
+        class="relative hfull wfull bg-theme-bg"
       >
         <slot></slot>
       </main>
@@ -27,7 +27,9 @@
 
   <script type="module">
     export default async ({ load }) => {
-      const { sys_store, refreshTheme } = await load("./store/system.js");
+      const { sys_store, refreshTheme, system } = await load(
+        "./store/system.js"
+      );
       return {
         data: {
           currentPage: "",
@@ -35,14 +37,13 @@
         },
         attached() {
           this.sys_store = sys_store;
-          // 监听浏览器颜色主题变化
           window
             .matchMedia("(prefers-color-scheme: dark)")
             .addEventListener("change", ({ matches }) => {
-              refreshTheme(matches ? dark : light);
+              if (this.sys_store.theme === system) {
+                refreshTheme();
+              }
             });
-
-          refreshTheme();
         },
         detached() {
           this.sys_store = null;

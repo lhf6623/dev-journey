@@ -2,7 +2,7 @@
   <link rel="stylesheet" href="../css/uno.css" />
   <link rel="stylesheet" href="../css/highlightjs.css?v=0.2.3" />
   <l-m src="../component/common/l-button.html"></l-m>
-  <div attr:class="`md ${sys_store.theme} relative hfull overflow-auto`">
+  <div attr:class="`md ${theme} relative hfull overflow-auto`">
     <l-button
       title="下载文档为PDF"
       class="fixed right-18px mt3px bg-amber dark:bg-blue rounded-3px z100"
@@ -11,10 +11,7 @@
       :loading="pdfLoading"
     >
     </l-button>
-    <div
-      id="pdf"
-      class="bg-theme-bg-color relative max-w794px min-w-595px mx-auto"
-    >
+    <div id="pdf" class="bg-theme-bg relative max-w794px min-w-595px mx-auto">
       <h1 class="text-center tracking-2px">{{getTitle(title)}}</h1>
       <div :html="mdTxt" id="md" class="px40px all:transition-200"></div>
     </div>
@@ -27,13 +24,14 @@
     import hljs from "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/es/highlight.min.js";
     import { jsPDF } from "https://esm.sh/jspdf@2.5.2";
     import html2canvas from "https://esm.sh/html2canvas@1.4.1";
-    import {
-      imgClipByPage,
-      checkImgEmptyLine,
-      colorDistance,
-    } from "../js/util.js";
 
     export default async ({ load }) => {
+      const {
+        imgClipByPage,
+        checkImgEmptyLine,
+        colorDistance,
+        watchHtmlTheme,
+      } = await load("../js/util.js");
       const {
         sys_store,
         changeType,
@@ -55,6 +53,8 @@
           sys_store: {},
           pdfLoading: false,
           title: "",
+          theme: "light",
+          observer: null,
         },
         watch: {
           async "sys_store.title"(data) {
@@ -76,11 +76,16 @@
           this.sys_store = null;
           this.page_store = null;
           this.shadow.off("click", this.copyCode);
+          this.observer && this.observer();
+          this.observer = null;
         },
         ready() {
           this.shadow.on("click", this.copyCode);
         },
         attached() {
+          this.observer = watchHtmlTheme((theme) => {
+            this.theme = theme;
+          });
           changeType("mdbook", page_store.md_title);
           this.sys_store = sys_store;
           this.page_store = page_store;
@@ -234,7 +239,7 @@
                 const { base64 } = await imgClipByPage(canvas, _y, _img_height);
 
                 // PDF底部颜色跟随主题色
-                const color = this.sys_store.theme === "dark" ? "#222" : "#fff";
+                const color = this.theme === "dark" ? "#222" : "#fff";
                 doc.setFillColor(color);
                 doc.rect(0, 0, pdf_page_w, pdf_page_h, "F"); // "F" 表示填充
 
