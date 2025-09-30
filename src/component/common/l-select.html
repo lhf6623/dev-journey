@@ -3,15 +3,15 @@
   <div attr:class="`${theme} relative`" attr:id="id">
     <div on:click="show = !show" class="select__btn">
       <x-if :value="!defaultSlot">
-        <l-button gap-0>
-          <span text-xs>{{label}}</span>
-          <i text-3xl i-mingcute-down-small-fill></i>
+        <l-button class="gap0">
+          <span class="text-xs">{{label}}</span>
+          <i class="text-3xl i-mingcute:down-small-fill"></i>
         </l-button>
       </x-if>
       <slot></slot>
     </div>
     <ul
-      attr:class="`${show ? 'inline-block' : 'hidden'} z-200 absolute top-100% left-50% transform-translate-x-[-50%] shadow b b-#f0f0f0 dark:b-#323232 rounded overflow-hidden bg-#fff !dark:bg-#222 select__ul`"
+      attr:class="`${show ? 'inline-block' : 'hidden'} z200 absolute top-100% left-50% transform-translate-x-[-50%] shadow b b-#f0f0f0 dark:b-#323232 rounded overflow-hidden bg-#fff !dark:bg-#222 select__ul`"
     >
       <x-fill :value="options">
         <li>
@@ -21,7 +21,9 @@
             :icon="!$host.multiple ? $data.icon : $host.inValues($data.value) ? $host.optionIcon :'-'"
             butCls="wfull"
           >
-            <span text-sm text-nowrap inline-block> {{$data.label}} </span>
+            <span class="text-sm text-nowrap inline-block">
+              {{$data.label}}
+            </span>
           </l-button>
         </li>
       </x-fill>

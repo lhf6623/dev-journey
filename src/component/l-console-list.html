@@ -2,21 +2,24 @@
   <l-m src="./common/l-button.html"></l-m>
   <l-m src="./common/l-select.html"></l-m>
   <div id="console-list" attr:class="`${theme} hfull relative overflow-auto`">
-    <div b-b b-b-theme-hover text-sm flex items-center flex-wrap gap-6px>
-      <l-button on:on-click="clear" title="清空运行结果">
-        <i i-lsicon-disable-outline></i>
+    <div class="b-b b-b-theme-hover text-sm flex items-center flex-wrap gap6px">
+      <l-button
+        on:on-click="clear"
+        :icon="'i-lsicon:disable-outline'"
+        title="清空运行结果"
+      >
       </l-button>
       <l-select
         :multiple="true"
         :options="logLevel"
-        :option-icon="'i-line-md-confirm'"
+        :option-icon="'i-line-md:confirm'"
         :value="logLevelValue"
         on:select="changeLogLevel"
         :label="'所有级别'"
       >
       </l-select>
       <x-if :value="logList.length - filterLogList.length > 0">
-        <p text-xs text-theme-text>
+        <p class="text-xs text-theme-text">
           {{logList.length - filterLogList.length}}个已隐藏
         </p>
       </x-if>
@@ -25,12 +28,9 @@
       class="px6px text-14px text-#1c1c1c dark:text-#fff bg-#fff !dark:bg-transparent"
     >
       <x-fill :value="filterLogList">
-        <li
-          attr:class="`${$host.getCls($data)} relative rounded p-x22px m-y3px`"
-        >
+        <li attr:class="`${$host.getCls($data)} relative rounded px22px my3px`">
           <div
-            b="b-solid b-1px b-#cadbfd dark:b-#4c4c4c "
-            attr:class="`${$host.getCls($data) ? '!b-none' : ''} overflow-hidden`"
+            attr:class="`${$host.getCls($data) ? '!b-none' : ''} overflow-hidden b-b-solid b-b-1px b-b-#cadbfd dark:b-b-#4c4c4c`"
           >
             <pre>{{$data.info}}</pre>
           </div>

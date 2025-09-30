@@ -1,7 +1,8 @@
 <template page>
-  <link rel="stylesheet" href="../css/tailwind-compat.css?v=0.2.5" />
-  <link rel="stylesheet" href="../css/public.css?v=0.2.5" />
-  <link rel="stylesheet" href="../css/uno.css?v=0.2.5" />
+  <link rel="stylesheet" href="../css/tailwind-compat.css" />
+  <link rel="stylesheet" href="../css/public.css?v=0.2.7" />
+  <link rel="stylesheet" href="../css/uno.css?v=0.2.7" />
+  <link rel="stylesheet" href="../css/uno-icon.css?v=0.2.7" />
   <l-m src="../component/common/l-switch.html"></l-m>
   <l-m src="../component/common/l-button.html"></l-m>
 
@@ -15,7 +16,7 @@
       <!-- 功能区 -->
       <div class="p3px pl16px m0 flex-between">
         <p class="text-14px max-sm:hidden">{{getTitle(title)}}</p>
-        <div class="flex-between gap-x-10px *:flex-shrink-0">
+        <div class="flex-between gap-x10px *:flex-shrink-0">
           <l-button
             :loading="sys_store.loading"
             :icon="'i-pepicons-pop:reload'"
@@ -25,7 +26,7 @@
           </l-button>
 
           <div
-            class="l-btn rounded-3px overflow-hidden px14px h34px flex-center gap-x-6px"
+            class="l-btn rounded-3px overflow-hidden px14px h34px flex-center gap-x6px"
           >
             <p class="text-14px">实时运行</p>
             <l-switch

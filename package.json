@@ -3,19 +3,20 @@
   "name": "dev-journey",
   "version": "0.2.7",
   "scripts": {
-    "dev": "unocss --w",
-    "build": "unocss --m"
+    "dev": "concurrently \"unocss -c uno.config.js -w\" \"unocss -c uno.config.icons.js -w\"",
+    "build": "unocss -c uno.config.js -m && unocss -c uno.config.icons.js -m"
   },
   "devDependencies": {
     "@unocss/cli": "^66.5.2",
+    "concurrently": "^9.2.1",
     "unocss": "^66.5.2"
   },
   "dependencies": {
-    "@iconify-json/fluent-mdl2": "^1.2.1",
-    "@iconify-json/lsicon": "^1.2.5",
     "@iconify-json/akar-icons": "^1.2.7",
     "@iconify-json/eos-icons": "^1.2.4",
+    "@iconify-json/fluent-mdl2": "^1.2.1",
     "@iconify-json/line-md": "^1.2.11",
+    "@iconify-json/lsicon": "^1.2.5",
     "@iconify-json/mage": "^1.2.4",
     "@iconify-json/mdi": "^1.2.3",
     "@iconify-json/mingcute": "^1.2.5",

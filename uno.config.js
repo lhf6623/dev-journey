@@ -1,29 +1,19 @@
 import {
   defineConfig,
-  transformerDirectives,
-  transformerVariantGroup,
-  presetAttributify,
   presetMini,
-  presetIcons,
 } from "unocss";
 
 export default defineConfig({
   presets: [
     presetMini(),
-    presetAttributify(),
-    presetIcons({
-      // cdn: "https://esm.sh/",  unocss 提示会被阻塞，使用本地图标
-      extraProperties: {
-        display: "inline-block",
-        "vertical-align": "middle",
-      },
-    }),
   ],
   cli: {
-    entry: {
-      patterns: ["src/**/*.html", "src/**/*.js", "index.html"],
-      outFile: "src/css/uno.css",
-    },
+    entry: [
+      {
+        patterns: ["src/**/*.{html,js}", "index.html"],
+        outFile: "src/css/uno.css",
+      },
+    ],
   },
   theme: {
     colors: {
@@ -45,5 +35,4 @@ export default defineConfig({
     "l-btn-disabled":
       "disabled:op-70 disabled:cursor-not-allowed disabled:bg-theme-hover",
   },
-  transformers: [transformerDirectives(), transformerVariantGroup()],
 });

@@ -1,6 +1,7 @@
 <template page>
-  <link rel="stylesheet" href="../css/uno.css" />
-  <link rel="stylesheet" href="../css/highlightjs.css?v=0.2.3" />
+  <link rel="stylesheet" href="../css/uno.css?v=0.2.7" />
+  <link rel="stylesheet" href="../css/uno-icon.css?v=0.2.7" />
+  <link rel="stylesheet" href="../css/highlightjs.css?v=0.2.7" />
   <l-m src="../component/common/l-button.html"></l-m>
   <div attr:class="`md ${theme} relative hfull overflow-auto`">
     <l-button
@@ -11,11 +12,11 @@
       :loading="pdfLoading"
     >
     </l-button>
-    <div id="pdf" class="bg-theme-bg relative max-w794px min-w-595px mx-auto">
+    <div id="pdf" class="bg-theme-bg relative max-w794px min-w595px mxauto">
       <h1 class="text-center tracking-2px">{{getTitle(title)}}</h1>
       <div :html="mdTxt" id="md" class="px40px all:transition-200"></div>
     </div>
-    <div h-40px></div>
+    <div class="h40px"></div>
   </div>
 
   <script>

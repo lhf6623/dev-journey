@@ -1,6 +1,6 @@
 <!-- layout-page.html -->
 <template page>
-  <link rel="stylesheet" href="./css/uno.css?v=0.2.3" />
+  <link rel="stylesheet" href="./css/uno.css?v=0.2.7" />
 
   <l-m src="./component/l-menu.html"></l-m>
   <l-m src="./component/l-header.html"></l-m>
@@ -10,15 +10,14 @@
     <div class="flex-1 wfull flex relative flex-shrink-0 overflow-hidden">
       <x-if :value="sys_store.loading">
         <div
-          class="absolute z-999 bg-#00000009 top-0 left-0 wfull hfull flex-center"
+          class="absolute z999 bg-#00000009 top-0 left-0 wfull hfull flex-center"
         >
           <i class="i-eos-icons:bubble-loading w60px h60px text-#3498db"></i>
         </div>
       </x-if>
       <l-menu class="relative hfull"></l-menu>
       <main
-        b="l l-solid l-theme-hover"
-        class="relative hfull wfull bg-theme-bg"
+        class="relative hfull wfull bg-theme-bg b-l b-l-solid b-l-theme-hover"
       >
         <slot></slot>
       </main>

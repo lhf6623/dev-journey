@@ -20,13 +20,13 @@ export default class Toast {
   createToast(message, duration) {
     const toast = document.createElement("div");
     toast.className =
-      "bg-theme-bg text-sm text-nowrap text-theme-text b b-theme-hover px-10px py-3px rounded-6px text-center transform-translate-y-[-100%] op-0 transition-all w-fit shadow-md";
+      "bg-theme-bg text-sm text-nowrap text-theme-text b b-theme-hover px10px py3px rounded-6px text-center transform-translate-y-[-100%] op0 transition-all wfit shadow-md";
     toast.innerHTML = message;
     this.container.insertBefore(toast, this.container.firstChild);
 
     setTimeout(() => {
       toast.classList.remove("transform-translate-y-[-100%]");
-      toast.classList.remove("op-0");
+      toast.classList.remove("op0");
     }, 10);
 
     setTimeout(() => {
@@ -38,7 +38,7 @@ export default class Toast {
       toast.remove();
     } else {
       toast.classList.add("transform-translate-y-[-100%]");
-      toast.classList.add("op-0");
+      toast.classList.add("op0");
       setTimeout(() => {
         toast.remove();
       }, 300);
