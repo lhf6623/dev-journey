@@ -2,6 +2,7 @@ import { getUrl } from "../js/util.js";
 import leetcode_menu from "../js/leetcode_menu.js";
 import mdbook_menu from "../js/mdbook_menu.js";
 import Cache from "../js/cache.js";
+import { getPlatform } from "../js/Keyboard.mjs"
 
 const THEME_KEY = "sys_theme";
 const DOCUMENT_TYPE = "sys_document_type";
@@ -39,6 +40,7 @@ export const sys_store = $.stanz({
   is_small: false,
   /** 主题 */
   theme: Cache.getItem(THEME_KEY) ?? sys_theme,
+  is_mac: getPlatform() === "macOS",
 });
 /** 处理文件后缀 */
 export const handleFileSuffix = (textName) => {

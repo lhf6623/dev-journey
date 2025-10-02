@@ -1,10 +1,12 @@
 <template component>
   <input
-    attr:placeholder="`搜索 ${isMac ? '⌘':'Ctrl'} K`"
+    attr:placeholder="`搜索 ${sys_store.is_mac ? '⌘':'Ctrl'} K`"
     list="menus"
     :value="inputValue"
     on:change="toggle"
+    type="search"
     class="relative w168px box-border px6px py0px rounded placeholder:text-12px b b-solid b-theme-border"
+    id="test_123"
   />
   <datalist id="menus">
     <x-fill :value="sys_store.menus">
@@ -13,6 +15,7 @@
   </datalist>
   <script type="module">
     export const tag = "l-search";
+    import { keyboard } from "../js/Keyboard.mjs";
     export default async function ({ load }) {
       const { sys_store, mdbook, leetcode, handleFileSuffix, setSysTitle } =
         await load("../store/system.js");
@@ -20,24 +23,19 @@
         data: {
           sys_store: {},
           inputValue: "",
-          isMac: navigator.platform.toUpperCase().indexOf("MAC") >= 0,
         },
         attached() {
-          window.addEventListener("keydown", this.focusInput.bind(this));
-
           this.sys_store = sys_store;
+          keyboard.on("Ctrl-K", this.focusInput, this);
         },
         detached() {
           this.sys_store = null;
-          window.removeEventListener("keydown", this.focusInput.bind(this));
+          keyboard.off("Ctrl-K", this.focusInput, this);
         },
         proto: {
           // 监听按键 聚焦输入框
-          focusInput(e) {
-            // 监听 command k 键
-            if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
-              this.shadow.ele.querySelector("input").focus();
-            }
+          focusInput() {
+            this.shadow.ele.querySelector("input").focus();
           },
           changeText: handleFileSuffix,
           async toggle(e) {

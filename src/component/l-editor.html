@@ -9,11 +9,9 @@
 
   <script type="module">
     export const tag = "l-editor";
-    import Toast from "./common/Toast.js";
     export default async function ({ load }) {
       const { setLeetcodeCode } = await load("../store/page-store.js");
       const { watchHtmlTheme } = await load("../js/util.js");
-      const toast = new Toast(3);
       return {
         data: {
           code: "",
@@ -44,14 +42,10 @@
               } else {
                 if (this[fn] && typeof this[fn] === "function") {
                   this[fn](...(ags || []));
+                } else {
+                  console.log("not found fn:", fn);
                 }
               }
-            }
-          });
-          document.addEventListener("keydown", (e) => {
-            if ((e.ctrlKey || e.metaKey) && e.key === "s") {
-              e.preventDefault();
-              this.saveCode();
             }
           });
           this.observer = watchHtmlTheme(this.selectTheme.bind(this));
@@ -73,15 +67,17 @@
           selectTheme(theme) {
             this.postMessage("setTheme", [theme]);
           },
+          keydown(e) {
+            this.emit("keydown", {
+              data: e,
+            });
+          },
           changeEditorCode(code) {
             if (this.iframe) {
               this.postMessage("setValue", [code]);
 
               this.emit("load");
             }
-          },
-          saveCode() {
-            toast.show("代码已经存储到本地，点击 还原代码 按钮立即还原");
           },
         },
       };

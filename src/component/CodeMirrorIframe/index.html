@@ -4,9 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CodeMirror 5</title>
-    <link rel="stylesheet" href="../../css/public.css?v=0.2.7" />
-    <link rel="stylesheet" href="../../css/uno.css?v=0.2.7" />
-    <link rel="stylesheet" href="../../css/tailwind-compat.css?v=0.2.7" />
+    <link rel="stylesheet" href="../../css/tailwind-compat.css?v=0.2.8" />
+    <link rel="stylesheet" href="../../css/public.css?v=0.2.8" />
+    <link rel="stylesheet" href="../../css/uno.css?v=0.2.8" />
     <link href="./css/codemirror.css" rel="stylesheet" />
     <link href="./css/monokai.css" rel="stylesheet" />
     <link href="./css/foldgutter.css" rel="stylesheet" />
@@ -47,22 +47,36 @@
         matchBrackets: true,
         // 自动换行
         // lineWrapping: true,
-        // 折叠
-        extraKeys: {
-          "Ctrl-Q": function (cm) {
-            cm.foldCode(cm.getCursor());
-          },
-          "Ctrl-Space": "autocomplete", // 按 Shift-Space 触发提示
-        },
+        // 代码提示
+        // extraKeys: {
+        //   "Ctrl-Space": "autocomplete",
+        // },
         foldGutter: true,
         gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
       });
 
       document.addEventListener("keydown", function (e) {
-        if ((e.ctrlKey || e.metaKey) && e.key === "s") {
-          e.preventDefault();
-          _postMessage("saveCode");
+        // ctrl + k, meta + k
+        // ctrl + s, meta + s
+        // ctrl + Enter, meta + Enter
+        // ctrl + ', meta + '
+        if (e.ctrlKey || e.metaKey) {
+          switch (e.key) {
+            case "s":
+            case "Enter":
+            case "'":
+            case "k":
+              e.preventDefault();
+              break;
+          }
         }
+        _postMessage("keydown", [
+          {
+            key: e.key,
+            ctrlKey: e.ctrlKey,
+            metaKey: e.metaKey,
+          },
+        ]);
       });
 
       setTheme();
@@ -121,6 +135,8 @@
           if (fn && typeof fns[fn] === "function") fns[fn](...(ags || []));
         }
       });
+      // 聚焦
+      editor.focus();
     </script>
   </body>
 </html>

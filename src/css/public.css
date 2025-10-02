@@ -8,6 +8,8 @@ html {
   --text-color: #606770;
   --border-color: #858585;
   --bg-hover-color: #f0f0f0;
+  --popover-bg-color: #fff;
+  --popover-b-color: #f0f0f0;
 }
 
 html.dark {
@@ -17,6 +19,8 @@ html.dark {
   --text-color: #dedede;
   --border-color: #767676;
   --bg-hover-color: #323232;
+  --popover-bg-color: #222;
+  --popover-b-color: #323232;
 }
 
 [tabindex]:focus-visible,

@@ -157,7 +157,7 @@ function proxyConsole(id) {
  * @returns
  */
 export function createJsRunner(fn) {
-  let iframe, iframeDoc;
+  let iframe;
   const id = crypto.randomUUID();
 
   function createIframe() {
@@ -170,20 +170,23 @@ export function createJsRunner(fn) {
     iframe.style.display = "none";
     iframe.src = `about:blank`; // 或同源 URL
     iframe.id = id;
-    document.body.appendChild(iframe);
-
-    iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
 
     return new Promise(resolve => {
       setTimeout(() => {
-        resolve(true);
+        iframe.onload = () => {
+
+          const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+          resolve(iframeDoc)
+        };
+
+        document.body.appendChild(iframe);
       }, 100);
     })
   }
 
   // 写入运行代码
   async function writeCode(code) {
-    await createIframe()
+    const iframeDoc = await createIframe()
 
     const runCode = `
       const id = '${id}';

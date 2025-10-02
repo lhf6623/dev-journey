@@ -1,14 +1,14 @@
 <template page>
-  <link rel="stylesheet" href="../css/tailwind-compat.css?v=0.2.7" />
-  <link rel="stylesheet" href="../css/public.css?v=0.2.7" />
-  <link rel="stylesheet" href="../css/uno.css?v=0.2.7" />
-  <link rel="stylesheet" href="../css/uno-icon.css?v=0.2.7" />
+  <link rel="stylesheet" href="../css/tailwind-compat.css?v=0.2.8" />
+  <link rel="stylesheet" href="../css/public.css?v=0.2.8" />
+  <link rel="stylesheet" href="../css/uno.css?v=0.2.8" />
+  <link rel="stylesheet" href="../css/uno-icon.css?v=0.2.8" />
   <l-m src="../component/common/l-switch.html"></l-m>
   <l-m src="../component/common/l-button.html"></l-m>
 
   <l-m src="../component/l-console-list.html"></l-m>
   <l-m src="../component/l-editor.html"></l-m>
-  <div class="relative hfull flex flex-col">
+  <div attr:class="`relative hfull flex flex-col ${theme}`">
     <div
       id="main"
       class="flex wfull relative flex-col overflow-hidden flex-1 bg-theme-bg"
@@ -17,31 +17,48 @@
       <div class="p3px pl16px m0 flex-between">
         <p class="text-14px max-sm:hidden">{{getTitle(title)}}</p>
         <div class="flex-between gap-x10px *:flex-shrink-0">
-          <l-button
-            :loading="sys_store.loading"
-            :icon="'i-pepicons-pop:reload'"
-            on:on-click="restoreCode"
-          >
-            还原代码
-          </l-button>
-
-          <div
-            class="l-btn rounded-3px overflow-hidden px14px h34px flex-center gap-x6px"
-          >
-            <p class="text-14px">实时运行</p>
-            <l-switch
-              on:change="runCodeInterval"
-              :size="'small'"
-              :checked="!!timer"
-            ></l-switch>
+          <div class="relative">
+            <l-button
+              :loading="sys_store.loading"
+              :icon="'i-pepicons-pop:reload'"
+              on:on-click="restoreCode"
+              class="peer"
+            >
+              还原代码
+            </l-button>
+            <div class="popover-box hidden peer-hover:block">
+              <div
+                class="flex flex-center px12px py3px inline-block gap-1 text-12px"
+              >
+                <span class="text-14px"> 还原代码 </span>
+                <span class="b b-theme-hover rounded px4px">
+                  {{sys_store.is_mac? '⌘':'Ctrl'}}
+                </span>
+                <span class="b b-theme-hover rounded w20px text-center">
+                  '
+                </span>
+              </div>
+            </div>
           </div>
-          <l-button
-            :disabled="!!timer"
-            :icon="'i-solar:play-bold'"
-            on:on-click="runCode"
-          >
-            运行
-          </l-button>
+          <div class="relative">
+            <l-button
+              :icon="'i-solar:play-bold'"
+              on:on-click="runCode"
+              class="peer"
+            >
+              运行
+            </l-button>
+
+            <div class="popover-box hidden peer-hover:block">
+              <div class="flex flex-center px12px py3px inline-block gap-1">
+                <span class="text-14px"> 运行 </span>
+                <span class="b b-theme-hover rounded px4px text-12px">
+                  {{sys_store.is_mac? '⌘':'Ctrl'}}
+                </span>
+                <span class="b b-theme-hover rounded px4px text-12px">⏎</span>
+              </div>
+            </div>
+          </div>
         </div>
         <l-button
           :icon="!is_fullscreen ? 'i-tabler:arrows-maximize':'i-tabler:arrows-minimize'"
@@ -59,6 +76,7 @@
             :code="leetcode_code"
             :update-code="updateCode"
             on:load="editorLoad"
+            on:keydown="editorKeydown"
           ></l-editor>
         </div>
         <div
@@ -69,7 +87,7 @@
         </div>
         <div
           id="split-2"
-          class="group-[.cursor-col-resize]:select-none flex-shrink-0 group-[.cursor-col-resize]:pointer-events-none"
+          class="relative flex-shrink-0 hfull overflow-hidden group-[.cursor-col-resize]:select-none group-[.cursor-col-resize]:pointer-events-none"
         >
           <l-console-list
             :log-list="logList"
@@ -100,8 +118,12 @@
   <script>
     import screenfull from "https://esm.sh/screenfull@6.0.0";
     import dayjs from "https://esm.sh/dayjs@1.11.13";
-    import { Split, createJsRunner } from "../js/util.js";
+    import Toast from "../component/common/Toast.js";
+    import { keyboard, getCombinationKey } from "../js/Keyboard.mjs";
     export default async ({ load }) => {
+      const { Split, createJsRunner, watchHtmlTheme } = await load(
+        "../js/util.js"
+      );
       const {
         sys_store,
         changeType,
@@ -113,7 +135,7 @@
       const { page_store, setLeetcodeCode, setLeetcodeTitle } = await load(
         "../store/page-store.js"
       );
-
+      const toast = new Toast(3);
       return {
         parent: "../layout-page.html",
         data: {
@@ -126,10 +148,10 @@
           updateCode: null,
           title: "",
           logList: [],
-          /** 定时器 */
-          timer: null,
           writeCode: null,
           onDestroy: null,
+          theme: "light",
+          observer: null,
         },
         loaded() {
           Split({
@@ -157,13 +179,24 @@
 
           this.writeCode = writeCode;
           this.onDestroy = onDestroy;
+
+          keyboard.on("Ctrl-Enter", this.runCode, this);
+          keyboard.on("Ctrl-'", this.restoreCode, this);
+          keyboard.on("Ctrl-S", this.saveCode, this);
+
+          this.observer = watchHtmlTheme((theme) => {
+            this.theme = theme;
+          });
         },
         detached() {
           this.sys_store = null;
           this.page_store = null;
-          if (this.onDestroy) {
-            this.onDestroy();
-          }
+          this.onDestroy && this.onDestroy();
+          this.observer && this.observer();
+
+          keyboard.off("Ctrl-Enter", this.runCode, this);
+          keyboard.off("Ctrl-'", this.restoreCode, this);
+          keyboard.off("Ctrl-S", this.saveCode, this);
         },
         watch: {
           async "sys_store.title"(val) {
@@ -178,6 +211,11 @@
           },
         },
         proto: {
+          // 主动触发组合键事件
+          editorKeydown(e) {
+            const key = getCombinationKey(e.data);
+            keyboard.trigger(key);
+          },
           editorLoad() {
             const { title } = this.sys_store || {};
 
@@ -189,6 +227,7 @@
           },
           // 运行代码
           runCode() {
+            if (!this.page_store) return;
             const { leetcode_code } = this.page_store;
             if (this.writeCode) {
               this.logList = [];
@@ -222,18 +261,8 @@
             this.leetcode_code = leetcode_code;
             this.updateCode = Date.now();
           },
-          // 周期性运行代码
-          async runCodeInterval(e) {
-            const is_run_interval = e.data;
-            if (is_run_interval) {
-              this.runCode();
-              this.timer = setInterval(async () => {
-                this.runCode();
-              }, 3000);
-            } else {
-              this.timer && clearInterval(this.timer);
-              this.timer = null;
-            }
+          saveCode() {
+            toast.show("代码已经存储到本地，点击 还原代码 按钮立即还原");
           },
         },
       };

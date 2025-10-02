@@ -1,8 +1,13 @@
 <template component>
   <l-m src="./common/l-button.html"></l-m>
   <l-m src="./common/l-select.html"></l-m>
-  <div id="console-list" attr:class="`${theme} hfull relative overflow-auto`">
-    <div class="b-b b-b-theme-hover text-sm flex items-center flex-wrap gap6px">
+  <div
+    id="console-list"
+    attr:class="`${theme} hfull wfull relative overflow-hidden flex flex-col`"
+  >
+    <div
+      class="b-b b-b-theme-hover text-sm flex items-center flex-wrap gap6px flex-shrink-0"
+    >
       <l-button
         on:on-click="clear"
         :icon="'i-lsicon:disable-outline'"
@@ -15,8 +20,11 @@
         :option-icon="'i-line-md:confirm'"
         :value="logLevelValue"
         on:select="changeLogLevel"
-        :label="'所有级别'"
       >
+        <l-button class="gap0">
+          <span class="text-xs">所有级别</span>
+          <i class="text-3xl i-mingcute:down-small-fill"></i>
+        </l-button>
       </l-select>
       <x-if :value="logList.length - filterLogList.length > 0">
         <p class="text-xs text-theme-text">
@@ -24,19 +32,19 @@
         </p>
       </x-if>
     </div>
-    <ul
-      class="px6px text-14px text-#1c1c1c dark:text-#fff bg-#fff !dark:bg-transparent"
-    >
-      <x-fill :value="filterLogList">
-        <li attr:class="`${$host.getCls($data)} relative rounded px22px my3px`">
-          <div
-            attr:class="`${$host.getCls($data) ? '!b-none' : ''} overflow-hidden b-b-solid b-b-1px b-b-#cadbfd dark:b-b-#4c4c4c`"
+    <div class="wfull flex-1 overflow-auto px12px">
+      <ul
+        class="text-14px text-#1c1c1c dark:text-#fff bg-#fff !dark:bg-transparent wfit min-w-100%"
+      >
+        <x-fill :value="filterLogList">
+          <li
+            attr:class="`${$host.getCls($data)} px-4px relative rounded b-b-solid b-b-1px b-b-#cadbfd dark:b-b-#4c4c4c`"
           >
             <pre>{{$data.info}}</pre>
-          </div>
-        </li>
-      </x-fill>
-    </ul>
+          </li>
+        </x-fill>
+      </ul>
+    </div>
   </div>
 
   <script type="module">
