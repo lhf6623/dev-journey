@@ -74,8 +74,6 @@
         },
         detached() {
           document.removeEventListener("click", this.listenerFn);
-          this.observer && this.observer();
-          this.observer = null;
         },
       };
     }

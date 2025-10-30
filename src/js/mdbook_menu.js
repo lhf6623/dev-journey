@@ -8,4 +8,5 @@ export default [
   "unocss-cli配置.md",
   "uuid.md",
   "在控制台打印日历.md",
+  "小程序.md",
 ];

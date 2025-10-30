@@ -28,7 +28,7 @@ export default defineConfig({
   },
   shortcuts: {
     // 弹出框面板样式
-    "popover-box": "text-nowrap z200 absolute top-108% left-50% transform-translate-x-[-50%] shadow b b-popover-border rounded bg-popover-bg",
+    "popover-box": "text-nowrap z200 absolute top-100% left-50% transform-translate-x-[-50%] shadow b b-popover-border rounded bg-popover-bg",
     // 文本溢出显示省略号
     truncate: "overflow-hidden text-ellipsis whitespace-nowrap",
     "flex-center": "flex justify-center items-center",
