@@ -28,6 +28,11 @@ var lastStoneWeight = function (stones) {
   return 0;
 };
 
-console.log(lastStoneWeight([2, 7, 4, 1, 8, 1]));
+const test = [
+  [[[2, 7, 4, 1, 8, 1]], 1],
+].forEach(([items, expect]) => {
+  const result = lastStoneWeight(...items);
+  console.log(`结果：${result} ${result.toString() === expect.toString() ? '✅' : '❌'}`);
+})
 
 // @lc code=end

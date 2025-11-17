@@ -30,6 +30,12 @@ var findMaxConsecutiveOnes = function (nums) {
   //   .sort((a, b) => b.length - a.length)[0].length;
 };
 
-console.log(findMaxConsecutiveOnes([1, 1, 0, 1, 1, 1]));
+const test = [
+  [[[1, 1, 0, 1, 1, 1]], 3],
+  [[[1, 0, 1, 1, 0, 1]], 2],
+].forEach(([items, expect]) => {
+  const result = findMaxConsecutiveOnes(...items);
+  console.log(`结果：${result} ${result.toString() === expect.toString() ? '✅' : '❌'}`);
+})
 
 // @lc code=end

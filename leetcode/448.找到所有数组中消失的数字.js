@@ -23,7 +23,12 @@ var findDisappearedNumbers = function (nums) {
   }
   return ret;
 };
-const f = findDisappearedNumbers([1, 1, 2]);
-console.log(`🚀 ~ f:`, f);
+const test = [
+  [[[4, 3, 2, 7, 8, 2, 3, 1]], [5, 6]],
+  [[[1, 1]], [2]],
+].forEach(([items, expect]) => {
+  const result = findDisappearedNumbers(...items);
+  console.log(`结果：${result} ${result.toString() === expect.toString() ? '✅' : '❌'}`);
+})
 
 // @lc code=end

@@ -25,6 +25,12 @@ var findErrorNums = function (nums) {
   return [repeat, lack];
 };
 
-console.log(findErrorNums([1, 2, 2, 4]));
+const test = [
+  [[[1, 2, 2, 4]], [2, 3]],
+  [[[1, 1]], [1, 2]],
+].forEach(([items, expect]) => {
+  const result = findErrorNums(...items);
+  console.log(`结果：${result} ${result.toString() === expect.toString() ? '✅' : '❌'}`);
+})
 
 // @lc code=end
