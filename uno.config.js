@@ -10,7 +10,7 @@ export default defineConfig({
   cli: {
     entry: [
       {
-        patterns: ["src/**/*.{html,js}", "index.html"],
+        patterns: ["src/**/*.{html,js,mjs}", "index.html"],
         outFile: "src/css/uno.css",
       },
     ],

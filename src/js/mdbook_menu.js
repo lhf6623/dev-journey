@@ -1,6 +1,5 @@
 export default [
   "filename与dirname.md",
-  "github首页简介.md",
   "icns制作.md",
   "mac 自动操作.md",
   "slots中的参数传递.md",

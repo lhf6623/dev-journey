@@ -1,8 +1,0 @@
-{
-  "leetcode.endpoint": "leetcode-cn",
-  "leetcode.workspaceFolder": "/Users/lhf/Desktop/leetcode",
-  "leetcode.defaultLanguage": "javascript",
-  "leetcode.hint.configWebviewMarkdown": false,
-  "leetcode.hint.commentDescription": false,
-  "leetcode.hint.commandShortcut": false
-}

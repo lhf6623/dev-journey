@@ -19,11 +19,23 @@
   pnpm dev
   ```
 
+- 压缩代码
+
+  ```shell
+  pnpm build
+  ```
+
 ### 增加 leetcode 或者 mdbook 文件后的操作
 
 ```shell
 cd node_util
-node node create_menus.cjs
+node create_menus.cjs
+```
+
+或者
+
+```shell
+pnpm menu
 ```
 
 ### npm 依赖使用
