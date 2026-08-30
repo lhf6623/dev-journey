@@ -8,24 +8,24 @@
     "menu": "node ./node_util/create_menus.cjs"
   },
   "devDependencies": {
-    "@unocss/cli": "^66.5.2",
-    "concurrently": "^9.2.1",
-    "unocss": "^66.5.2"
+    "@unocss/cli": "^66.8.1",
+    "concurrently": "^9.2.4",
+    "unocss": "^66.8.1"
   },
   "dependencies": {
     "@iconify-json/akar-icons": "^1.2.7",
     "@iconify-json/eos-icons": "^1.2.4",
     "@iconify-json/fluent-mdl2": "^1.2.1",
-    "@iconify-json/line-md": "^1.2.11",
+    "@iconify-json/line-md": "^1.2.16",
     "@iconify-json/lsicon": "^1.2.5",
     "@iconify-json/mage": "^1.2.4",
     "@iconify-json/mdi": "^1.2.3",
-    "@iconify-json/mingcute": "^1.2.5",
+    "@iconify-json/mingcute": "^1.2.8",
     "@iconify-json/pepicons-pop": "^1.2.3",
     "@iconify-json/ph": "^1.2.2",
-    "@iconify-json/solar": "^1.2.4",
-    "@iconify-json/tabler": "^1.2.23",
+    "@iconify-json/solar": "^1.2.10",
+    "@iconify-json/tabler": "^1.2.38",
     "@iconify-json/typcn": "^1.2.2",
-    "@unocss/reset": "^66.5.2"
+    "@unocss/reset": "^66.8.1"
   }
 }
