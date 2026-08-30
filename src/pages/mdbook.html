@@ -59,6 +59,7 @@
         },
         watch: {
           async "sys_store.title"(data) {
+            if (!this.page_store) return;
             if (!this.sys_store || this.sys_store.document_type !== mdbook) {
               return;
             }
@@ -159,11 +160,11 @@
             this.mdTxt = marked.parse(mdTxt);
           },
           /** 向上寻找最近的空行 */
-          findNearestEmptyLine(canvas, ctx, findY, page) {
+          findNearestEmptyLine(canvas, ctx, findY, pageOffset) {
             const step = 4; // 向上搜索的步长
             let currentY = findY;
             while (currentY >= 0) {
-              const isEmpty = checkImgEmptyLine(canvas, ctx, currentY, page);
+              const isEmpty = checkImgEmptyLine(canvas, ctx, pageOffset + currentY);
               if (isEmpty) {
                 return currentY;
               }
@@ -211,11 +212,12 @@
                 // 图片一个页面实际高度
                 let img_height = c_h * ratio;
                 // 找到适合的图片高度
+                const pageOffset = y / height_ratio;
                 const empty_height = this.findNearestEmptyLine(
                   canvas,
                   ctx,
                   img_height,
-                  page
+                  pageOffset
                 );
 
                 if (Math.round(empty_height) !== Math.round(img_height)) {
@@ -246,7 +248,7 @@
 
                 doc.addImage(
                   base64,
-                  "JEPG",
+                  "JPEG",
                   0,
                   margin_top,
                   pdf_page_w,
@@ -259,6 +261,10 @@
 
               const title = `${this.getTitle(this.title)}.pdf`;
               doc.save(title);
+              this.pdfLoading = false;
+            })
+            .catch((e) => {
+              console.error("PDF 生成失败：", e);
               this.pdfLoading = false;
             });
           },

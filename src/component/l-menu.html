@@ -50,10 +50,13 @@
         },
         attached() {
           this.sys_store = sys_store;
-          window.addEventListener("resize", throttle(this.setShowMenu, 300));
+          this.resizeHandler = throttle(this.setShowMenu, 300);
+          window.addEventListener("resize", this.resizeHandler);
           this.setShowMenu();
         },
         detached() {
+          window.removeEventListener("resize", this.resizeHandler);
+          this.resizeHandler = null;
           this.sys_store = null;
         },
         async loaded() {

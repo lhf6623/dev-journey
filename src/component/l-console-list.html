@@ -32,7 +32,7 @@
         </p>
       </x-if>
     </div>
-    <div class="wfull flex-1 overflow-auto px12px">
+    <div id="console-scroll" class="wfull flex-1 overflow-auto px12px">
       <ul
         class="text-14px text-#1c1c1c dark:text-#fff bg-#fff !dark:bg-transparent wfit min-w-100%"
       >
@@ -141,7 +141,7 @@
             const ele = this.shadow.ele;
             // 滚动到底部
             setTimeout(() => {
-              const consoleList = ele.querySelector("#console-list");
+              const consoleList = ele.querySelector("#console-scroll");
               consoleList.scroll({
                 top: consoleList.scrollHeight + 30,
                 behavior: "smooth",

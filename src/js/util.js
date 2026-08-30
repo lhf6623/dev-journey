@@ -319,14 +319,13 @@ export async function imgClipByPage(canvas, y, img_height, quality = 0.8) {
 /**
  * 检查区域内图片内容是否为空
  * @param {HTMLCanvasElement} canvas 图片canvas
- * @param {number} y 图片要检查的高度
- * @param {number} page 图片要检查的页码
+ * @param {number} y 图片需要检查的绝对 canvas y 坐标
  * @returns {boolean} 是否为空
  */
-export function checkImgEmptyLine(canvas, ctx, y, page) {
+export function checkImgEmptyLine(canvas, ctx, y) {
   const line_height = 3; // 检查行的高度
 
-  const imageData = ctx.getImageData(0, y + (y * page) - line_height, canvas.width, line_height);
+  const imageData = ctx.getImageData(0, y - line_height, canvas.width, line_height);
   const data = imageData.data;
 
   // 计算相同颜色像素的比例

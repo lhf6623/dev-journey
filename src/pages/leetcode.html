@@ -262,7 +262,10 @@
             this.updateCode = Date.now();
           },
           saveCode() {
-            toast.show("代码已经存储到本地，点击 还原代码 按钮立即还原");
+            const leetcode_code = this.page_store?.leetcode_code ?? this.leetcode_code;
+            setLeetcodeCode(leetcode_code);
+            this.leetcode_code = leetcode_code;
+            toast.show("代码已经保存到本地，点击 还原代码 按钮立即还原");
           },
         },
       };

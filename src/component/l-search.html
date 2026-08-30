@@ -44,16 +44,19 @@
             const suffix =
               this.sys_store.document_type == mdbook ? ".md" : ".js";
 
+            // 支持带完整后缀（.js/.md）输入命中：已带后缀则直接匹配，否则补全
+            const target = _title.endsWith(suffix) ? _title : `${_title}${suffix}`;
+
             const inMenu = this.sys_store.menus.reduce((pre, curr) => {
               if (pre === true) return pre;
-              return curr === `${_title}${suffix}`;
+              return curr === target;
             }, false);
 
             if (!inMenu) return;
 
             this.inputValue = e.target.value;
             this.inputValue = "";
-            setSysTitle(`${_title}${suffix}`);
+            setSysTitle(target);
           },
         },
       };

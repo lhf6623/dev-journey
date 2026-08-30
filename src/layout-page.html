@@ -36,15 +36,18 @@
         },
         attached() {
           this.sys_store = sys_store;
-          window
-            .matchMedia("(prefers-color-scheme: dark)")
-            .addEventListener("change", ({ matches }) => {
-              if (this.sys_store.theme === system) {
-                refreshTheme();
-              }
-            });
+          this.darkModeQuery = window.matchMedia("(prefers-color-scheme: dark)");
+          this.darkModeHandler = ({ matches }) => {
+            if (this.sys_store.theme === system) {
+              refreshTheme();
+            }
+          };
+          this.darkModeQuery.addEventListener("change", this.darkModeHandler);
         },
         detached() {
+          this.darkModeQuery?.removeEventListener("change", this.darkModeHandler);
+          this.darkModeQuery = null;
+          this.darkModeHandler = null;
           this.sys_store = null;
         },
         proto: {},

@@ -31,7 +31,7 @@
         attached() {
           this.iframe = this.shadow.ele.querySelector("#iframe");
 
-          window.addEventListener("message", (event) => {
+          this.messageHandler = (event) => {
             if (event.data?.id === "codemirror") {
               const { fn, ags } = event.data;
               // 元素初次加载
@@ -47,10 +47,13 @@
                 }
               }
             }
-          });
+          };
+          window.addEventListener("message", this.messageHandler);
           this.observer = watchHtmlTheme(this.selectTheme.bind(this));
         },
         detached() {
+          window.removeEventListener("message", this.messageHandler);
+          this.messageHandler = null;
           this.iframe = null;
           this.observer && this.observer();
           this.observer = null;
