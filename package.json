@@ -8,9 +8,9 @@
     "menu": "node ./node_util/create_menus.cjs"
   },
   "devDependencies": {
-    "@unocss/cli": "^66.8.1",
+    "@unocss/cli": "^66.10.0",
     "concurrently": "^9.2.4",
-    "unocss": "^66.8.1"
+    "unocss": "^66.10.0"
   },
   "dependencies": {
     "@iconify-json/akar-icons": "^1.2.7",
@@ -26,6 +26,6 @@
     "@iconify-json/solar": "^1.2.10",
     "@iconify-json/tabler": "^1.2.38",
     "@iconify-json/typcn": "^1.2.2",
-    "@unocss/reset": "^66.8.1"
+    "@unocss/reset": "^66.10.0"
   }
 }
