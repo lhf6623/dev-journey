@@ -48,13 +48,13 @@ class Keyboard {
 
 // 获取组合键
 export function getCombinationKey(e) {
-  const is_mac = getPlatform() === 'macOS';
+  const isMac = getPlatform() === 'macOS';
 
-  const ctrl_key = (is_mac ? e.metaKey : e.ctrlKey) ? "Ctrl" : '';
-  const shift_key = e.shiftKey ? "Shift" : '';
-  const alt_key = e.altKey ? "Alt" : '';
-  const letter_key = capitalizeFirst(e.key);
-  return [ctrl_key, shift_key, alt_key, letter_key].filter(Boolean).join('-');
+  const ctrlKey = (isMac ? e.metaKey : e.ctrlKey) ? "Ctrl" : '';
+  const shiftKey = e.shiftKey ? "Shift" : '';
+  const altKey = e.altKey ? "Alt" : '';
+  const letterKey = capitalizeFirst(e.key);
+  return [ctrlKey, shiftKey, altKey, letterKey].filter(Boolean).join('-');
 }
 
 function capitalizeFirst(str) {

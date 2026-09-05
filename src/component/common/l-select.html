@@ -51,8 +51,8 @@
           },
         },
         attached() {
-          const inSelect = (x, y, dom_str) => {
-            const rect = this.shadow.$(dom_str).ele.getBoundingClientRect();
+          const inSelect = (x, y, domStr) => {
+            const rect = this.shadow.$(domStr).ele.getBoundingClientRect();
             return (
               x >= rect.left &&
               x <= rect.right &&

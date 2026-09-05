@@ -1,12 +1,12 @@
 import { getUrl } from "../js/util.js";
-import leetcode_menu from "../js/leetcode_menu.js";
-import mdbook_menu from "../js/mdbook_menu.js";
+import leetcodeMenu from "../js/leetcodeMenu.js";
+import mdbookMenu from "../js/mdbookMenu.js";
 import Cache from "../js/cache.js";
 import { getPlatform } from "../js/Keyboard.mjs"
 
-const THEME_KEY = "sys_theme";
-const DOCUMENT_TYPE = "sys_document_type";
-const TITLE = "sys_title";
+const THEME = "SYSTEM_THEME";
+const DOCUMENT_TYPE = "SYS_DOCUMENT_TYPE";
+const TITLE = "SYS_TITLE";
 export const dark = "dark";
 export const light = "light";
 export const system = "system";
@@ -14,20 +14,20 @@ export const mdbook = "mdbook";
 export const leetcode = "leetcode";
 
 const menuMap = {
-  [leetcode]: leetcode_menu,
-  [mdbook]: mdbook_menu,
+  [leetcode]: leetcodeMenu,
+  [mdbook]: mdbookMenu,
 };
-const document_type = Cache.getItem(DOCUMENT_TYPE) ?? leetcode;
-const menus = menuMap[document_type];
+const documentType = Cache.getItem(DOCUMENT_TYPE) ?? leetcode;
+const menus = menuMap[documentType];
 
 // 读取系统主题
-const sys_theme = window.matchMedia("(prefers-color-scheme: dark)").matches
+const sysTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
   ? dark
   : light;
 
-export const sys_store = $.stanz({
+export const sysStore = $.stanz({
   /** 文档类型 */
-  document_type,
+  documentType,
   /** 加载 文档 状态 */
   loading: false,
   /** 菜单列表 */
@@ -35,12 +35,12 @@ export const sys_store = $.stanz({
   /** 当前标题 有后缀 */
   title: Cache.getItem(TITLE) || menus[0],
   /** 显示菜单 */
-  is_show_menu: true,
+  isShowMenu: true,
   /** 小屏 */
-  is_small: false,
+  isSmall: false,
   /** 主题 */
-  theme: Cache.getItem(THEME_KEY) ?? sys_theme,
-  is_mac: getPlatform() === "macOS",
+  theme: Cache.getItem(THEME) ?? sysTheme,
+  isMac: getPlatform() === "macOS",
 });
 /** 处理文件后缀 */
 export const handleFileSuffix = (textName) => {
@@ -50,40 +50,40 @@ export const handleFileSuffix = (textName) => {
 };
 
 export const setSysTitle = (title) => {
-  sys_store.title = title;
+  sysStore.title = title;
 
   Cache.setItem(TITLE, title);
 };
 
-export const changeType = (type, file_name) => {
+export const changeType = (type, fileName) => {
 
-  if (sys_store.document_type === type) return;
+  if (sysStore.documentType === type) return;
 
-  sys_store.menus = menuMap[type] ?? [];
+  sysStore.menus = menuMap[type] ?? [];
 
   if (!menuMap[type]) {
     console.error(`未找到【${type}】的菜单`);
   }
-  sys_store.document_type = type;
+  sysStore.documentType = type;
 
-  sys_store.title = file_name ? file_name : sys_store.menus[0];
+  sysStore.title = fileName ? fileName : sysStore.menus[0];
 
-  Cache.setItem(TITLE, sys_store.title);
+  Cache.setItem(TITLE, sysStore.title);
   Cache.setItem(DOCUMENT_TYPE, type);
 };
 
 export function refreshTheme(theme) {
-  const local_theme = Cache.getItem(THEME_KEY);
+  const localTheme = Cache.getItem(THEME);
 
-  theme = theme ?? local_theme ?? system
-  sys_store.theme = theme
-  Cache.setItem(THEME_KEY, theme);
+  theme = theme ?? localTheme ?? system
+  sysStore.theme = theme
+  Cache.setItem(THEME, theme);
   function setTheme() {
-    const scheme_theme = window.matchMedia("(prefers-color-scheme: dark)").matches
+    const schemeTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
       ? "dark"
       : "light"
 
-    const _theme = theme === system ? scheme_theme : theme
+    const _theme = theme === system ? schemeTheme : theme
     document.documentElement.classList.toggle(dark, _theme === dark);
   }
   // Firefox 兼容性判断
@@ -95,20 +95,20 @@ export function refreshTheme(theme) {
 }
 
 export async function getContent() {
-  const { document_type, title: file_name } = sys_store;
-  const type = document_type === leetcode ? leetcode : mdbook;
+  const { documentType, title: fileName } = sysStore;
+  const type = documentType === leetcode ? leetcode : mdbook;
   let content = "";
-  if (file_name) {
+  if (fileName) {
     try {
-      sys_store.loading = true;
-      content = await fetch(getUrl(`${type}/${file_name}`)).then((res) =>
+      sysStore.loading = true;
+      content = await fetch(getUrl(`${type}/${fileName}`)).then((res) =>
         res.text()
       );
     } catch (e) {
       console.error(e);
     }
 
-    sys_store.loading = false;
+    sysStore.loading = false;
   }
   return content;
 }

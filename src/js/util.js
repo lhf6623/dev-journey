@@ -94,9 +94,9 @@ function proxyConsole(id) {
 
         if (loopObject.has(item)) return "循环引用";
         loopObject.set(item, true);
-        const space_string = Array.from({ length: space }).fill(' ').join('');
-        const last_space_string = Array.from({ length: space - 2 }).fill(' ').join('');
-        return `{\n${Object.keys(item).map(key => `${space_string}${key}: ${anyToString([item[key]], space)}`).join(', \n')}\n${last_space_string}}`
+        const spaceString = Array.from({ length: space }).fill(' ').join('');
+        const lastSpaceString = Array.from({ length: space - 2 }).fill(' ').join('');
+        return `{\n${Object.keys(item).map(key => `${spaceString}${key}: ${anyToString([item[key]], space)}`).join(', \n')}\n${lastSpaceString}}`
       }
 
       // function number
@@ -266,13 +266,13 @@ export function Split(opt) {
 
   resizeObserver.observe(parentElement);
 
-  function setStyle(left_width) {
+  function setStyle(leftWidth) {
     // 百分百
-    const el1_w_str = `calc(${left_width}% - ${midWidth / 2}px)`;
-    const el3_w_str = `calc(${100 - left_width}% - ${midWidth / 2}px)`;
+    const el1WStr = `calc(${leftWidth}% - ${midWidth / 2}px)`;
+    const el3WStr = `calc(${100 - leftWidth}% - ${midWidth / 2}px)`;
 
-    el1.style.setProperty("width", el1_w_str);
-    el3.style.setProperty("width", el3_w_str);
+    el1.style.setProperty("width", el1WStr);
+    el3.style.setProperty("width", el3WStr);
   }
 
   el2.addEventListener("mousedown", (e) => {
@@ -293,18 +293,18 @@ export function Split(opt) {
  * @param {number} h 图片高度
  * @returns {object} 剪裁后的图片信息
  */
-export async function imgClipByPage(canvas, y, img_height, quality = 0.8) {
+export async function imgClipByPage(canvas, y, imgHeight, quality = 0.8) {
 
   const _canvas = document.createElement("canvas");
   const _ctx = _canvas.getContext("2d", { willReadFrequently: true });
   _canvas.width = canvas.width;
-  _canvas.height = img_height;
+  _canvas.height = imgHeight;
   // html2canvas 图片底部有 1px 的白边
-  if (canvas.height === y + img_height) {
+  if (canvas.height === y + imgHeight) {
     _canvas.height -= 1
   }
 
-  _ctx.drawImage(canvas, 0, y, canvas.width, img_height, 0, 0, canvas.width, img_height);
+  _ctx.drawImage(canvas, 0, y, canvas.width, imgHeight, 0, 0, canvas.width, imgHeight);
 
   // PNG 不能压缩，所以这里用 JPEG
   const base64 = _canvas.toDataURL("image/jpeg", quality);
@@ -323,9 +323,9 @@ export async function imgClipByPage(canvas, y, img_height, quality = 0.8) {
  * @returns {boolean} 是否为空
  */
 export function checkImgEmptyLine(canvas, ctx, y) {
-  const line_height = 3; // 检查行的高度
+  const lineHeight = 3; // 检查行的高度
 
-  const imageData = ctx.getImageData(0, y - line_height, canvas.width, line_height);
+  const imageData = ctx.getImageData(0, y - lineHeight, canvas.width, lineHeight);
   const data = imageData.data;
 
   // 计算相同颜色像素的比例

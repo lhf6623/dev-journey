@@ -29,7 +29,7 @@
 
 ```shell
 cd node_util
-node create_menus.cjs
+node createMenus.cjs
 ```
 
 或者

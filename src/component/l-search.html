@@ -1,15 +1,14 @@
 <template component>
   <input
-    attr:placeholder="`搜索 ${sys_store.is_mac ? '⌘':'Ctrl'} K`"
+    attr:placeholder="`搜索 ${sysStore.isMac ? '⌘':'Ctrl'} K`"
     list="menus"
     :value="inputValue"
     on:change="toggle"
     type="search"
     class="relative w168px box-border px6px py0px rounded placeholder:text-12px b b-solid b-theme-border"
-    id="test_123"
   />
   <datalist id="menus">
-    <x-fill :value="sys_store.menus">
+    <x-fill :value="sysStore.menus">
       <option :value="$host.changeText($data)" />
     </x-fill>
   </datalist>
@@ -17,19 +16,19 @@
     export const tag = "l-search";
     import { keyboard } from "../js/Keyboard.mjs";
     export default async function ({ load }) {
-      const { sys_store, mdbook, leetcode, handleFileSuffix, setSysTitle } =
+      const { sysStore, mdbook, leetcode, handleFileSuffix, setSysTitle } =
         await load("../store/system.js");
       return {
         data: {
-          sys_store: {},
+          sysStore: {},
           inputValue: "",
         },
         attached() {
-          this.sys_store = sys_store;
+          this.sysStore = sysStore;
           keyboard.on("Ctrl-K", this.focusInput, this);
         },
         detached() {
-          this.sys_store = null;
+          this.sysStore = null;
           keyboard.off("Ctrl-K", this.focusInput, this);
         },
         proto: {
@@ -42,12 +41,12 @@
             const _title = e.target.value.trim();
             if (!_title) return;
             const suffix =
-              this.sys_store.document_type == mdbook ? ".md" : ".js";
+              this.sysStore.documentType == mdbook ? ".md" : ".js";
 
             // 支持带完整后缀（.js/.md）输入命中：已带后缀则直接匹配，否则补全
             const target = _title.endsWith(suffix) ? _title : `${_title}${suffix}`;
 
-            const inMenu = this.sys_store.menus.reduce((pre, curr) => {
+            const inMenu = this.sysStore.menus.reduce((pre, curr) => {
               if (pre === true) return pre;
               return curr === target;
             }, false);

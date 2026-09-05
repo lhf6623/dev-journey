@@ -2,7 +2,7 @@ import { version } from "./util.js";
 
 const globalLinks = []; // 需要添加的 global style link
 
-const white_list = ["o-global-link"];
+const whiteList = ["o-global-link"];
 
 const OLDHREF = Symbol("oldHref");
 
@@ -52,7 +52,7 @@ $.register({
 $.extensions.afterAttached = (el) => {
   if (el.tag !== "o-global-link") {
     // 添加 globalLink
-    if (!white_list.includes(el.tag) && el.shadow) {
+    if (!whiteList.includes(el.tag) && el.shadow) {
       // 添加 globalLink
       globalLinks.forEach((href) => {
         el.shadow.push(`<link rel="stylesheet" href="${href}">`);

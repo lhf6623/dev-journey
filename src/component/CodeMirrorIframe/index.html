@@ -96,15 +96,15 @@
       });
 
       function setTheme(theme) {
-        const scheme_theme = window.matchMedia("(prefers-color-scheme: dark)")
+        const schemeTheme = window.matchMedia("(prefers-color-scheme: dark)")
           .matches
           ? "dark"
           : "light";
-        let local_theme = Cache.getItem("sys_theme");
-        theme = theme ?? local_theme ?? scheme_theme;
+        let localTheme = Cache.getItem("sysTheme");
+        theme = theme ?? localTheme ?? schemeTheme;
 
         if (theme === "system") {
-          theme = scheme_theme;
+          theme = schemeTheme;
         }
 
         document.documentElement.classList.toggle("dark", theme === "dark");

@@ -34,14 +34,14 @@
         watchHtmlTheme,
       } = await load("../js/util.js");
       const {
-        sys_store,
+        sysStore,
         changeType,
         handleFileSuffix,
         setSysTitle,
         getContent,
         mdbook,
       } = await load("../store/system.js");
-      const { page_store, setMdContent, setMdTitle } = await load(
+      const { pageStore, setMdContent, setMdTitle } = await load(
         "../store/page-store.js"
       );
 
@@ -51,21 +51,21 @@
         parent: "../layout-page.html",
         data: {
           mdTxt: "加载中。。。",
-          sys_store: {},
+          sysStore: {},
           pdfLoading: false,
           title: "",
           theme: "light",
           observer: null,
         },
         watch: {
-          async "sys_store.title"(data) {
-            if (!this.page_store) return;
-            if (!this.sys_store || this.sys_store.document_type !== mdbook) {
+          async "sysStore.title"(data) {
+            if (!this.pageStore) return;
+            if (!this.sysStore || this.sysStore.documentType !== mdbook) {
               return;
             }
-            const { title } = this.sys_store || {};
+            const { title } = this.sysStore || {};
 
-            if (title && title !== this.page_store.md_title) {
+            if (title && title !== this.pageStore.mdTitle) {
               setMdTitle(title ?? "");
               const content = await getContent();
               setMdContent(content);
@@ -75,8 +75,8 @@
           },
         },
         detached() {
-          this.sys_store = null;
-          this.page_store = null;
+          this.sysStore = null;
+          this.pageStore = null;
           this.shadow.off("click", this.copyCode);
           this.observer && this.observer();
           this.observer = null;
@@ -88,9 +88,9 @@
           this.observer = watchHtmlTheme((theme) => {
             this.theme = theme;
           });
-          changeType("mdbook", page_store.md_title);
-          this.sys_store = sys_store;
-          this.page_store = page_store;
+          changeType("mdbook", pageStore.mdTitle);
+          this.sysStore = sysStore;
+          this.pageStore = pageStore;
           marked = new Marked(
             markedHighlight({
               emptyLangClass: "hljs",
@@ -108,14 +108,14 @@
 
           setTimeout(async () => {
             let content = "";
-            if (this.page_store.md_content) {
-              content = page_store.md_content;
-              this.title = page_store.md_title;
+            if (this.pageStore.mdContent) {
+              content = pageStore.mdContent;
+              this.title = pageStore.mdTitle;
             } else {
               content = await getContent();
               setMdContent(content);
-              setMdTitle(this.sys_store.title);
-              this.title = this.sys_store.title;
+              setMdTitle(this.sysStore.title);
+              this.title = this.sysStore.title;
             }
 
             this.renderMd(content);
@@ -187,75 +187,74 @@
             html2canvas(mdDom).then(async (canvas) => {
               const ctx = canvas.getContext("2d", { willReadFrequently: true });
               /** 图片宽度 */
-              const c_w = canvas.width;
+              const cW = canvas.width;
               /** 图片高度 */
-              const c_h = canvas.height;
+              const cH = canvas.height;
 
-              const margin_top = 30;
+              const marginTop = 30;
               /** pdf 一页的页面宽度 */
-              const pdf_page_w = doc.internal.pageSize.getWidth();
+              const pdfPageW = doc.internal.pageSize.getWidth();
               /** pdf 一页的页面高度 */
-              const pdf_page_h = doc.internal.pageSize.getHeight();
+              const pdfPageH = doc.internal.pageSize.getHeight();
 
               /** pdf 页面总高度, 根据宽度比利缩放高度 */
-              const pdf_page_total_h = pdf_page_w * (c_h / c_w);
+              const pdfPageTotalH = pdfPageW * (cH / cW);
 
-              const height_ratio = pdf_page_total_h / c_h;
-              const width_ratio = pdf_page_w / c_w;
+              const heightRatio = pdfPageTotalH / cH;
 
               let y = 0;
               let page = 0;
-              while (y < pdf_page_total_h) {
+              while (y < pdfPageTotalH) {
                 y > 0 && doc.addPage();
-                let page_content_height = pdf_page_h - margin_top * 2;
-                const ratio = page_content_height / pdf_page_total_h;
+                let pageContentHeight = pdfPageH - marginTop * 2;
+                const ratio = pageContentHeight / pdfPageTotalH;
                 // 图片一个页面实际高度
-                let img_height = c_h * ratio;
+                let imgHeight = cH * ratio;
                 // 找到适合的图片高度
-                const pageOffset = y / height_ratio;
-                const empty_height = this.findNearestEmptyLine(
+                const pageOffset = y / heightRatio;
+                const emptyHeight = this.findNearestEmptyLine(
                   canvas,
                   ctx,
-                  img_height,
+                  imgHeight,
                   pageOffset
                 );
 
-                if (Math.round(empty_height) !== Math.round(img_height)) {
+                if (Math.round(emptyHeight) !== Math.round(imgHeight)) {
                   // 图片高度减去 找到的适合的图片高度 就是 需要去除的高度 图片实际高度
-                  const diff = img_height - empty_height;
+                  const diff = imgHeight - emptyHeight;
                   // 图片实际高度 和 PDF 高度不一样，需要转换一下
-                  const page_diff = pdf_page_total_h / c_h;
+                  const pageDiff = pdfPageTotalH / cH;
 
-                  img_height = empty_height;
+                  imgHeight = emptyHeight;
 
-                  const diff_height = diff * page_diff;
+                  const diffHeight = diff * pageDiff;
 
-                  page_content_height = page_content_height - diff_height;
+                  pageContentHeight = pageContentHeight - diffHeight;
                 }
                 // 最后一页可能有空白
-                let _img_height = img_height;
-                const _y = y / height_ratio;
-                if (_y + img_height > canvas.height) {
-                  _img_height = canvas.height - _y;
+                let _imgHeight = imgHeight;
+                const _y = y / heightRatio;
+                if (_y + imgHeight > canvas.height) {
+                  _imgHeight = canvas.height - _y;
                 }
 
-                const { base64 } = await imgClipByPage(canvas, _y, _img_height);
+                const { base64 } = await imgClipByPage(canvas, _y, _imgHeight);
 
                 // PDF底部颜色跟随主题色
                 const color = this.theme === "dark" ? "#222" : "#fff";
                 doc.setFillColor(color);
-                doc.rect(0, 0, pdf_page_w, pdf_page_h, "F"); // "F" 表示填充
+                doc.rect(0, 0, pdfPageW, pdfPageH, "F"); // "F" 表示填充
 
                 doc.addImage(
                   base64,
                   "JPEG",
                   0,
-                  margin_top,
-                  pdf_page_w,
+                  marginTop,
+                  pdfPageW,
                   // 最后一页的空白处理
-                  _img_height * height_ratio
+                  _imgHeight * heightRatio
                 );
-                y += page_content_height;
+                y += pageContentHeight;
                 page += 1;
               }
 

@@ -8,7 +8,7 @@
   <div class="flex flex-col h100vh relative">
     <l-header></l-header>
     <div class="flex-1 wfull flex relative flex-shrink-0 overflow-hidden">
-      <x-if :value="sys_store.loading">
+      <x-if :value="sysStore.loading">
         <div
           class="absolute z999 bg-#00000009 top-0 left-0 wfull hfull flex-center"
         >
@@ -26,19 +26,19 @@
 
   <script type="module">
     export default async ({ load }) => {
-      const { sys_store, refreshTheme, system } = await load(
+      const { sysStore, refreshTheme, system } = await load(
         "./store/system.js"
       );
       return {
         data: {
           currentPage: "",
-          sys_store: {},
+          sysStore: {},
         },
         attached() {
-          this.sys_store = sys_store;
+          this.sysStore = sysStore;
           this.darkModeQuery = window.matchMedia("(prefers-color-scheme: dark)");
           this.darkModeHandler = ({ matches }) => {
-            if (this.sys_store.theme === system) {
+            if (this.sysStore.theme === system) {
               refreshTheme();
             }
           };
@@ -48,7 +48,7 @@
           this.darkModeQuery?.removeEventListener("change", this.darkModeHandler);
           this.darkModeQuery = null;
           this.darkModeHandler = null;
-          this.sys_store = null;
+          this.sysStore = null;
         },
         proto: {},
       };

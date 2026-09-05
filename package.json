@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "concurrently \"unocss -c uno.config.js -w\" \"unocss -c uno.config.icons.js -w\"",
     "build": "unocss -c uno.config.js -m && unocss -c uno.config.icons.js -m",
-    "menu": "node ./node_util/create_menus.cjs"
+    "menu": "node ./node_util/createMenus.cjs"
   },
   "devDependencies": {
     "@unocss/cli": "^66.10.0",
