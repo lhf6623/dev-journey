@@ -20,11 +20,16 @@ const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 const COLLECTOR = `
 <script>
   setTimeout(() => {
-    const acc = { text: "", hrefs: [], lmSrcs: [] };
+    const acc = { text: "", hrefs: [], lmSrcs: [], iframes: [] };
+    const seen = new Set();
     const walk = (node) => {
       if (node.nodeType === 3) { acc.text += node.textContent; return; }
+      // 元素去重：shadow 与 light 遍历路径会重复访问同一节点
+      if (seen.has(node)) return;
+      seen.add(node);
       if (node.nodeName === "A" && node.href) acc.hrefs.push(node.href);
       if (node.tagName === "L-M" && node.getAttribute("src")) acc.lmSrcs.push(node.getAttribute("src"));
+      if (node.tagName === "IFRAME" && node.getAttribute("src")) acc.iframes.push(node.getAttribute("src"));
       if (node.shadowRoot) [...node.shadowRoot.childNodes].forEach((c) => walk(c));
       [...node.childNodes].forEach((c) => walk(c));
     };
@@ -32,6 +37,7 @@ const COLLECTOR = `
     document.body.setAttribute("data-smoke-text", acc.text.replace(/\\s+/g, " ").slice(0, 8000));
     document.body.setAttribute("data-smoke-hrefs", acc.hrefs.join(","));
     document.body.setAttribute("data-smoke-lmsrc", acc.lmSrcs.join(","));
+    document.body.setAttribute("data-smoke-iframes", acc.iframes.join(","));
   }, 10000);
 </script>`;
 
@@ -52,11 +58,10 @@ const CASES = [
     expectHrefs: ["projects/demo/index.html"],
   },
   {
-    name: "P0-leetcode未建应用错误卡片",
+    name: "P0-leetcode深链",
     type: "spa",
     home: "app/leetcode/",
-    expectText: ["加载失败", "HTTP 404"],
-    allowError: true, // 未建应用 fetch 404 属预期，验证 l-micro 优雅错误卡片
+    expectText: ["力扣", "1.两数之和", "还原代码"],
   },
   {
     name: "P0-projects带斜杠深链",
@@ -89,6 +94,28 @@ const CASES = [
     type: "standalone",
     file: "apps/mdbook/index.html",
     expectText: ["filename与dirname", "在 CommonJS 模块中使用"],
+  },
+  // ===== P2 =====
+  {
+    name: "P2-leetcode内嵌",
+    type: "spa",
+    home: "app/leetcode/",
+    expectText: ["力扣", "1.两数之和", "还原代码", "运行", "2.两数相加"],
+    expectLmSrc: ["apps/leetcode/components/leetcode-app.html", "apps/leetcode/components/l-editor.html", "apps/leetcode/components/l-console-list.html"],
+    expectIframes: ["apps/leetcode/components/CodeMirrorIframe/index.html"],
+  },
+  {
+    name: "P2-leetcode独立打开",
+    type: "standalone",
+    file: "apps/leetcode/index.html",
+    expectText: ["力扣", "1.两数之和", "还原代码", "运行"],
+    expectIframes: ["apps/leetcode/components/CodeMirrorIframe/index.html"],
+  },
+  {
+    name: "P2-CodeMirrorIframe独立",
+    type: "standalone",
+    file: "apps/leetcode/components/CodeMirrorIframe/index.html",
+    expectText: ["1"],
   },
 ];
 
@@ -152,6 +179,7 @@ function extract(dom) {
     text: pick("data-smoke-text"),
     hrefs: pick("data-smoke-hrefs"),
     lmSrc: pick("data-smoke-lmsrc"),
+    iframes: pick("data-smoke-iframes"),
   };
 }
 
@@ -173,7 +201,7 @@ async function runCase(c) {
   const { stdout, stderr } = await runChrome(url);
   cleanup();
   const dom = stdout;
-  const { text, hrefs, lmSrc } = extract(dom);
+  const { text, hrefs, lmSrc, iframes } = extract(dom);
   const fails = [];
   for (const t of c.expectText || []) {
     if (!text.includes(t)) fails.push(`text缺少【${t}】`);
@@ -183,6 +211,9 @@ async function runCase(c) {
   }
   for (const l of c.expectLmSrc || []) {
     if (!lmSrc.includes(l)) fails.push(`lmsrc缺少【${l}】`);
+  }
+  for (const f of c.expectIframes || []) {
+    if (!iframes.includes(f)) fails.push(`iframe缺少【${f}】`);
   }
   if (text.includes("load fail")) fails.push("出现 load fail 页");
   if (!c.allowError) {

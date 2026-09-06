@@ -1,0 +1,287 @@
+<!-- leetcode-app.html 力扣应用根组件：菜单 + 搜索 + 三分栏编辑器 + 运行控制台（自 src/pages/leetcode.html 移植） -->
+<template component>
+  <link rel="stylesheet" href="../../../src/css/uno.css?v=0.3.0" />
+  <link rel="stylesheet" href="../../../src/css/uno-icon.css?v=0.3.0" />
+
+  <l-m src="../../../src/component/common/l-button.html"></l-m>
+  <l-m src="./leetcode-menu.html"></l-m>
+  <l-m src="./leetcode-search.html"></l-m>
+  <l-m src="./l-console-list.html"></l-m>
+  <l-m src="./l-editor.html"></l-m>
+
+  <div attr:class="`relative hfull flex ${theme}`">
+    <leetcode-menu
+      :menus="store.menus"
+      :title="store.title"
+      on:toggle="selectDoc"
+    ></leetcode-menu>
+    <div class="flex-1 min-w-0 flex flex-col">
+      <div
+        id="main"
+        class="flex wfull relative flex-col overflow-hidden flex-1 bg-theme-bg"
+      >
+        <!-- 功能区 -->
+        <div
+          class="p3px pl16px m0 flex-between h44px flex-shrink-0 b-b b-b-solid b-b-theme-hover gap-x12px"
+        >
+          <leetcode-search
+            :menus="store.menus"
+            :suffix="'.js'"
+            on:select="selectDoc"
+          ></leetcode-search>
+          <p class="text-14px text-blueGray truncate">{{pageTitle}}</p>
+          <div class="flex-between gap-x10px *:flex-shrink-0">
+            <div class="relative">
+              <l-button
+                :loading="loading"
+                :icon="'i-pepicons-pop:reload'"
+                on:on-click="restoreCode"
+                class="peer"
+              >
+                还原代码
+              </l-button>
+              <div class="popover-box hidden peer-hover:block">
+                <div
+                  class="flex flex-center px12px py3px inline-block gap-1 text-12px"
+                >
+                  <span class="text-14px"> 还原代码 </span>
+                  <span class="b b-theme-hover rounded px4px">
+                    {{isMac? '⌘':'Ctrl'}}
+                  </span>
+                  <span class="b b-theme-hover rounded w20px text-center">
+                    '
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="relative">
+              <l-button
+                :icon="'i-solar:play-bold'"
+                on:on-click="runCode"
+                class="peer"
+              >
+                运行
+              </l-button>
+
+              <div class="popover-box hidden peer-hover:block">
+                <div class="flex flex-center px12px py3px inline-block gap-1">
+                  <span class="text-14px"> 运行 </span>
+                  <span class="b b-theme-hover rounded px4px text-12px">
+                    {{isMac? '⌘':'Ctrl'}}
+                  </span>
+                  <span class="b b-theme-hover rounded px4px text-12px">⏎</span>
+                </div>
+              </div>
+            </div>
+            <l-button
+              :icon="!isFullscreen ? 'i-tabler:arrows-maximize':'i-tabler:arrows-minimize'"
+              on:on-click="toggleFullScreen"
+            >
+            </l-button>
+          </div>
+        </div>
+        <!-- 编辑区 -->
+        <div class="flex-1 group relative flex b-y overflow-hidden b-theme-hover">
+          <div
+            id="split-0"
+            class="relative flex-shrink-0 hfull overflow-hidden group-[.cursor-col-resize]:select-none group-[.cursor-col-resize]:pointer-events-none"
+          >
+            <l-editor
+              :code="leetcodeCode"
+              :update-code="updateCode"
+              on:load="editorLoad"
+              on:keydown="editorKeydown"
+            ></l-editor>
+          </div>
+          <div
+            id="split-1"
+            class="cursor-col-resize flex-shrink-0 !w6px overflow-hidden bg-theme-hover flex-center"
+          >
+            <i class="i-akar-icons:drag-vertical w16px h16px"></i>
+          </div>
+          <div
+            id="split-2"
+            class="relative flex-shrink-0 hfull overflow-hidden group-[.cursor-col-resize]:select-none group-[.cursor-col-resize]:pointer-events-none"
+          >
+            <l-console-list
+              :log-list="logList"
+              on:clear="clearLog"
+            ></l-console-list>
+          </div>
+        </div>
+      </div>
+
+      <footer
+        class="flex-shrink-0 flex-row flex-between !*:text-#0073ff *:flex *:items-center *:cursor-pointer !*:my8px b-t b-t-solid b-t-theme-hover"
+      >
+        <button class="l-btn" on:click="setNextTitle(preTitle)">
+          <x-if :value="preTitle">
+            <i class="i-mingcute:left-fill w24px h24px"></i>
+            <span>{{stripSuffix(preTitle)}}</span>
+          </x-if>
+        </button>
+        <button class="l-btn" on:click="setNextTitle(nextTitle)">
+          <x-if :value="nextTitle">
+            <span>{{stripSuffix(nextTitle)}}</span>
+            <i class="i-mingcute:right-fill w24px h24px"></i>
+          </x-if>
+        </button>
+      </footer>
+    </div>
+  </div>
+
+  <script>
+    import screenfull from "https://esm.sh/screenfull@6.0.0";
+    import Toast from "./Toast.js";
+    import { keyboard, getCombinationKey } from "../../../src/js/Keyboard.mjs";
+    export default async ({ load }) => {
+      const { Split, createJsRunner } = await load("../js/util.js");
+      const { watchHtmlTheme } = await load("../../../src/js/util.js");
+      const { sysStore } = await load("../../../src/store/system.js");
+      const { store, setTitle, setCode, stripSuffix, getContent } = await load(
+        "../store.js"
+      );
+      const toast = new Toast(3);
+      return {
+        data: {
+          store: {},
+          preTitle: "",
+          nextTitle: "",
+          pageTitle: "",
+          isFullscreen: false,
+          leetcodeCode: "",
+          updateCode: null,
+          logList: [],
+          writeCode: null,
+          onDestroy: null,
+          theme: "light",
+          loading: false,
+          observer: null,
+          isMac: false,
+        },
+        loaded() {
+          Split({
+            els: [
+              this.shadow.ele.querySelector("#split-0"),
+              this.shadow.ele.querySelector("#split-1"),
+              this.shadow.ele.querySelector("#split-2"),
+            ],
+          });
+        },
+        async attached() {
+          this.isMac = sysStore?.isMac ?? false;
+          // 先记录初始标题再绑定 store，避免绑定触发 watch 误加载
+          this.__lastTitle = store.title;
+          this.store = store;
+          this.leetcodeCode = store.leetcodeCode;
+          this.setFooterTitle();
+          this.updateCode = Date.now();
+
+          const { id, writeCode, onDestroy } = createJsRunner(({ data }) => {
+            if (data?.source && data.source == id) {
+              this.logList.push(data);
+            }
+          });
+
+          this.writeCode = writeCode;
+          this.onDestroy = onDestroy;
+
+          keyboard.on("Ctrl-Enter", this.runCode, this);
+          keyboard.on("Ctrl-'", this.restoreCode, this);
+          keyboard.on("Ctrl-S", this.saveCode, this);
+
+          this.observer = watchHtmlTheme((theme) => {
+            this.theme = theme;
+          });
+
+          // 首次进入（无缓存代码）时拉取题目原始内容
+          if (!store.leetcodeCode) {
+            this.restoreCode();
+          }
+        },
+        detached() {
+          this.store = null;
+          this.onDestroy && this.onDestroy();
+          this.observer && this.observer();
+
+          keyboard.off("Ctrl-Enter", this.runCode, this);
+          keyboard.off("Ctrl-'", this.restoreCode, this);
+          keyboard.off("Ctrl-S", this.saveCode, this);
+        },
+        watch: {
+          async "store.title"(title) {
+            // 菜单/搜索/页脚切题时还原为题目原始代码
+            if (!title || title === this.__lastTitle) return;
+            this.restoreCode();
+          },
+        },
+        proto: {
+          stripSuffix,
+          // 主动触发组合键事件
+          editorKeydown(e) {
+            const key = getCombinationKey(e.data);
+            keyboard.trigger(key);
+          },
+          editorLoad() {
+            this.setFooterTitle();
+          },
+          clearLog() {
+            this.logList = [];
+          },
+          // 运行代码
+          runCode() {
+            if (!this.store) return;
+            const { leetcodeCode } = this.store;
+            if (this.writeCode) {
+              this.logList = [];
+              this.writeCode(leetcodeCode);
+            }
+          },
+          setFooterTitle() {
+            if (!this.store) return;
+            const { menus, title } = this.store;
+
+            this.pageTitle = stripSuffix(title);
+            const index = menus.findIndex((item) => item === title);
+
+            this.preTitle = menus[index - 1] || "";
+            this.nextTitle = menus[index + 1] || "";
+          },
+          selectDoc({ data }) {
+            if (data) {
+              setTitle(data);
+              this.setFooterTitle();
+            }
+          },
+          setNextTitle(title) {
+            if (title) setTitle(title);
+          },
+          toggleFullScreen() {
+            const element = this.shadow.ele.querySelector("#main");
+            if (!screenfull.isEnabled) return;
+
+            screenfull.toggle(element).then(() => {
+              this.isFullscreen = screenfull.isFullscreen;
+            });
+          },
+          // 还原代码
+          async restoreCode() {
+            this.loading = true;
+            const leetcodeCode = await getContent();
+            setCode(leetcodeCode);
+            this.leetcodeCode = leetcodeCode;
+            this.__lastTitle = store.title;
+            this.updateCode = Date.now();
+            this.loading = false;
+          },
+          saveCode() {
+            const leetcodeCode = store.leetcodeCode ?? this.leetcodeCode;
+            setCode(leetcodeCode);
+            this.leetcodeCode = leetcodeCode;
+            toast.show("代码已经保存到本地，点击 还原代码 按钮立即还原");
+          },
+        },
+      };
+    };
+  </script>
+</template>
