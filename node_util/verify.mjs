@@ -52,18 +52,11 @@ const CASES = [
     expectHrefs: ["projects/demo/index.html"],
   },
   {
-    name: "P0-mdbook未建应用错误卡片",
-    type: "spa",
-    home: "app/mdbook/",
-    expectText: ["加载失败", "HTTP 404"],
-    allowError: true, // fetch 404 属预期
-  },
-  {
     name: "P0-leetcode未建应用错误卡片",
     type: "spa",
     home: "app/leetcode/",
     expectText: ["加载失败", "HTTP 404"],
-    allowError: true,
+    allowError: true, // 未建应用 fetch 404 属预期，验证 l-micro 优雅错误卡片
   },
   {
     name: "P0-projects带斜杠深链",
@@ -82,6 +75,20 @@ const CASES = [
     type: "standalone",
     file: "projects/demo/index.html",
     expectText: ["点我 +1", "返回", "点击次数：0"],
+  },
+  // ===== P1 =====
+  {
+    name: "P1-mdbook内嵌",
+    type: "spa",
+    home: "app/mdbook/",
+    expectText: ["文档", "filename与dirname", "在 CommonJS 模块中使用"],
+    expectLmSrc: ["apps/mdbook/components/mdbook-app.html", "apps/mdbook/components/mdbook-menu.html"],
+  },
+  {
+    name: "P1-mdbook独立打开",
+    type: "standalone",
+    file: "apps/mdbook/index.html",
+    expectText: ["filename与dirname", "在 CommonJS 模块中使用"],
   },
 ];
 
