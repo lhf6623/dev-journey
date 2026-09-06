@@ -117,6 +117,17 @@ const CASES = [
     file: "apps/leetcode/components/CodeMirrorIframe/index.html",
     expectText: ["1"],
   },
+  // ===== P3 =====
+  {
+    name: "P3-缓存迁移探针",
+    type: "spa-seed",
+    seed: {
+      PAGE_MD_CONTENT: "# 迁移测试标题\n\n迁移内容",
+      PAGE_MD_TITLE: "filename与dirname.md",
+    },
+    home: "app/mdbook/",
+    expectText: ["迁移测试标题"],
+  },
 ];
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -186,12 +197,20 @@ function extract(dom) {
 async function runCase(c) {
   let url;
   let cleanup = () => {};
-  if (c.type === "spa") {
+  if (c.type === "spa" || c.type === "spa-seed") {
     // 每次重写整个配置（占位符替换一次后就消失，不能复用 replace）
     writeFileSync(
       join(ROOT, "smoke-app-config.mjs"),
       `export const home = ${JSON.stringify(c.home)};\n`
     );
+    if (c.type === "spa-seed") {
+      // 探针用例：head 注入旧版本 localStorage 数据，验证 cache.js 迁移；跑完恢复原文件
+      const seedScript = `<script>localStorage.setItem("dev-journey_0.2.9", ${JSON.stringify(JSON.stringify(c.seed))});</script>`;
+      let html = readFileSync(join(ROOT, "smoke-index.html"), "utf-8");
+      html = html.replace("<head>", "<head>" + seedScript);
+      writeFileSync(join(ROOT, "smoke-index.html"), html);
+      cleanup = () => writeFileSync(join(ROOT, "smoke-index.html"), readFileSync(join(ROOT, "smoke-index.html"), "utf-8").replace(seedScript, ""));
+    }
     url = `${BASE}/smoke-index.html`;
   } else {
     const dest = writeSmokeStandalone(c.file);
@@ -231,7 +250,16 @@ async function main() {
   await ensureServer();
   const results = [];
   for (const c of CASES) {
-    const r = await runCase(c);
+    let r = await runCase(c);
+    // CDN（esm.sh/jsdelivr）偶发抖动会导致组件 blob import 失败，失败重试一次
+    if (!r.pass && !c.allowError) {
+      await sleep(2000);
+      const retry = await runCase(c);
+      if (retry.pass) {
+        console.log(`RETRY-PASS  ${c.name}（首次失败为瞬时抖动）`);
+        r = retry;
+      }
+    }
     results.push(r);
     console.log(`${r.pass ? "PASS" : "FAIL"}  ${r.name}`);
     r.fails.forEach((f) => console.log(`      - ${f}`));
