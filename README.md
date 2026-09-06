@@ -52,6 +52,7 @@ projects/<项目名>/
 - meta.json 缺省时 title 取目录名、description 为空
 - 缺封面时卡片显示渐变占位（标题首字）
 - 项目页内的 unocss 原子类由 `pnpm dev`/`pnpm build` 扫描 `projects/**/*.html` 生成，页面内引 `../../src/css/uno.css`
+- 项目页引用站内资源一律用**相对路径**（如 `../../public/favicon.ico`、`../../src/css/uno.css`），不要用 `/` 开头的绝对路径——GitHub Pages 部署在 `/dev-journey/` 子路径下，绝对路径会 404
 - 新增/修改项目后运行 `pnpm menu`（现同时生成 leetcode/mdbook/projects 三个菜单）
 
 ### npm 依赖使用
