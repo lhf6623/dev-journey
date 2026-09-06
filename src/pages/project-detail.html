@@ -1,0 +1,75 @@
+<template page>
+  <link rel="stylesheet" href="../css/uno.css?v=0.2.9" />
+
+  <l-m src="../component/l-project.html"></l-m>
+
+  <div class="relative hfull wfull flex flex-col bg-theme-bg">
+    <!-- 详情页工具条 -->
+    <div
+      class="flex-between h44px flex-shrink-0 px16px b-b b-b-solid b-b-theme-hover"
+    >
+      <button class="l-btn flex-center gap-x4px text-14px" on:click="goBack">
+        <i class="i-mdi:arrow-left"></i>
+        项目列表
+      </button>
+      <span class="text-16px font600 text-theme-text">{{pageTitle}}</span>
+      <a
+        class="l-btn text-12px text-blueGray no-underline"
+        target="_blank"
+        attr:href="getStandaloneUrl()"
+      >
+        <i class="i-mdi:open-in-new"></i> 独立页打开
+      </a>
+    </div>
+    <div class="flex-1 relative overflow-hidden">
+      <x-if :value="projectName">
+        <l-project :name="projectName"></l-project>
+      </x-if>
+      <x-if :value="!projectName">
+        <div class="hfull flex-center text-blueGray">
+          未指定项目，请从项目列表进入
+        </div>
+      </x-if>
+    </div>
+  </div>
+
+  <script>
+    export default async ({ load, query }) => {
+      const { sysStore, setSysTitle, changeType, projects } = await load(
+        "../store/system.js"
+      );
+      const { getUrl } = await load("../js/util.js");
+      return {
+        parent: "../layout-projects.html",
+        data: {
+          // o-router 会把 query 存进 hash，刷新/深链均能恢复
+          projectName: query?.name || "",
+          pageTitle: "",
+          sysStore: {},
+        },
+        attached() {
+          this.sysStore = sysStore;
+          // 深链/刷新直接进入时 documentType 可能是默认值，先切回 projects（已是则 early-return）
+          changeType(projects);
+          const menu = sysStore.menus?.find(
+            (m) => m.name === this.projectName
+          );
+          this.pageTitle = menu?.title || this.projectName;
+          setSysTitle(this.pageTitle);
+        },
+        detached() {
+          this.sysStore = null;
+        },
+        proto: {
+          getStandaloneUrl() {
+            return getUrl(`projects/${this.projectName}/index.html`);
+          },
+          goBack() {
+            // 确定性返回（深链进入时 app.back() 会跳出 SPA，故用 goto；back 是 ofa 页面保留方法名）
+            this.app.goto(getUrl("src/pages/projects.html"));
+          },
+        },
+      };
+    };
+  </script>
+</template>

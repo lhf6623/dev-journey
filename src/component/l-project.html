@@ -1,0 +1,204 @@
+<!-- l-project.html 项目加载器：把 projects/<name>/index.html 的 body 组合进 SPA 外壳 -->
+<template component>
+  <style>
+    :host {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+    /* 等待 l-m 完成组件注册后注入内容再显示，避免自定义元素升级前闪烁 */
+    .l-project-mount *:not(:defined) {
+      display: none;
+    }
+  </style>
+  <div class="relative wfull hfull">
+    <x-if :value="loading">
+      <div
+        class="absolute z99 top-0 left-0 wfull hfull bg-theme-bg flex-center"
+      >
+        <i class="i-eos-icons:bubble-loading w60px h60px text-#3498db"></i>
+      </div>
+    </x-if>
+    <x-if :value="error">
+      <div class="p40px flex flex-col items-center gap-y12px text-14px">
+        <p class="m0 text-theme-text">项目加载失败：{{error}}</p>
+        <div class="flex-center gap-x12px">
+          <button
+            class="l-btn b b-solid b-theme-border rounded-4px px12px py4px"
+            on:click="reload"
+          >
+            重试
+          </button>
+          <a
+            class="text-#0173ff no-underline"
+            target="_blank"
+            attr:href="standaloneUrl"
+          >
+            在独立页打开
+          </a>
+        </div>
+      </div>
+    </x-if>
+    <!-- 注入挂载点：项目 body 子节点按序 append 到这里 -->
+    <div class="l-project-mount relative wfull hfull"></div>
+  </div>
+
+  <script type="module">
+    export const tag = "l-project";
+    import { getUrl } from "../js/util.js";
+
+    // project-page.js 源码缓存：跨项目切换只 fetch 一次
+    const pageScriptCache = new Map();
+
+    export default async function ({ load }) {
+      const { sysStore } = await load("../store/system.js");
+      return {
+        attrs: { name: null },
+        data: {
+          name: "",
+          loading: false,
+          error: "",
+          standaloneUrl: "",
+        },
+        watch: {
+          name(name) {
+            if (name && name !== this.__loadedName) this.loadProject(name);
+          },
+        },
+        attached() {
+          this.sysStore = sysStore;
+        },
+        detached() {
+          // 清理：中断在途请求；标志对象若仍属于本实例则删除（页面栈中历史实例不干扰当前项目）
+          this.__abort?.abort();
+          this.__abort = null;
+          if (window.__devJourneyProject === this.__flagObj) {
+            delete window.__devJourneyProject;
+          }
+          this.__flagObj = null;
+          this.sysStore = null;
+          this.__loadedName = null;
+        },
+        proto: {
+          getMount() {
+            return this.shadow.ele.querySelector(".l-project-mount");
+          },
+          async loadProject(name) {
+            this.__abort?.abort();
+            const abort = (this.__abort = new AbortController());
+            this.loading = true;
+            this.error = "";
+            const url = getUrl(`projects/${name}/index.html`);
+            this.standaloneUrl = url;
+            sysStore.loading = true;
+            try {
+              const res = await fetch(url, { signal: abort.signal });
+              if (!res.ok) throw new Error(`HTTP ${res.status}`);
+              const html = await res.text();
+              if (this.__loadedName) this.clearMount(); // 同一实例换项目时先清空
+              this.__loadedName = name;
+              // 双模式标志：注入内容内的共享脚本据此识别“被外壳内嵌”；
+              // back 回调由当前实例注册（新加载会覆盖，页面栈中的历史实例不会重复响应）
+              this.__flagObj = { name, embedded: true, back: () => this.goBack() };
+              window.__devJourneyProject = this.__flagObj;
+              this.renderBody(html);
+            } catch (e) {
+              if (e.name === "AbortError") return;
+              this.error = e.message;
+              this.loading = false;
+              sysStore.loading = false;
+            }
+          },
+          /** 解析 body 子节点：脚本按白名单处理，其余重写相对路径后按序注入 */
+          renderBody(html) {
+            const doc = new DOMParser().parseFromString(html, "text/html");
+            const mount = this.getMount();
+            const base = this.standaloneUrl;
+            // head 内脚本（project-page.js / ofa.js CDN）同样按白名单处理
+            doc.head.querySelectorAll("script").forEach((el) =>
+              this.handleScript(el, mount)
+            );
+            Array.from(doc.body.childNodes).forEach((node) => {
+              if (node.nodeType !== 1) {
+                mount.appendChild(node);
+                return;
+              }
+              if (node.tagName === "SCRIPT") {
+                this.handleScript(node, mount);
+                return;
+              }
+              this.rewriteUrls(node, base);
+              mount.appendChild(node);
+            });
+            this.loading = false;
+            sysStore.loading = false;
+          },
+          /**
+           * 脚本白名单：ofa.js CDN 跳过（外壳已运行，二次加载会重复注册冲突）；
+           * 共享脚本取文本后以经典脚本执行（插入即执行）；其余一律警告跳过（约定禁止）
+           */
+          handleScript(el, mount) {
+            const src = el.getAttribute("src");
+            if (src) {
+              if (/ofa\.min\.js/.test(src)) return;
+              if (/project-page\.js$/.test(src)) {
+                this.runProjectPageScript(mount);
+                return;
+              }
+            }
+            console.warn(
+              `[l-project] 项目页脚本被跳过（约定业务逻辑应放 l-m 组件文件）：${src || "inline"}`
+            );
+          },
+          async runProjectPageScript(mount) {
+            const url = getUrl("src/js/project-page.js");
+            let code = pageScriptCache.get(url);
+            if (!code) {
+              code = await fetch(url).then((res) => res.text());
+              pageScriptCache.set(url, code);
+            }
+            const script = document.createElement("script"); // 经典脚本
+            script.textContent = code;
+            mount.appendChild(script); // 插入即同步执行；theme 逻辑因 __devJourneyProject 标志跳过
+          },
+          /**
+           * 复刻 ofa.js 自身 ct() 的重写规则：跳过 #、//、带 scheme；
+           * 递归 template；重写 style 内 url()
+           */
+          rewriteUrls(root, base) {
+            root.querySelectorAll("[href], [src]").forEach((el) => {
+              ["href", "src"].forEach((attr) => {
+                const v = el.getAttribute(attr);
+                if (!v || /^#/.test(v) || /^(https?:)?\/\//.test(v)) return;
+                el.setAttribute(attr, new URL(v, base).href);
+              });
+            });
+            root.querySelectorAll("style").forEach((el) => {
+              el.textContent = el.textContent.replace(
+                /url\((.+?)\)/g,
+                (m, u) => {
+                  const raw = u.trim().replace(/^['"]|['"]$/g, "");
+                  return `url(${new URL(raw, base).href})`;
+                }
+              );
+            });
+            root.querySelectorAll("template").forEach((t) =>
+              this.rewriteUrls(t.content, base)
+            );
+          },
+          clearMount() {
+            this.getMount().replaceChildren();
+          },
+          reload() {
+            const name = this.__loadedName;
+            this.__loadedName = null;
+            if (name) this.loadProject(name);
+          },
+          goBack() {
+            this.app?.goto(getUrl("src/pages/projects.html"));
+          },
+        },
+      };
+    }
+  </script>
+</template>

@@ -1,5 +1,5 @@
 <template page>
-  <link rel="stylesheet" href="../css/uno.css?v=0.2.8" />
+  <link rel="stylesheet" href="../css/uno.css?v=0.2.9" />
 
   <div class="relative hfull overflow-y-auto bg-theme-bg">
     <!-- 切走瞬间 menus 会变回字符串数组，documentType 守卫防止对象模板渲染字符串报错 -->
@@ -9,9 +9,9 @@
           class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x20px gap-y24px p24px max-w1400px mxauto"
         >
           <x-fill :value="sysStore.menus">
-            <a
-              attr:href="$host.getProjectUrl($data.name)"
-              class="b b-theme-border b-solid rounded-8px overflow-hidden flex flex-col bg-theme-bg no-underline transition-all hover:shadow-lg hover:translate-y-[-4px]"
+            <div
+              on:click="$host.openProject($data)"
+              class="cursor-pointer b b-theme-border b-solid rounded-8px overflow-hidden flex flex-col bg-theme-bg transition-all hover:shadow-lg hover:translate-y-[-4px]"
             >
               <!-- 有封面 -->
               <x-if :value="$data.cover">
@@ -38,7 +38,7 @@
                   {{$data.description}}
                 </p>
               </div>
-            </a>
+            </div>
           </x-fill>
         </div>
       </x-if>
@@ -73,6 +73,12 @@
           /** 拼项目资源地址：本地与 GitHub Pages 由 getUrl 统一处理 */
           getProjectUrl(name, file) {
             return getUrl(`projects/${name}/${file || "index.html"}`);
+          },
+          /** 点击卡片：路由到 SPA 内详情页，项目名经 query 传递（写入 hash，刷新可恢复） */
+          openProject(data) {
+            this.app.goto(
+              `${getUrl("src/pages/project-detail.html")}?name=${encodeURIComponent(data.name)}`
+            );
           },
         },
       };

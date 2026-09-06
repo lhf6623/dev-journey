@@ -7,25 +7,16 @@
     <link rel="icon" href="../../public/favicon.ico" type="image/x-icon" />
     <link rel="stylesheet" href="../../src/css/public.css" />
     <link rel="stylesheet" href="../../src/css/uno.css" />
-    <script>
-      // 跟随系统深浅色
-      const setDark = () => {
-        document.documentElement.classList.toggle(
-          "dark",
-          matchMedia("(prefers-color-scheme: dark)").matches
-        );
-      };
-      setDark();
-      matchMedia("(prefers-color-scheme: dark)").addEventListener(
-        "change",
-        setDark
-      );
-    </script>
+    <!-- 共享双模式脚本：独立打开跟随系统深浅色；被外壳加载器内嵌时自动跳过主题逻辑 -->
+    <script src="../../src/js/project-page.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/kirakiray/ofa.js@4.6.12/dist/ofa.min.js"></script>
   </head>
-  <body class="flex-center h100vh bg-theme-bg">
-    <!-- 组件与仓库其他组件一致，通过 l-m 加载 html 文件 -->
-    <l-m src="./demo-app.html"></l-m>
-    <demo-app></demo-app>
+  <body>
+    <!-- 布局类放容器 div（被内嵌时注入的是 body 子节点，body 本身不进外壳） -->
+    <div class="flex-center h100vh bg-theme-bg">
+      <!-- 组件与仓库其他组件一致，通过 l-m 加载 html 文件 -->
+      <l-m src="./demo-app.html"></l-m>
+      <demo-app></demo-app>
+    </div>
   </body>
 </html>
