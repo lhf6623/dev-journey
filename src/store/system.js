@@ -1,6 +1,7 @@
 import { getUrl } from "../js/util.js";
 import leetcodeMenu from "../js/leetcodeMenu.js";
 import mdbookMenu from "../js/mdbookMenu.js";
+import projectsMenu from "../js/projectsMenu.js";
 import Cache from "../js/cache.js";
 import { getPlatform } from "../js/Keyboard.mjs"
 
@@ -12,13 +13,23 @@ export const light = "light";
 export const system = "system";
 export const mdbook = "mdbook";
 export const leetcode = "leetcode";
+export const projects = "projects";
 
 const menuMap = {
   [leetcode]: leetcodeMenu,
   [mdbook]: mdbookMenu,
+  [projects]: projectsMenu,
 };
 const documentType = Cache.getItem(DOCUMENT_TYPE) ?? leetcode;
-const menus = menuMap[documentType];
+const menus = menuMap[documentType] ?? [];
+
+/** 菜单首项标题：对象菜单（projects）取 name，字符串菜单原样返回 */
+const getFirstMenuTitle = (list) => {
+  const first = list?.[0];
+  return typeof first === "object" && first !== null
+    ? first.name ?? ""
+    : first ?? "";
+};
 
 // 读取系统主题
 const sysTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
@@ -33,7 +44,7 @@ export const sysStore = $.stanz({
   /** 菜单列表 */
   menus,
   /** 当前标题 有后缀 */
-  title: Cache.getItem(TITLE) || menus[0],
+  title: Cache.getItem(TITLE) || getFirstMenuTitle(menus),
   /** 显示菜单 */
   isShowMenu: true,
   /** 小屏 */
@@ -44,6 +55,8 @@ export const sysStore = $.stanz({
 });
 /** 处理文件后缀 */
 export const handleFileSuffix = (textName) => {
+  // 对象数组菜单（projects）不参与文件名截断，直接返回空字符串
+  if (typeof textName !== "string") return "";
   if (!textName) return "";
   // 统一把 其他未知的后缀去掉
   return textName.replace(/\.\w+$/, "");
@@ -66,7 +79,7 @@ export const changeType = (type, fileName) => {
   }
   sysStore.documentType = type;
 
-  sysStore.title = fileName ? fileName : sysStore.menus[0];
+  sysStore.title = fileName || getFirstMenuTitle(sysStore.menus);
 
   Cache.setItem(TITLE, sysStore.title);
   Cache.setItem(DOCUMENT_TYPE, type);
@@ -92,6 +105,20 @@ export function refreshTheme(theme) {
   } else {
     setTheme();
   }
+}
+
+/** 系统主题跟随：主题为 system 时监听 OS 深浅色切换，返回取消函数 */
+export function watchSystemTheme() {
+  const darkModeQuery = window.matchMedia("(prefers-color-scheme: dark)");
+  const handler = () => {
+    if (sysStore.theme === system) {
+      refreshTheme();
+    }
+  };
+  darkModeQuery.addEventListener("change", handler);
+  return () => {
+    darkModeQuery.removeEventListener("change", handler);
+  };
 }
 
 export async function getContent() {

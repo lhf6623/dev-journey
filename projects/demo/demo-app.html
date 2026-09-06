@@ -1,0 +1,34 @@
+<template component>
+  <div class="flex flex-col items-center gap-y16px text-theme-text">
+    <h1 class="m0 text-24px">示例项目</h1>
+    <p class="m0">点击次数：{{count}}</p>
+    <div class="flex-center gap-x8px">
+      <button
+        class="l-btn b b-solid b-theme-border rounded-4px px12px py4px cursor-pointer"
+        on:click="add"
+      >
+        点我 +1
+      </button>
+      <button
+        class="l-btn b b-solid b-theme-border rounded-4px px12px py4px cursor-pointer"
+        on:click="back"
+      >
+        返回
+      </button>
+    </div>
+  </div>
+  <script type="module">
+    export default {
+      tag: "demo-app",
+      data: { count: 0 },
+      proto: {
+        add() {
+          this.count++;
+        },
+        back() {
+          history.back();
+        },
+      },
+    };
+  </script>
+</template>

@@ -10,11 +10,23 @@ export default defineConfig({
   cli: {
     entry: [
       {
-        patterns: ["src/**/*.{html,js,mjs}", "index.html"],
+        patterns: ["src/**/*.{html,js,mjs}", "projects/**/*.html", "index.html"],
         outFile: "src/css/uno.css",
       },
     ],
   },
+  rules: [
+    // 文本两行截断，presetMini 没有 line-clamp
+    [
+      "line-clamp-2",
+      {
+        display: "-webkit-box",
+        "-webkit-box-orient": "vertical",
+        "-webkit-line-clamp": "2",
+        overflow: "hidden",
+      },
+    ],
+  ],
   theme: {
     colors: {
       themeBg: "var(--theme-bg-color)",

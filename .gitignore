@@ -4,6 +4,7 @@ bin-release/
 [Oo]bj/
 [Bb]in/
 .agent-teams
+.claude
 
 node_modules
 package-lock.json

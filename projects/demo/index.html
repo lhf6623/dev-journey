@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>示例项目</title>
+    <link rel="icon" href="/public/favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="../../src/css/public.css" />
+    <link rel="stylesheet" href="../../src/css/uno.css" />
+    <script>
+      // 跟随系统深浅色
+      const setDark = () => {
+        document.documentElement.classList.toggle(
+          "dark",
+          matchMedia("(prefers-color-scheme: dark)").matches
+        );
+      };
+      setDark();
+      matchMedia("(prefers-color-scheme: dark)").addEventListener(
+        "change",
+        setDark
+      );
+    </script>
+    <script src="https://cdn.jsdelivr.net/gh/kirakiray/ofa.js@4.6.12/dist/ofa.min.js"></script>
+  </head>
+  <body class="flex-center h100vh bg-theme-bg">
+    <!-- 组件与仓库其他组件一致，通过 l-m 加载 html 文件 -->
+    <l-m src="./demo-app.html"></l-m>
+    <demo-app></demo-app>
+  </body>
+</html>

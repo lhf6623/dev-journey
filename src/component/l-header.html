@@ -6,7 +6,7 @@
   <header
     class="z10 relative h50px !px18px flex-shrink-0 b-b b-theme-hover flex-center"
   >
-    <x-if :value="sysStore.isSmall">
+    <x-if :value="sysStore.isSmall && sysStore.documentType !== 'projects'">
       <l-button
         :icon="'i-typcn:th-menu'"
         on:on-click="setMenu"
@@ -25,19 +25,27 @@
         力扣
       </button>
       <button
-        attr:class="`b b-solid b-theme-border b-l-0px rounded-e-full l-btn ${sysStore.documentType === 'mdbook' ? 'text-#0173ff':''}`"
+        attr:class="`b b-solid b-theme-border b-l-0px l-btn ${sysStore.documentType === 'mdbook' ? 'text-#0173ff':''}`"
         on:click="toPage('mdbook')"
       >
         文档
       </button>
+      <button
+        attr:class="`b b-solid b-theme-border b-l-0px rounded-e-full l-btn ${sysStore.documentType === 'projects' ? 'text-#0173ff':''}`"
+        on:click="toPage('projects')"
+      >
+        项目
+      </button>
       <span class="text-blueGray">
-        共【{{sysStore.menus?.length || 0}}】篇
+        共【{{sysStore.menus?.length || 0}}】{{sysStore.documentType === 'projects' ? '个' : '篇'}}
       </span>
     </div>
     <nav class="hfull wfull flex items-center justify-end">
       <ul class="hfull gap-x8px m0 flex-center">
         <li>
-          <l-search></l-search>
+          <x-if :value="sysStore.documentType !== 'projects'">
+            <l-search></l-search>
+          </x-if>
         </li>
         <li>
           <l-select :options="themeList" on:select="toggleTheme">

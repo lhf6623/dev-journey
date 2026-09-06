@@ -1,8 +1,7 @@
-<!-- layout-page.html -->
+<!-- layout-projects.html -->
 <template page>
   <link rel="stylesheet" href="./css/uno.css?v=0.2.8" />
 
-  <l-m src="./component/l-menu.html"></l-m>
   <l-m src="./component/l-header.html"></l-m>
 
   <div class="flex flex-col h100vh relative">
@@ -15,10 +14,7 @@
           <i class="i-eos-icons:bubble-loading w60px h60px text-#3498db"></i>
         </div>
       </x-if>
-      <l-menu class="relative hfull"></l-menu>
-      <main
-        class="relative hfull wfull bg-theme-bg b-l b-l-solid b-l-theme-hover"
-      >
+      <main class="relative hfull wfull bg-theme-bg">
         <slot></slot>
       </main>
     </div>
@@ -26,9 +22,7 @@
 
   <script type="module">
     export default async ({ load }) => {
-      const { sysStore, watchSystemTheme } = await load(
-        "./store/system.js"
-      );
+      const { sysStore, watchSystemTheme } = await load("./store/system.js");
       return {
         data: {
           currentPage: "",

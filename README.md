@@ -25,7 +25,7 @@
   pnpm build
   ```
 
-### 增加 leetcode 或者 mdbook 文件后的操作
+### 增加 leetcode、mdbook 文件或者 projects 项目后的操作
 
 ```shell
 cd node_util
@@ -37,6 +37,22 @@ node createMenus.cjs
 ```shell
 pnpm menu
 ```
+
+### projects 项目展示模式
+
+projects/ 目录下每个子目录是一个独立小项目：
+
+```
+projects/<项目名>/
+  ├── index.html    # 独立完整单页（自带 ofa.js 引入，不依赖 SPA）
+  ├── cover.png     # 封面（可选，支持 png/jpg/webp，文件名固定 cover.*）
+  └── meta.json     # 元信息（可选）：{ "title": "显示标题", "description": "卡片描述" }
+```
+
+- meta.json 缺省时 title 取目录名、description 为空
+- 缺封面时卡片显示渐变占位（标题首字）
+- 项目页内的 unocss 原子类由 `pnpm dev`/`pnpm build` 扫描 `projects/**/*.html` 生成，页面内引 `../../src/css/uno.css`
+- 新增/修改项目后运行 `pnpm menu`（现同时生成 leetcode/mdbook/projects 三个菜单）
 
 ### npm 依赖使用
 
