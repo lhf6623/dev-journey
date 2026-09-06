@@ -52,6 +52,8 @@ export const sysStore = $.stanz({
   /** 主题 */
   theme: Cache.getItem(THEME) ?? sysTheme,
   isMac: getPlatform() === "macOS",
+  /** 当前挂载的应用 name（别名页 attached 设置，l-header tab 高亮） */
+  activeApp: null,
 });
 /** 处理文件后缀 */
 export const handleFileSuffix = (textName) => {

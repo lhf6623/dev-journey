@@ -10,6 +10,7 @@ function createMenu(targetUrl, createUrl, handleMenus) {
   // 指定要读取的目录
   const directoryPath = path.join(__dirname, targetUrl); // 替换为你的目录路径
   const outputFilePath = path.join(__dirname, createUrl); // 输出文件的路径
+  fs.mkdirSync(path.dirname(outputFilePath), { recursive: true });
 
   // 读取目录
   fs.readdir(directoryPath, (err, files) => {
@@ -30,7 +31,7 @@ function createMenu(targetUrl, createUrl, handleMenus) {
     });
   });
 }
-createMenu("../leetcode", "../src/js/leetcodeMenu.js", (files) => {
+createMenu("../leetcode", "../apps/leetcode/leetcodeMenu.js", (files) => {
   const menus = [...files]
     .sort((a, b) => {
       const [aIndex] = a.split(".");
@@ -40,7 +41,7 @@ createMenu("../leetcode", "../src/js/leetcodeMenu.js", (files) => {
     .filter((item) => item.endsWith(".js"));
   return menus;
 });
-createMenu("../mdbook", "../src/js/mdbookMenu.js", (files) => {
+createMenu("../mdbook", "../apps/mdbook/mdbookMenu.js", (files) => {
   return files.filter((item) => item.endsWith(".md"));
 });
 /**
@@ -52,6 +53,7 @@ createMenu("../mdbook", "../src/js/mdbookMenu.js", (files) => {
 function createProjectsMenu(targetUrl, createUrl) {
   const directoryPath = path.join(__dirname, targetUrl);
   const outputFilePath = path.join(__dirname, createUrl);
+  fs.mkdirSync(path.dirname(outputFilePath), { recursive: true });
   const coverExts = [".png", ".jpg", ".webp"];
 
   const menus = fs
@@ -89,4 +91,4 @@ function createProjectsMenu(targetUrl, createUrl) {
   fs.writeFileSync(outputFilePath, strMenu);
   console.log("文件名已写入 " + outputFilePath);
 }
-createProjectsMenu("../projects", "../src/js/projectsMenu.js");
+createProjectsMenu("../projects", "../apps/projects/projectsMenu.js");

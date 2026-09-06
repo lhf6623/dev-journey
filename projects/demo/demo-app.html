@@ -26,8 +26,8 @@
           this.count++;
         },
         back() {
-          // 双形态：内嵌时通知外壳返回项目列表（经 projectPage 派发事件），独立打开时走浏览器后退
-          window.projectPage?.back();
+          // 双形态：内嵌时调用加载器注册的回调（返回项目列表），独立打开时走浏览器后退
+          window.appCtx?.back();
         },
       },
     };
