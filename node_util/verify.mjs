@@ -136,6 +136,13 @@ const CASES = [
     budget: 60000,
     expectText: ["1.两数之和"], // 最终停在力扣，断言当前应用菜单渲染；console 零错误由全局检查覆盖
   },
+  {
+    name: "FIX-菜单项点击切换",
+    type: "spa-menu",
+    home: "app/leetcode/",
+    budget: 50000,
+    expectText: ["mac 自动操作"], // 切到文档后点击第 3 个菜单项，断言 active 状态与内容切换
+  },
 ];
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -204,6 +211,49 @@ const SWITCH_SCRIPT = `
   }, 1000);
 </script>`;
 
+// 菜单点击用例脚本：切到文档应用后点击第 3 个菜单项，把 active 项文本写入 data-smoke-text
+const MENU_SCRIPT = `
+<script>
+  const findMenuItems = () => {
+    const acc = { items: [] };
+    const seen = new Set();
+    const w = (node) => {
+      if (seen.has(node)) return;
+      seen.add(node);
+      if (node.tagName === "LI" && typeof node.className === "string" && node.className.includes("l-btn")) acc.items.push(node);
+      if (node.shadowRoot) [...node.shadowRoot.childNodes].forEach((c) => w(c));
+      [...node.childNodes].forEach((c) => w(c));
+    };
+    w(document.body);
+    return acc.items;
+  };
+  const activeText = () =>
+    findMenuItems()
+      .filter((li) => typeof li.className === "string" && li.className.includes("active"))
+      .map((li) => li.textContent.trim())
+      .join("|");
+  setTimeout(() => {
+    const tabs = [];
+    const seen2 = new Set();
+    const wb = (node) => {
+      if (seen2.has(node)) return;
+      seen2.add(node);
+      if (node.nodeName === "BUTTON" && node.textContent.trim() === "文档") tabs.push(node);
+      if (node.shadowRoot) [...node.shadowRoot.childNodes].forEach((c) => wb(c));
+      [...node.childNodes].forEach((c) => wb(c));
+    };
+    wb(document.body);
+    if (tabs.length) tabs[0].click();
+    setTimeout(() => {
+      const items = findMenuItems();
+      if (items.length > 2) items[2].click();
+      setTimeout(() => {
+        document.body.setAttribute("data-smoke-text", activeText());
+      }, 5000);
+    }, 6000);
+  }, 8000);
+</script>`;
+
 /** 独立页用例：复制为同目录 smoke 副本并注入收集器 */
 function writeSmokeStandalone(file) {
   const src = join(ROOT, file);
@@ -244,10 +294,13 @@ function extract(dom) {
 async function runCase(c) {
   let url;
   let cleanup = () => {};
-  if (c.type === "spa" || c.type === "spa-seed" || c.type === "spa-switch") {
+  if (c.type === "spa" || c.type === "spa-seed" || c.type === "spa-switch" || c.type === "spa-menu") {
     if (c.type === "spa-switch") {
       // 切换用例：收集器换成 tab 连续点击脚本（先重写宿主页，再写配置，避免占位符覆盖 home）
       writeSmokeIndex(SWITCH_SCRIPT);
+    }
+    if (c.type === "spa-menu") {
+      writeSmokeIndex(MENU_SCRIPT);
     }
     // 每次重写整个配置（占位符替换一次后就消失，不能复用 replace）
     writeFileSync(

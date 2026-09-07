@@ -13,6 +13,7 @@ export const store = $.stanz({
 });
 
 export const setTitle = (title) => {
+  
   store.title = title;
   Cache.setItem(MD_TITLE, title);
 };

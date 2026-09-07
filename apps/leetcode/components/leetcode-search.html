@@ -55,7 +55,7 @@
             if (!inMenu) return;
 
             this.inputValue = "";
-            this.emit("select", target);
+            this.emit("select", { data: target });
           },
         },
       };

@@ -84,7 +84,7 @@
           },
           toggle(_title) {
             this.setMenu();
-            setTimeout(() => this.emit("toggle", _title), 0);
+            setTimeout(() => this.emit("toggle", { data: _title }), 0);
           },
         },
       };
