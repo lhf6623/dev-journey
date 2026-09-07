@@ -75,6 +75,7 @@
         data: {
           mdTxt: "加载中。。。",
           store: {},
+          currentTitle: "",
           pdfLoading: false,
           pageTitle: "",
           theme: "light",
@@ -82,7 +83,9 @@
           observer: null,
         },
         watch: {
-          async "store.title"(title) {
+          // 深度 watch（如 "store.title"）不会跟随 attached 里替换的外部 store，
+          // 用组件自有的 currentTitle 桥接（见 attached 的 stanz watch 订阅）
+          async currentTitle(title) {
             // 菜单/搜索选中新文档时重新加载（初始渲染由 attached 处理，避免重复加载）
             if (!title || title === this.__renderedTitle) return;
             this.loadDoc(title);
@@ -92,6 +95,10 @@
           this.shadow.on("click", this.copyCode);
         },
         detached() {
+          if (this.__titleWatchId) {
+            store.unwatch(this.__titleWatchId);
+            this.__titleWatchId = null;
+          }
           this.store = null;
           this.shadow.off("click", this.copyCode);
           this.observer && this.observer();
@@ -101,7 +108,15 @@
           this.observer = watchHtmlTheme((theme) => {
             this.theme = theme;
           });
+          // 模板绑定走原对象（attached 赋值保留引用，data 定义会被包装成副本）；
+          // title 变化经 stanz 原生 watch 桥接到组件自有 data
           this.store = store;
+          this.currentTitle = store.title;
+          this.__titleWatchId = store.watch((e) => {
+            if (e.type === "set" && e.name === "title") {
+              this.currentTitle = e.value;
+            }
+          });
           marked = new Marked(
             markedHighlight({
               emptyLangClass: "hljs",
@@ -119,27 +134,26 @@
 
           setTimeout(async () => {
             const cachedTitle = store.title;
-            // watch 绑定 store 时可能已触发过加载，去重
+            // currentTitle watch 可能已触发过加载，去重
             if (!cachedTitle || this.__renderedTitle === cachedTitle) return;
-            // 缓存优先：缓存内容与标题一起保存，直接渲染
-            if (store.mdContent) {
-              this.__renderedTitle = cachedTitle;
-              this.pageTitle = stripSuffix(cachedTitle);
-              this.renderMd(store.mdContent);
-              return;
-            }
             this.loadDoc(cachedTitle);
           }, 100);
         },
         proto: {
           getTitle: stripSuffix,
           selectDoc({ data }) {
+
             if (data) setTitle(data);
           },
           /** 加载并渲染文档 */
           async loadDoc(title) {
             this.__renderedTitle = title;
             this.pageTitle = stripSuffix(title);
+            // 缓存优先：缓存内容与其所属标题（mdTitle）一起保存，标题一致才有效
+            if (store.mdContent && store.mdTitle === title) {
+              this.renderMd(store.mdContent);
+              return;
+            }
             this.loading = true;
             const content = await getContent();
             setMdContent(content);

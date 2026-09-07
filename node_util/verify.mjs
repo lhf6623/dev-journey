@@ -141,7 +141,7 @@ const CASES = [
     type: "spa-menu",
     home: "app/leetcode/",
     budget: 50000,
-    expectText: ["mac 自动操作"], // 切到文档后点击第 3 个菜单项，断言 active 状态与内容切换
+    expectText: ["mac 自动操作", "CONTENT-OK"], // 切到文档后点击第 3 个菜单项，断言 active 状态与内容切换
   },
 ];
 
@@ -248,7 +248,16 @@ const MENU_SCRIPT = `
       const items = findMenuItems();
       if (items.length > 2) items[2].click();
       setTimeout(() => {
-        document.body.setAttribute("data-smoke-text", activeText());
+        // 断言 active 切换 + 内容真实切换（新文档首个标题渲染）
+        const acc = { text: "" };
+        const walkText = (node) => {
+          if (node.nodeType === 3) { acc.text += node.textContent; return; }
+          if (node.shadowRoot) [...node.shadowRoot.childNodes].forEach((c) => walkText(c));
+          [...node.childNodes].forEach((c) => walkText(c));
+        };
+        walkText(document.body);
+        const contentOk = acc.text.includes("自动操作文件保存地址") ? "CONTENT-OK" : "";
+        document.body.setAttribute("data-smoke-text", activeText() + "|" + contentOk);
       }, 5000);
     }, 6000);
   }, 8000);

@@ -145,6 +145,7 @@
       return {
         data: {
           store: {},
+          currentTitle: "",
           preTitle: "",
           nextTitle: "",
           pageTitle: "",
@@ -170,9 +171,17 @@
         },
         async attached() {
           this.isMac = sysStore?.isMac ?? false;
+          // 模板绑定走原对象（attached 赋值保留引用，data 定义会被包装成副本）；
+          // title 变化经 stanz 原生 watch 桥接到组件自有 data
+          this.store = store;
+          this.currentTitle = store.title;
+          this.__titleWatchId = store.watch((e) => {
+            if (e.type === "set" && e.name === "title") {
+              this.currentTitle = e.value;
+            }
+          });
           // 先记录初始标题再绑定 store，避免绑定触发 watch 误加载
           this.__lastTitle = store.title;
-          this.store = store;
           this.leetcodeCode = store.leetcodeCode;
           this.setFooterTitle();
           this.updateCode = Date.now();
@@ -200,6 +209,10 @@
           }
         },
         detached() {
+          if (this.__titleWatchId) {
+            store.unwatch(this.__titleWatchId);
+            this.__titleWatchId = null;
+          }
           this.store = null;
           this.onDestroy && this.onDestroy();
           this.observer && this.observer();
@@ -209,7 +222,9 @@
           keyboard.off("Ctrl-S", this.saveCode, this);
         },
         watch: {
-          async "store.title"(title) {
+          // 深度 watch（如 "store.title"）不会跟随 attached 里替换的外部 store，
+          // 用组件自有的 currentTitle 桥接（见 attached 的 stanz watch 订阅）
+          async currentTitle(title) {
             // 菜单/搜索/页脚切题时还原为题目原始代码
             if (!title || title === this.__lastTitle) return;
             this.restoreCode();
