@@ -1,4 +1,4 @@
-<!-- l-project.html 项目加载器：把 projects/<name>/index.html 的 body 组合进 SPA 外壳 -->
+<!-- l-micro.html 微前端加载器：把 HTML-entry 应用（apps/<name>/index.html 或 src 指向的任意页面）body 组合进外壳 -->
 <template component>
   <style>
     :host {
@@ -7,7 +7,7 @@
       height: 100%;
     }
     /* 等待 l-m 完成组件注册后注入内容再显示，避免自定义元素升级前闪烁 */
-    .l-project-mount *:not(:defined) {
+    .l-micro-mount *:not(:defined) {
       display: none;
     }
   </style>
@@ -39,41 +39,51 @@
         </div>
       </div>
     </x-if>
-    <!-- 注入挂载点：项目 body 子节点按序 append 到这里 -->
-    <div class="l-project-mount relative wfull hfull"></div>
+    <!-- 注入挂载点：应用 body 子节点按序 append 到这里 -->
+    <div class="l-micro-mount relative wfull hfull"></div>
   </div>
 
   <script type="module">
-    export const tag = "l-project";
+    export const tag = "l-micro";
     import { getUrl } from "../js/util.js";
+    import { getApp } from "./index.js";
 
-    // project-page.js 源码缓存：跨项目切换只 fetch 一次
-    const pageScriptCache = new Map();
+    // init.js 源码缓存：跨应用切换只 fetch 一次
+    const initScriptCache = new Map();
 
     export default async function ({ load }) {
       const { sysStore } = await load("../store/system.js");
       return {
-        attrs: { name: null },
+        attrs: { name: null, src: null, back: null },
         data: {
           name: "",
+          src: "",
+          query: null,
+          back: null,
           loading: false,
           error: "",
           standaloneUrl: "",
         },
         watch: {
           name(name) {
-            if (name && name !== this.__loadedName) this.loadProject(name);
+            if (name && name !== this.__loadedName) this.loadEntry(name);
+          },
+          src(src) {
+            if (src && src !== this.__loadedName) this.loadEntry(src);
+          },
+          query() {
+            if (this.__flagObj) this.__flagObj.query = this.query;
           },
         },
         attached() {
           this.sysStore = sysStore;
         },
         detached() {
-          // 清理：中断在途请求；标志对象若仍属于本实例则删除（页面栈中历史实例不干扰当前项目）
+          // 清理：中断在途请求；标志对象若仍属于本实例则删除（页面栈中历史实例不干扰当前应用）
           this.__abort?.abort();
           this.__abort = null;
-          if (window.__devJourneyProject === this.__flagObj) {
-            delete window.__devJourneyProject;
+          if (window.__devJourneyApp === this.__flagObj) {
+            delete window.__devJourneyApp;
           }
           this.__flagObj = null;
           this.sysStore = null;
@@ -81,26 +91,39 @@
         },
         proto: {
           getMount() {
-            return this.shadow.ele.querySelector(".l-project-mount");
+            return this.shadow.ele.querySelector(".l-micro-mount");
           },
-          async loadProject(name) {
+          /** name → apps.json 登记入口；src → 仓库相对 HTML-entry（如 projects/demo/index.html） */
+          resolveEntry(v) {
+            return getApp(v)?.entry ?? v;
+          },
+          async loadEntry(ref) {
             this.__abort?.abort();
             const abort = (this.__abort = new AbortController());
             this.loading = true;
             this.error = "";
-            const url = getUrl(`projects/${name}/index.html`);
+            const entry = this.resolveEntry(ref);
+            // 绝对地址直接使用（避免 getUrl 双重包裹 origin）
+            const url = /^https?:/.test(entry) ? entry : getUrl(entry);
             this.standaloneUrl = url;
             sysStore.loading = true;
             try {
               const res = await fetch(url, { signal: abort.signal });
               if (!res.ok) throw new Error(`HTTP ${res.status}`);
               const html = await res.text();
-              if (this.__loadedName) this.clearMount(); // 同一实例换项目时先清空
-              this.__loadedName = name;
-              // 双模式标志：注入内容内的共享脚本据此识别“被外壳内嵌”；
-              // back 回调由当前实例注册（新加载会覆盖，页面栈中的历史实例不会重复响应）
-              this.__flagObj = { name, embedded: true, back: () => this.goBack() };
-              window.__devJourneyProject = this.__flagObj;
+              if (this.__loadedName) this.clearMount(); // 同一实例换应用时先清空
+              this.__loadedName = entry;
+              // 双模式标志：back 未配时 emit 事件（子应用内嵌套场景由宿主组件监听）
+              this.__flagObj = {
+                name: this.name || null,
+                embedded: true,
+                query: this.query ?? {},
+                back: () => {
+                  if (this.back) this.app.goto(getUrl(this.back));
+                  else this.emit("back");
+                },
+              };
+              window.__devJourneyApp = this.__flagObj;
               this.renderBody(html);
             } catch (e) {
               if (e.name === "AbortError") return;
@@ -114,7 +137,7 @@
             const doc = new DOMParser().parseFromString(html, "text/html");
             const mount = this.getMount();
             const base = this.standaloneUrl;
-            // head 内脚本（project-page.js / ofa.js CDN）同样按白名单处理
+            // head 内脚本（micro/init.js / ofa.js CDN）同样按白名单处理
             doc.head.querySelectorAll("script").forEach((el) =>
               this.handleScript(el, mount)
             );
@@ -140,26 +163,26 @@
           handleScript(el, mount) {
             const src = el.getAttribute("src");
             if (src) {
-              if (/ofa\.min\.js/.test(src)) return;
-              if (/project-page\.js$/.test(src)) {
-                this.runProjectPageScript(mount);
+              if (/ofa\.min\.js$/.test(src)) return;
+              if (/micro\/init\.js$/.test(src)) {
+                this.runInitScript(mount);
                 return;
               }
             }
             console.warn(
-              `[l-project] 项目页脚本被跳过（约定业务逻辑应放 l-m 组件文件）：${src || "inline"}`
+              `[l-micro] 应用脚本被跳过（约定业务逻辑应放 l-m 组件文件）：${src || "inline"}`
             );
           },
-          async runProjectPageScript(mount) {
-            const url = getUrl("src/js/project-page.js");
-            let code = pageScriptCache.get(url);
+          async runInitScript(mount) {
+            const url = getUrl("src/micro/init.js");
+            let code = initScriptCache.get(url);
             if (!code) {
               code = await fetch(url).then((res) => res.text());
-              pageScriptCache.set(url, code);
+              initScriptCache.set(url, code);
             }
             const script = document.createElement("script"); // 经典脚本
             script.textContent = code;
-            mount.appendChild(script); // 插入即同步执行；theme 逻辑因 __devJourneyProject 标志跳过
+            mount.appendChild(script); // 插入即同步执行；theme 逻辑因 __devJourneyApp 标志跳过
           },
           /**
            * 复刻 ofa.js 自身 ct() 的重写规则：跳过 #、//、带 scheme；
@@ -190,12 +213,9 @@
             this.getMount().replaceChildren();
           },
           reload() {
-            const name = this.__loadedName;
+            const ref = this.__loadedName;
             this.__loadedName = null;
-            if (name) this.loadProject(name);
-          },
-          goBack() {
-            this.app?.goto(getUrl("src/pages/projects.html"));
+            if (ref) this.loadEntry(ref);
           },
         },
       };

@@ -1,52 +1,25 @@
 <template component>
-  <l-m src="./l-search.html"></l-m>
   <l-m src="./common/l-button.html"></l-m>
   <l-m src="./common/l-select.html"></l-m>
 
   <header
     class="z10 relative h50px !px18px flex-shrink-0 b-b b-theme-hover flex-center"
   >
-    <x-if :value="sysStore.isSmall && sysStore.documentType !== 'projects'">
-      <l-button
-        :icon="'i-typcn:th-menu'"
-        on:on-click="setMenu"
-        :size="'large'"
-        :icon-size="24"
-      >
-      </l-button>
-    </x-if>
     <div
-      class="flex-center ml3px *:bg-transparent *:px10px *:py3px *:whitespace-nowrap *:text-12px"
+      class="flex-center *:bg-transparent *:px10px *:py3px *:whitespace-nowrap *:text-12px"
     >
-      <button
-        attr:class="`b b-solid b-theme-border rounded-s-full l-btn ${sysStore.documentType === 'leetcode' ? 'text-#0173ff':''}`"
-        on:click="toPage('leetcode')"
-      >
-        力扣
-      </button>
-      <button
-        attr:class="`b b-solid b-theme-border b-l-0px l-btn ${sysStore.documentType === 'mdbook' ? 'text-#0173ff':''}`"
-        on:click="toPage('mdbook')"
-      >
-        文档
-      </button>
-      <button
-        attr:class="`b b-solid b-theme-border b-l-0px rounded-e-full l-btn ${sysStore.documentType === 'projects' ? 'text-#0173ff':''}`"
-        on:click="toPage('projects')"
-      >
-        项目
-      </button>
-      <span class="text-blueGray">
-        共【{{sysStore.menus?.length || 0}}】{{sysStore.documentType === 'projects' ? '个' : '篇'}}
-      </span>
+      <!-- 应用 tab：由 src/micro/apps.json 清单驱动 -->
+      <x-fill :value="apps">
+        <button
+          attr:class="`b b-solid b-theme-border l-btn ${$index === 0 ? 'rounded-s-full' : 'b-l-0px'} ${$index === $host.apps.length - 1 ? 'rounded-e-full' : ''} ${$host.isActive($data.name) ? 'text-#0173ff' : ''}`"
+          on:click="$host.toPage($data.name)"
+        >
+          {{$data.title}}
+        </button>
+      </x-fill>
     </div>
     <nav class="hfull wfull flex items-center justify-end">
       <ul class="hfull gap-x8px m0 flex-center">
-        <li>
-          <x-if :value="sysStore.documentType !== 'projects'">
-            <l-search></l-search>
-          </x-if>
-        </li>
         <li>
           <l-select :options="themeList" on:select="toggleTheme">
             <l-button :icon="getThemeIcon()" :icon-size="24">主题</l-button>
@@ -82,6 +55,7 @@
 
   <script type="module">
     import { getUrl } from "../js/util.js";
+    import { getApps } from "../micro/index.js";
     export const tag = "l-header";
     export default async function ({ load }) {
       const { sysStore, refreshTheme, system, light, dark } = await load(
@@ -90,6 +64,7 @@
       return {
         data: {
           sysStore: {},
+          apps: getApps(),
           themeList: [
             {
               label: "系统",
@@ -115,13 +90,14 @@
           this.sysStore = null;
         },
         proto: {
-          toPage(type) {
-            if (this.sysStore.documentType === type) return;
-            this.app.goto(getUrl(`src/pages/${type}.html`));
+          /** tab 高亮：别名页 attached 时设置 sysStore.activeApp */
+          isActive(name) {
+            return this.sysStore?.activeApp === name;
           },
-          setMenu() {
-            const { isShowMenu } = this.sysStore;
-            this.sysStore.isShowMenu = !isShowMenu;
+          toPage(name) {
+            if (this.sysStore?.activeApp === name) return;
+            // 物理别名页路由：#/app/<name>/（目录索引 + ofa 尾斜杠 .html flag）
+            this.app.goto(getUrl(`app/${name}/`));
           },
           toggleTheme({ data }) {
             refreshTheme(data);

@@ -1,0 +1,93 @@
+<!-- mdbook-menu.html 文档菜单（自 src/component/l-menu.html 参数化而来，props 驱动） -->
+<template component>
+  <div
+    on:click="setMenu"
+    attr:class="`${isSmall && isShowMenu ? 'op100 z300' : 'op0 !z--1'} bg-#00000022 transition-all fixed w100vw h100vh top-0 left-0`"
+  ></div>
+  <x-if :value="isSmall">
+    <button
+      on:click="setMenu"
+      class="fixed bottom-20px left-16px z400 b b-solid b-theme-border rounded-full w40px h40px flex-center bg-theme-bg"
+    >
+      <i class="i-typcn:th-menu"></i>
+    </button>
+  </x-if>
+  <aside
+    attr:class="`${menuClass} hfull transition-all w280px text-theme-text bg-theme-bg overflow-y-auto relative flex-shrink-0 z1`"
+  >
+    <ul class="p0 m0 relative px16px">
+      <x-fill :value="menus">
+        <li
+          attr:class="`${$host.title === $data ? 'text-#0173ff active bg-theme-hover' : ''} l-btn rounded-5px font500 truncate pl8px py2px my5px mx0px text-ellipsis text-16px`"
+          on:click="$host.toggle($data)"
+          on:keydown="$host.keydownToggle($event, $data)"
+          attr:title="$host.stripSuffix($data)"
+          tabindex="0"
+        >
+          {{$host.stripSuffix($data)}}
+        </li>
+      </x-fill>
+    </ul>
+  </aside>
+  <script type="module">
+    export const tag = "mdbook-menu";
+    import { throttle } from "https://esm.sh/lodash-es@4.17.21";
+    export default async function ({ load }) {
+      return {
+        attrs: {},
+        data: {
+          menus: [],
+          title: "",
+          isSmall: false,
+          isShowMenu: true,
+          menuClass: "",
+        },
+        watch: {
+          isShowMenu() {
+            const show = this.isSmall && this.isShowMenu;
+            if (this.isSmall) {
+              this.menuClass = show
+                ? "!fixed z400 !top-0 !h100vh"
+                : "!fixed !w0 overflow-hidden";
+            } else {
+              this.menuClass = "";
+            }
+          },
+        },
+        attached() {
+          this.resizeHandler = throttle(this.setShowMenu, 300);
+          window.addEventListener("resize", this.resizeHandler);
+          this.setShowMenu();
+        },
+        detached() {
+          window.removeEventListener("resize", this.resizeHandler);
+          this.resizeHandler = null;
+        },
+        proto: {
+          setShowMenu() {
+            const width = window.innerWidth;
+            this.isSmall = width < 960;
+            this.isShowMenu = width >= 960;
+          },
+          stripSuffix(textName) {
+            return typeof textName === "string"
+              ? textName.replace(/\.\w+$/, "")
+              : "";
+          },
+          setMenu() {
+            this.isShowMenu = false;
+          },
+          keydownToggle(e, _title) {
+            if (e.key === "Enter") {
+              this.toggle(_title);
+            }
+          },
+          toggle(_title) {
+            this.setMenu();
+            setTimeout(() => this.emit("toggle", { data: _title }), 0);
+          },
+        },
+      };
+    }
+  </script>
+</template>

@@ -1,22 +1,55 @@
-<template page>
-  <link rel="stylesheet" href="../css/uno.css?v=0.2.9" />
-  <link rel="stylesheet" href="../css/uno-icon.css?v=0.2.9" />
-  <link rel="stylesheet" href="../css/highlightjs.css?v=0.2.9" />
-  <l-m src="../component/common/l-button.html"></l-m>
-  <div attr:class="`md ${theme} relative hfull overflow-auto`">
-    <l-button
-      title="下载文档为PDF"
-      class="fixed right-18px mt3px bg-amber dark:bg-blue rounded-3px z100"
-      :icon="'i-tabler:pdf'"
-      on:on-click="getPdf"
-      :loading="pdfLoading"
-    >
-    </l-button>
-    <div id="pdf" class="bg-theme-bg relative max-w794px min-w595px mxauto">
-      <h1 class="text-center tracking-2px">{{getTitle(title)}}</h1>
-      <div :html="mdTxt" id="md" class="px40px all:transition-200"></div>
+<!-- mdbook-app.html 文档应用根组件：菜单 + 搜索 + md 渲染 + PDF 导出（自 src/pages/mdbook.html 移植） -->
+<template component>
+  <link rel="stylesheet" href="../../../src/css/uno.css?v=0.3.0" />
+  <link rel="stylesheet" href="../../../src/css/uno-icon.css?v=0.3.0" />
+  <link rel="stylesheet" href="../../../src/css/highlightjs.css?v=0.3.0" />
+
+  <l-m src="../../../src/component/common/l-button.html"></l-m>
+  <l-m src="./mdbook-menu.html"></l-m>
+  <l-m src="./mdbook-search.html"></l-m>
+
+  <div class="flex hfull bg-theme-bg">
+    <mdbook-menu
+      :menus="store.menus"
+      :title="store.title"
+      on:toggle="selectDoc"
+    ></mdbook-menu>
+    <div class="flex-1 flex flex-col relative overflow-hidden min-w-0">
+      <!-- 内容区工具条：搜索 + 当前文档标题 + PDF 按钮 -->
+      <div
+        class="flex-between h44px px16px b-b b-b-solid b-b-theme-hover flex-shrink-0 gap-x12px"
+      >
+        <mdbook-search
+          :menus="store.menus"
+          :suffix="'.md'"
+          on:select="selectDoc"
+        ></mdbook-search>
+        <span class="text-14px text-blueGray truncate">{{pageTitle}}</span>
+        <l-button
+          title="下载文档为PDF"
+          :icon="'i-tabler:pdf'"
+          on:on-click="getPdf"
+          :loading="pdfLoading"
+        >
+        </l-button>
+      </div>
+      <div
+        attr:class="`md ${theme} flex-1 relative overflow-y-auto`"
+      >
+        <x-if :value="loading">
+          <div
+            class="absolute z99 top-0 left-0 wfull hfull bg-theme-bg flex-center"
+          >
+            <i class="i-eos-icons:bubble-loading w40px h40px text-#3498db"></i>
+          </div>
+        </x-if>
+        <div id="pdf" class="bg-theme-bg relative max-w794px min-w595px mxauto">
+          <h1 class="text-center tracking-2px">{{pageTitle}}</h1>
+          <div :html="mdTxt" id="md" class="px40px all:transition-200"></div>
+        </div>
+        <div class="h40px"></div>
+      </div>
     </div>
-    <div class="h40px"></div>
   </div>
 
   <script>
@@ -31,66 +64,59 @@
         imgClipByPage,
         checkImgEmptyLine,
         colorDistance,
-        watchHtmlTheme,
-      } = await load("../js/util.js");
-      const {
-        sysStore,
-        changeType,
-        handleFileSuffix,
-        setSysTitle,
-        getContent,
-        mdbook,
-      } = await load("../store/system.js");
-      const { pageStore, setMdContent, setMdTitle } = await load(
-        "../store/page-store.js"
-      );
+      } = await load("../js/pdf.js");
+      const { watchHtmlTheme } = await load("../../../src/js/util.js");
+      const { store, setTitle, setMdContent, stripSuffix, getContent } =
+        await load("../store.js");
 
       let marked = null;
       let tim = null;
       return {
-        parent: "../layout-page.html",
         data: {
           mdTxt: "加载中。。。",
-          sysStore: {},
+          store: {},
+          currentTitle: "",
           pdfLoading: false,
-          title: "",
+          pageTitle: "",
           theme: "light",
+          loading: false,
           observer: null,
         },
         watch: {
-          async "sysStore.title"(data) {
-            if (!this.pageStore) return;
-            if (!this.sysStore || this.sysStore.documentType !== mdbook) {
-              return;
-            }
-            const { title } = this.sysStore || {};
-
-            if (title && title !== this.pageStore.mdTitle) {
-              setMdTitle(title ?? "");
-              const content = await getContent();
-              setMdContent(content);
-              this.renderMd(content);
-              this.title = title;
-            }
+          // 深度 watch（如 "store.title"）不会跟随 attached 里替换的外部 store，
+          // 用组件自有的 currentTitle 桥接（见 attached 的 stanz watch 订阅）
+          async currentTitle(title) {
+            // 菜单/搜索选中新文档时重新加载（初始渲染由 attached 处理，避免重复加载）
+            if (!title || title === this.__renderedTitle) return;
+            this.loadDoc(title);
           },
-        },
-        detached() {
-          this.sysStore = null;
-          this.pageStore = null;
-          this.shadow.off("click", this.copyCode);
-          this.observer && this.observer();
-          this.observer = null;
         },
         ready() {
           this.shadow.on("click", this.copyCode);
+        },
+        detached() {
+          if (this.__titleWatchId) {
+            store.unwatch(this.__titleWatchId);
+            this.__titleWatchId = null;
+          }
+          this.store = null;
+          this.shadow.off("click", this.copyCode);
+          this.observer && this.observer();
+          this.observer = null;
         },
         attached() {
           this.observer = watchHtmlTheme((theme) => {
             this.theme = theme;
           });
-          changeType("mdbook", pageStore.mdTitle);
-          this.sysStore = sysStore;
-          this.pageStore = pageStore;
+          // 模板绑定走原对象（attached 赋值保留引用，data 定义会被包装成副本）；
+          // title 变化经 stanz 原生 watch 桥接到组件自有 data
+          this.store = store;
+          this.currentTitle = store.title;
+          this.__titleWatchId = store.watch((e) => {
+            if (e.type === "set" && e.name === "title") {
+              this.currentTitle = e.value;
+            }
+          });
           marked = new Marked(
             markedHighlight({
               emptyLangClass: "hljs",
@@ -107,22 +133,34 @@
           );
 
           setTimeout(async () => {
-            let content = "";
-            if (this.pageStore.mdContent) {
-              content = pageStore.mdContent;
-              this.title = pageStore.mdTitle;
-            } else {
-              content = await getContent();
-              setMdContent(content);
-              setMdTitle(this.sysStore.title);
-              this.title = this.sysStore.title;
-            }
-
-            this.renderMd(content);
+            const cachedTitle = store.title;
+            // currentTitle watch 可能已触发过加载，去重
+            if (!cachedTitle || this.__renderedTitle === cachedTitle) return;
+            this.loadDoc(cachedTitle);
           }, 100);
         },
         proto: {
-          getTitle: handleFileSuffix,
+          getTitle: stripSuffix,
+          selectDoc({ data }) {
+
+            if (data) setTitle(data);
+          },
+          /** 加载并渲染文档 */
+          async loadDoc(title) {
+            this.__renderedTitle = title;
+            this.pageTitle = stripSuffix(title);
+            // 缓存优先：缓存内容与其所属标题（mdTitle）一起保存，标题一致才有效
+            if (store.mdContent && store.mdTitle === title) {
+              this.renderMd(store.mdContent);
+              return;
+            }
+            this.loading = true;
+            const content = await getContent();
+            setMdContent(content);
+            this.renderMd(content);
+            this.loading = false;
+            this.scrollToTop();
+          },
           copyCode(e) {
             const color = "text-#18a058";
             let el = e.target;
@@ -258,7 +296,7 @@
                 page += 1;
               }
 
-              const title = `${this.getTitle(this.title)}.pdf`;
+              const title = `${this.getTitle(this.store.title)}.pdf`;
               doc.save(title);
               this.pdfLoading = false;
             })

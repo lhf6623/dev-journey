@@ -1,0 +1,32 @@
+<!-- app/leetcode/index.html 壳路由别名页：深链 #/app/leetcode 的物理落点，挂载 apps/leetcode -->
+<template page>
+  <link rel="stylesheet" href="../../src/css/uno.css?v=0.3.0" />
+
+  <l-m src="../../src/micro/l-micro.html"></l-m>
+  <x-if :value="appName">
+    <l-micro :name="appName" :query="query"></l-micro>
+  </x-if>
+
+  <script type="module">
+    import { cleanQuery } from "../../src/micro/index.js";
+    export default async ({ load, query }) => {
+      const { sysStore } = await load("../../src/store/system.js");
+      return {
+        parent: "../../src/layout-shell.html",
+        data: {
+          appName: "leetcode",
+          query: cleanQuery(query),
+        },
+        attached() {
+          this.sysStore = sysStore;
+          sysStore.activeApp = this.appName;
+        },
+        detached() {
+          this.sysStore = null;
+          if (sysStore.activeApp === this.appName) sysStore.activeApp = null;
+        },
+        proto: {},
+      };
+    };
+  </script>
+</template>

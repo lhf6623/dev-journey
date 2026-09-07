@@ -10,8 +10,8 @@
   <script type="module">
     export const tag = "l-editor";
     export default async function ({ load }) {
-      const { setLeetcodeCode } = await load("../store/page-store.js");
-      const { watchHtmlTheme } = await load("../js/util.js");
+      const { setCode } = await load("../store.js");
+      const { watchHtmlTheme } = await load("../../../src/js/util.js");
       return {
         data: {
           code: "",
@@ -59,7 +59,7 @@
           this.observer = null;
         },
         proto: {
-          setCode: setLeetcodeCode,
+          setCode,
           postMessage(fn, ags) {
             if (!this.iframe) return;
             this.iframe.contentWindow.postMessage(

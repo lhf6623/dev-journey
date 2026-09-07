@@ -1,0 +1,64 @@
+<!-- leetcode-search.html 文档搜索（自 src/component/l-search.html 参数化而来，props 驱动） -->
+<template component>
+  <input
+    attr:placeholder="`搜索 ${isMac ? '⌘':'Ctrl'} K`"
+    list="leetcode-menus"
+    :value="inputValue"
+    on:change="toggle"
+    type="search"
+    class="relative w168px box-border px6px py0px rounded placeholder:text-12px b b-solid b-theme-border"
+  />
+  <datalist id="leetcode-menus">
+    <x-fill :value="menus">
+      <option :value="$host.stripSuffix($data)" />
+    </x-fill>
+  </datalist>
+  <script type="module">
+    export const tag = "leetcode-search";
+    import { keyboard } from "../../../src/js/Keyboard.mjs";
+    export default async function ({ load }) {
+      const { sysStore } = await load("../../../src/store/system.js");
+      return {
+        attrs: {},
+        data: {
+          menus: [],
+          suffix: "",
+          inputValue: "",
+          isMac: false,
+        },
+        attached() {
+          this.isMac = sysStore?.isMac ?? false;
+          keyboard.on("Ctrl-K", this.focusInput, this);
+        },
+        detached() {
+          keyboard.off("Ctrl-K", this.focusInput, this);
+        },
+        proto: {
+          // 监听按键 聚焦输入框
+          focusInput() {
+            this.shadow.ele.querySelector("input").focus();
+          },
+          stripSuffix(textName) {
+            return typeof textName === "string"
+              ? textName.replace(/\.\w+$/, "")
+              : "";
+          },
+          async toggle(e) {
+            const _title = e.target.value.trim();
+            if (!_title) return;
+            const suffix = this.suffix || "";
+
+            // 支持带完整后缀输入命中：已带后缀则直接匹配，否则补全
+            const target = _title.endsWith(suffix) ? _title : `${_title}${suffix}`;
+
+            const inMenu = this.menus.some((curr) => curr === target);
+            if (!inMenu) return;
+
+            this.inputValue = "";
+            this.emit("select", { data: target });
+          },
+        },
+      };
+    }
+  </script>
+</template>

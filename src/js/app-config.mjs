@@ -1,4 +1,4 @@
-export const home = "../pages/leetcode.html";
+export const home = "../../app/leetcode/";
 
 export const fail = ({ src, error }) => {
   return `<div style="width:100%;height:100%;display:flex;justify-content:center;align-items:center;word-break:break-all;" data-testid="error-container">

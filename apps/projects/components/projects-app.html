@@ -1,0 +1,123 @@
+<!-- projects-app.html 项目应用根组件：卡片网格列表 + 详情视图（二级项目经 l-micro 嵌套组合） -->
+<template component>
+  <link rel="stylesheet" href="../../../src/css/uno.css?v=0.3.0" />
+
+  <l-m src="../../../src/micro/l-micro.html"></l-m>
+
+  <div class="relative hfull wfull overflow-y-auto bg-theme-bg">
+    <!-- 列表视图：卡片网格 -->
+    <x-if :value="store.view === 'list'">
+      <x-if :value="store.menus?.length">
+        <div
+          class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x20px gap-y24px p24px max-w1400px mxauto"
+        >
+          <x-fill :value="store.menus">
+            <div
+              on:click="$host.openProject($data)"
+              class="cursor-pointer b b-theme-border b-solid rounded-8px overflow-hidden flex flex-col bg-theme-bg transition-all hover:shadow-lg hover:translate-y-[-4px]"
+            >
+              <!-- 有封面 -->
+              <x-if :value="$data.cover">
+                <img
+                  attr:src="$host.getProjectUrl($data.name, $data.cover)"
+                  :alt="$data.title"
+                  loading="lazy"
+                  class="wfull aspect-16/10 [object-fit:cover] bg-theme-hover"
+                />
+              </x-if>
+              <!-- 无封面：渐变占位，显示标题首字（presetMini v66 无渐变规则，用任意值） -->
+              <x-if :value="!$data.cover">
+                <div
+                  class="wfull aspect-16/10 flex-center text-40px text-white font700 bg-[linear-gradient(to_bottom_right,#4f8cf7,#8b5cf6)]"
+                >
+                  {{$data.title[0]}}
+                </div>
+              </x-if>
+              <div class="p12px pt10px flex-1 flex flex-col gap-y4px">
+                <p class="m0 truncate text-16px font600 text-theme-text">
+                  {{$data.title}}
+                </p>
+                <p class="m0 line-clamp-2 text-12px text-blueGray">
+                  {{$data.description}}
+                </p>
+              </div>
+            </div>
+          </x-fill>
+        </div>
+      </x-if>
+      <x-if :value="!store.menus?.length">
+        <div class="hfull flex-center text-14px text-blueGray">
+          暂无项目，在 projects/ 下新建目录并运行 pnpm menu
+        </div>
+      </x-if>
+    </x-if>
+    <!-- 详情视图：工具条 + 二级项目加载 -->
+    <x-if :value="store.view === 'detail'">
+      <div class="relative hfull wfull flex flex-col">
+        <div
+          class="flex-between h44px flex-shrink-0 px16px b-b b-b-solid b-b-theme-hover"
+        >
+          <button
+            class="l-btn flex-center gap-x4px text-14px"
+            on:click="showList"
+          >
+            <i class="i-mdi:arrow-left"></i>
+            项目列表
+          </button>
+          <span class="text-16px font600 text-theme-text">{{pageTitle}}</span>
+          <a
+            class="l-btn text-12px text-blueGray no-underline"
+            target="_blank"
+            attr:href="getStandaloneUrl()"
+          >
+            <i class="i-mdi:open-in-new"></i> 独立页打开
+          </a>
+        </div>
+        <div class="flex-1 relative overflow-hidden">
+          <l-micro :src="detailSrc" on:back="showList"></l-micro>
+        </div>
+      </div>
+    </x-if>
+  </div>
+
+  <script type="module">
+    export default async ({ load }) => {
+      const { store } = await load("../store.js");
+      const { getUrl } = await load("../../../src/js/util.js");
+      return {
+        data: {
+          store,
+          detailSrc: "",
+          pageTitle: "",
+        },
+        attached() {
+          // 深链 #/app/projects?sub=demo / 独立打开 ?sub=demo：直接进入详情
+          const query = window.appCtx?.query ?? {};
+          if (query.sub) this.openProject({ name: query.sub });
+        },
+        detached() {
+          this.store = null;
+        },
+        proto: {
+          getProjectUrl(name, file) {
+            return getUrl(`projects/${name}/${file || "index.html"}`);
+          },
+          getStandaloneUrl() {
+            return getUrl(`projects/${this.store.sub}/index.html`);
+          },
+          openProject(data) {
+            const menu = this.store.menus.find((m) => m.name === data.name);
+            this.store.sub = data.name;
+            this.pageTitle = menu?.title || data.name;
+            this.detailSrc = this.getProjectUrl(data.name);
+            this.store.view = "detail"; // 应用内视图切换，不碰壳 hash
+          },
+          showList() {
+            this.store.sub = "";
+            this.store.view = "list";
+          },
+        },
+      };
+    };
+  </script>
+</template>
