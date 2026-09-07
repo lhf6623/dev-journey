@@ -128,6 +128,14 @@ const CASES = [
     home: "app/mdbook/",
     expectText: ["迁移测试标题"],
   },
+  // ===== 修复回归 =====
+  {
+    name: "FIX-tab切换菜单稳定",
+    type: "spa-switch",
+    home: "app/leetcode/",
+    budget: 60000,
+    expectText: ["1.两数之和"], // 最终停在力扣，断言当前应用菜单渲染；console 零错误由全局检查覆盖
+  },
 ];
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -148,14 +156,53 @@ async function ensureServer() {
   throw new Error("静态服务启动失败");
 }
 
-/** 生成 smoke 宿主页（index.html 副本 + o-app 指向 smoke config + 收集器） */
-function writeSmokeIndex() {
+/** 生成 smoke 宿主页（index.html 副本 + o-app 指向 smoke config + 注入脚本） */
+function writeSmokeIndex(script = COLLECTOR) {
   let html = readFileSync(join(ROOT, "index.html"), "utf-8");
   html = html.replace('src="./src/js/app-config.mjs"', 'src="./smoke-app-config.mjs"');
-  html = html.replace("</body>", COLLECTOR + "</body>");
+  html = html.replace("</body>", script + "</body>");
   writeFileSync(join(ROOT, "smoke-index.html"), html);
   writeFileSync(join(ROOT, "smoke-app-config.mjs"), "export const home = \"__HOME__\";\n");
 }
+
+// tab 切换用例脚本：力扣→文档→力扣→文档 连续切换后收集文本（验证菜单/内容稳定渲染）
+const SWITCH_SCRIPT = `
+<script>
+  const walkAll = (node, acc) => {
+    if (node.nodeType === 3) { acc.text += node.textContent; return; }
+    if (node.shadowRoot) [...node.shadowRoot.childNodes].forEach((c) => walkAll(c, acc));
+    [...node.childNodes].forEach((c) => walkAll(c, acc));
+  };
+  const clickTab = (name) => {
+    const acc = { btns: [] };
+    const w = (node) => {
+      if (node.nodeName === "BUTTON" && node.textContent.trim() === name) acc.btns.push(node);
+      if (node.shadowRoot) [...node.shadowRoot.childNodes].forEach((c) => w(c));
+      [...node.childNodes].forEach((c) => w(c));
+    };
+    w(document.body);
+    if (acc.btns.length) acc.btns[0].click();
+  };
+  setTimeout(() => {
+    setTimeout(() => {
+      clickTab("文档");
+      setTimeout(() => {
+        clickTab("力扣");
+        setTimeout(() => {
+          clickTab("文档");
+          setTimeout(() => {
+            clickTab("力扣");
+            setTimeout(() => {
+              const acc = { text: "" };
+              walkAll(document.body, acc);
+              document.body.setAttribute("data-smoke-text", acc.text.replace(/\\s+/g, " ").slice(0, 8000));
+            }, 6000);
+          }, 6000);
+        }, 6000);
+      }, 6000);
+    }, 8000);
+  }, 1000);
+</script>`;
 
 /** 独立页用例：复制为同目录 smoke 副本并注入收集器 */
 function writeSmokeStandalone(file) {
@@ -167,11 +214,11 @@ function writeSmokeStandalone(file) {
   return dest;
 }
 
-async function runChrome(url) {
+async function runChrome(url, budget = 30000) {
   return new Promise((resolve) => {
     const p = spawn(CHROME, [
       "--headless=new", "--disable-gpu", "--no-first-run",
-      "--virtual-time-budget=30000", "--enable-logging=stderr",
+      `--virtual-time-budget=${budget}`, "--enable-logging=stderr",
       "--dump-dom", url,
     ], { stdio: ["ignore", "pipe", "pipe"] });
     let stdout = "", stderr = "";
@@ -197,7 +244,11 @@ function extract(dom) {
 async function runCase(c) {
   let url;
   let cleanup = () => {};
-  if (c.type === "spa" || c.type === "spa-seed") {
+  if (c.type === "spa" || c.type === "spa-seed" || c.type === "spa-switch") {
+    if (c.type === "spa-switch") {
+      // 切换用例：收集器换成 tab 连续点击脚本（先重写宿主页，再写配置，避免占位符覆盖 home）
+      writeSmokeIndex(SWITCH_SCRIPT);
+    }
     // 每次重写整个配置（占位符替换一次后就消失，不能复用 replace）
     writeFileSync(
       join(ROOT, "smoke-app-config.mjs"),
@@ -217,7 +268,7 @@ async function runCase(c) {
     url = BASE + "/" + dest.slice(ROOT.length + 1);
     cleanup = () => rmSync(dest, { force: true });
   }
-  const { stdout, stderr } = await runChrome(url);
+  const { stdout, stderr } = await runChrome(url, c.budget ?? 30000);
   cleanup();
   const dom = stdout;
   const { text, hrefs, lmSrc, iframes } = extract(dom);
