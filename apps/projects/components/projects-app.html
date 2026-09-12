@@ -1,8 +1,9 @@
-<!-- projects-app.html 项目应用根组件：卡片网格列表 + 详情视图（二级项目经 l-micro 嵌套组合） -->
+<!-- projects-app.html 项目应用根组件：卡片网格列表 + 详情视图（二级项目按同一 mount 契约嵌套） -->
 <template component>
-  <link rel="stylesheet" href="../../../src/css/uno.css?v=0.4.0" />
-
-  <l-m src="../../../src/micro/l-micro.html"></l-m>
+  <link rel="stylesheet" href="../../../src/css/uno.css?v=0.5.0" />
+  <link rel="stylesheet" href="../../../src/css/uno-icon.css?v=0.5.0" />
+  <link rel="stylesheet" href="../../../components/ui.css?v=0.5.0" />
+  <link rel="stylesheet" href="../../../components/ui-icon.css?v=0.5.0" />
 
   <div class="relative hfull wfull overflow-y-auto bg-theme-bg">
     <!-- 列表视图：卡片网格 -->
@@ -51,7 +52,7 @@
         </div>
       </x-if>
     </x-if>
-    <!-- 详情视图：工具条 + 二级项目加载 -->
+    <!-- 详情视图：工具条 + 二级项目挂载点 -->
     <x-if :value="store.view === 'detail'">
       <div class="relative hfull wfull flex flex-col">
         <div
@@ -74,47 +75,96 @@
           </a>
         </div>
         <div class="flex-1 relative overflow-hidden">
-          <l-micro :src="detailSrc" on:back="showList"></l-micro>
+          <div class="project-sub relative hfull wfull"></div>
         </div>
       </div>
     </x-if>
   </div>
 
   <script type="module">
+    import { getUrl } from "../../../src/js/util.js";
+    import { createCtx, getCtxById } from "../../../src/micro/context.js";
+
     export default async ({ load }) => {
       const { store } = await load("../store.js");
-      const { getUrl } = await load("../../../src/js/util.js");
       return {
         data: {
           store,
-          detailSrc: "",
           pageTitle: "",
         },
         attached() {
-          // 深链 #/app/projects?sub=demo / 独立打开 ?sub=demo：直接进入详情
-          const query = window.appCtx?.query ?? {};
-          if (query.sub) this.openProject({ name: query.sub });
+          // 深链 #/projects/<name>：ctx.sub 决定直接进入详情
+          const sub = this.appCtx()?.sub;
+          if (sub) this.showDetail(sub);
         },
         detached() {
+          this.__subUnmount?.();
+          this.__subUnmount = null;
           this.store = null;
         },
         proto: {
+          /** 上下文经 data-ctx-id 查注册表（ofa 会丢元素上的外部对象属性） */
+          appCtx() {
+            return getCtxById(this.ele?.getAttribute?.("data-ctx-id"));
+          },
           getProjectUrl(name, file) {
             return getUrl(`projects/${name}/${file || "index.html"}`);
           },
           getStandaloneUrl() {
             return getUrl(`projects/${this.store.sub}/index.html`);
           },
+          /** 点击卡片：内嵌改壳路由（可前进后退），独立则内部切视图 */
           openProject(data) {
-            const menu = this.store.menus.find((m) => m.name === data.name);
-            this.store.sub = data.name;
-            this.pageTitle = menu?.title || data.name;
-            this.detailSrc = this.getProjectUrl(data.name);
-            this.store.view = "detail"; // 应用内视图切换，不碰壳 hash
+            const ctx = this.appCtx();
+            if (ctx?.embedded) {
+              ctx.navigate(`#/projects/${data.name}`);
+              return;
+            }
+            this.showDetail(data.name);
+          },
+          showDetail(name) {
+            const menu = this.store.menus.find((m) => m.name === name);
+            this.store.sub = name;
+            this.pageTitle = menu?.title || name;
+            this.store.view = "detail";
+            this.mountSub(name).catch((e) => console.error(e));
           },
           showList() {
+            this.__subUnmount?.();
+            this.__subUnmount = null;
+            const ctx = this.appCtx();
+            if (ctx?.embedded) {
+              ctx.back("#/projects");
+              return;
+            }
             this.store.sub = "";
             this.store.view = "list";
+          },
+          /** 按统一契约挂载二级项目：projects/<name>/index.js 的 mount */
+          async mountSub(name) {
+            const container = await this.waitSubContainer();
+            const mod = await import(getUrl(`projects/${name}/index.js`));
+            const childCtx = createCtx({
+              name: "projects",
+              sub: name,
+              embedded: this.appCtx()?.embedded ?? false,
+            });
+            childCtx.back = () => this.showList();
+            this.__subUnmount = await mod.mount(container, childCtx);
+            // 二级项目挂载完成后更新就绪信号（宿主 ready 早于这里）
+            document.body.setAttribute("data-app-ready", `projects/${name}`);
+          },
+          async waitSubContainer() {
+            for (let i = 0; i < 40; i++) {
+              const el = this.shadow?.ele?.querySelector(".project-sub");
+              if (el) {
+                el.replaceChildren();
+                return el;
+              }
+              // 用定时器而非 rAF：无头虚拟时间下 rAF 不可靠
+              await new Promise((r) => setTimeout(r, 50));
+            }
+            throw new Error("项目详情容器未就绪");
           },
         },
       };

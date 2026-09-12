@@ -1,4 +1,5 @@
-export const home = "../../app/leetcode/";
+// 壳是唯一 o-app 页面，应用切换由壳自身解析 hash（src/micro/router.js）
+export const home = "../../src/layout-shell.html";
 
 export const fail = ({ src, error }) => {
   return `<div style="width:100%;height:100%;display:flex;justify-content:center;align-items:center;word-break:break-all;" data-testid="error-container">

@@ -18,6 +18,7 @@
     </div>
   </div>
   <script type="module">
+    import { getCtxById } from "../../src/micro/context.js";
     export default {
       tag: "demo-app",
       data: { count: 0 },
@@ -26,8 +27,8 @@
           this.count++;
         },
         back() {
-          // 双形态：内嵌时调用加载器注册的回调（返回项目列表），独立打开时走浏览器后退
-          window.appCtx?.back();
+          // 双形态：内嵌回项目列表，独立打开走浏览器后退（ctx 经 data-ctx-id 查注册表）
+          getCtxById(this.ele?.getAttribute?.("data-ctx-id"))?.back();
         },
       },
     };

@@ -1,0 +1,146 @@
+<!-- app-host.html 应用宿主：按注册表加载应用/项目并显式注入 ctx（取代 l-micro） -->
+<template component>
+  <style>
+    :host {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+  <div class="relative wfull hfull">
+    <x-if :value="loading">
+      <div
+        class="absolute z99 top-0 left-0 wfull hfull bg-theme-bg flex-center"
+      >
+        <i class="i-eos-icons:bubble-loading w60px h60px text-#3498db"></i>
+      </div>
+    </x-if>
+    <x-if :value="error">
+      <div class="p40px flex flex-col items-center gap-y12px text-14px">
+        <p class="m0 text-theme-text">应用加载失败：{{error}}</p>
+      </div>
+    </x-if>
+    <div class="app-host-mount relative wfull hfull"></div>
+  </div>
+
+  <script type="module">
+    export const tag = "app-host";
+    import { getApp } from "./registry.js";
+    import { createCtx } from "./context.js";
+
+    export default async function ({ load }) {
+      const { sysStore } = await load("../store/system.js");
+      return {
+        attrs: { name: null, sub: null },
+        data: { loading: false, error: "" },
+        watch: {
+          name() {
+            this.loadIfNeeded();
+          },
+          sub() {
+            this.loadIfNeeded();
+          },
+        },
+        attached() {
+          this.sysStore = sysStore;
+          this.loadIfNeeded();
+        },
+        detached() {
+          // 作废在途加载并卸载当前应用，避免切走后仍挂载
+          this.__token = null;
+          this.__loadedKey = null;
+          this.__loadingKey = null;
+          this.cleanup();
+          this.sysStore = null;
+        },
+        proto: {
+          key() {
+            return `${this.name || ""}|${this.sub || ""}`;
+          },
+          getMount() {
+            return this.shadow?.ele?.querySelector(".app-host-mount") ?? null;
+          },
+          cleanup() {
+            const unmount = this.unmount;
+            this.unmount = null;
+            if (typeof unmount === "function") {
+              try {
+                unmount();
+              } catch (e) {
+                console.error(e);
+              }
+            }
+          },
+          /** 仅在 name/sub 变化时加载，规避 watch 与 attached 的重复触发 */
+          loadIfNeeded() {
+            if (!this.name) return;
+            const key = this.key();
+            if (key === this.__loadedKey || key === this.__loadingKey) return;
+            this.load(key);
+          },
+          async load(key) {
+            const name = this.name;
+            const sub = this.sub || "";
+            const app = getApp(name);
+            if (!app) {
+              this.error = `未知应用：${name}`;
+              return;
+            }
+
+            this.__loadingKey = key;
+            this.cleanup();
+            const token = (this.__token = { key });
+            this.loading = true;
+            this.error = "";
+            if (this.sysStore) this.sysStore.loading = true;
+            document.body.removeAttribute("data-app-ready");
+
+            try {
+              const mountEl = await this.waitMount();
+              if (this.__token !== token) return;
+
+              const mod = await app.load();
+              if (this.__token !== token) return;
+
+              const ctx = createCtx({ name, sub, embedded: true });
+              const unmount = await mod.mount(mountEl, ctx);
+
+              // 加载期间已被新的路由取代：立刻卸载本次挂载
+              if (this.__token !== token) {
+                unmount?.();
+                return;
+              }
+
+              this.unmount = unmount;
+              this.__loadedKey = key;
+              document.body.setAttribute(
+                "data-app-ready",
+                `${name}${sub ? "/" + sub : ""}`
+              );
+              this.emit("ready", { data: { name, sub } });
+            } catch (e) {
+              if (this.__token !== token) return;
+              console.error(e);
+              this.error = e?.message || String(e);
+            } finally {
+              if (this.__token === token) {
+                this.loading = false;
+                this.__loadingKey = null;
+                if (this.sysStore) this.sysStore.loading = false;
+              }
+            }
+          },
+          async waitMount() {
+            for (let i = 0; i < 40; i++) {
+              const el = this.getMount();
+              if (el) return el;
+              // 用定时器而非 rAF：无头虚拟时间下 rAF 不可靠
+              await new Promise((r) => setTimeout(r, 50));
+            }
+            throw new Error("app-host 挂载点未就绪");
+          },
+        },
+      };
+    }
+  </script>
+</template>

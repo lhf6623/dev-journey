@@ -1,7 +1,7 @@
 {
   "type": "module",
   "name": "dev-journey",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "scripts": {
     "dev": "concurrently \"unocss -c uno.config.js -w\" \"unocss -c uno.config.icons.js -w\" \"unocss -c components/uno.config.js -w\" \"unocss -c components/uno.config.icons.js -w\"",
     "build": "unocss -c uno.config.js -m && unocss -c uno.config.icons.js -m && unocss -c components/uno.config.js -m && unocss -c components/uno.config.icons.js -m",

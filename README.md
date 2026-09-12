@@ -38,40 +38,57 @@ node createMenus.cjs
 pnpm menu
 ```
 
-### 微前端架构（自研机制，两级组合）
+### 微前端架构（壳 + 注册表 + 统一契约）
 
-外壳（index.html + header/主题/工具）与三个模式应用（[apps/leetcode](apps/leetcode/)、[apps/mdbook](apps/mdbook/)、[apps/projects](apps/projects/)）由自研微前端工具组合；projects 应用内的二级项目页由同一工具嵌套组合。
+外壳（[index.html](index.html) + [layout-shell.html](src/layout-shell.html) 的 header/主题/工具）与三个应用（[apps/leetcode](apps/leetcode/)、[apps/mdbook](apps/mdbook/)、[apps/projects](apps/projects/)）通过**应用注册表 + 统一 `mount` 契约**组合；projects 内的二级项目用同一契约嵌套。
 
-- 工具：[src/micro/](src/micro/)——`apps.json` 应用清单（header tab 由此生成）、`l-micro` 加载器（HTML-entry 组合）、`init.js` 共享双模式脚本
-- 壳路由深链：`#/app/<name>`（物理别名页 [app/](app/)），二级深链 `#/app/projects?sub=<项目名>`
-- 应用入口均为**完整 HTML 文档**（双形态：被壳组合展示 / 独立打开）
+- 内核 [src/micro/](src/micro/)：
+  - `apps.json`：应用清单（header tab 由此生成）
+  - `registry.js`：清单 → `{ ...meta, load: () => import("apps/<name>/index.js") }`，全站唯一事实源
+  - `router.js`：壳路由 `#/<app>`、`#/<app>/<sub>`；旧链接 `#/app/<name>[/]?sub=<x>` 自动归一化重定向
+  - `context.js`：`createCtx`（`back`/`navigate`/`onTheme`）+ ctx 注册表
+  - `app-host.html`：`<app-host :name :sub>` 按注册表加载、注入 ctx、卸载、写就绪信号 `document.body[data-app-ready]`
+  - `component-entry.js`：`mountComponent` 通用挂载（ofa 组件 + ctx）
+  - `standalone.js`：独立打开形态入口
+- 深链：`#/leetcode`、`#/mdbook`、`#/projects`、`#/projects/demo`
+- 没有 HTML-entry 解析（无 fetch/DOMParser/路径重写/脚本白名单），也没有 `window.__devJourneyApp` / `window.appCtx` 全局
 
 #### 应用编写约定
 
-1. `apps/<name>/index.html` 完整单页：head 引 `../../src/css/public.css`、`../../src/css/uno.css`、`../../src/micro/init.js`（共享脚本）与 ofa.js CDN；body 为页面内容，**布局类放在 body 内的容器 div 上**（被内嵌时注入的是 body 子节点，body 本身不进外壳）
-2. 业务逻辑一律放进 l-m 加载的组件 html 文件（`<template component>`）。index.html 内嵌脚本（inline 或 src）除上述两个外会被加载器跳过并告警，不会执行
-3. 组件 tag 全局唯一：组件文件经 l-m 加载会 `customElements.define` 全局注册，重名会抛 `comp_registered`；建议用应用/项目名前缀（如 `demo-app`、`mdbook-menu`）
-4. 禁止依赖 document 级结构（document.body 追加节点、document 级查询）——被内嵌时内容位于加载器 shadow 内
-5. 相对路径（img/src/href/style url()）由加载器以入口文件为基准重写为绝对地址，无需处理；l-m 的 src 必须用相对路径
-6. 返回交互用 `window.appCtx.back()`（内嵌时调用加载器注册的回调，独立时 `history.back()`）；**appCtx 在组件 attached 时捕获，不要在交互时活读**（嵌套加载器会覆盖全局）
-7. 主题由外壳统一管理（内嵌时 init.js 会自动跳过主题逻辑）；应用内不要自己改 documentElement 的 class
-8. `back` 是 ofa 页面/组件保留方法名，自定义返回方法用 `goBack`/`showList` 等命名
-9. 组件目录（`apps/<name>/components/`）到仓库根的相对路径是 `../../../`，应用根是 `../`——写错层级会 404
-10. 新增 unocss 原子类/图标后运行 `pnpm dev`/`pnpm build`，并同步升级全仓库 `?v=` 版本号与 package.json 版本
+1. 每个应用是一个 ESM 模块 `apps/<name>/index.js`，导出 `mount(container, ctx)` 并返回 `unmount`：
+
+   ```js
+   import { mountComponent } from "../../src/micro/component-entry.js";
+   const src = new URL("./components/<name>-app.html", import.meta.url).href;
+   export async function mount(container, ctx) {
+     return mountComponent(container, { ctx, tag: "<name>-app", src });
+   }
+   ```
+
+2. `apps/<name>/index.html` 只是**独立打开的薄宿主**（引样式 + ofa.js，调 `mountStandalone("<name>", ...)`）；壳内嵌复用同一个 `mount`
+3. 业务逻辑放 `<template component>` 组件文件（`apps/<name>/components/`）；组件 tag 全局唯一，建议应用/项目名前缀
+4. 上下文经 `mount(container, ctx)` 显式传入。组件内取用：宿主元素上的 `data-ctx-id` 属性 + `getCtxById(id)`——**ofa 会丢弃外部挂在元素上的普通对象属性，且组件 `data` 不允许函数**
+5. 组件内 `this` 不是 DOM 元素：宿主元素是 `this.ele`，shadow 查询用 `this.shadow.ele.querySelector(...)`
+6. 返回交互用 `ctx.back()`（内嵌回上级路由，独立 `history.back()`）；`back` 是 ofa 保留方法名，自定义返回用 `goBack`/`showList` 等
+7. 主题由外壳统一管理（独立打开时 `standalone.js` 跟随系统）；应用不要改 `documentElement` 的 class
+8. 站内资源用相对路径，不要 `/` 开头（Pages 部署在 `/dev-journey/` 子路径）。应用根到仓库根是 `../../`，组件目录是 `../../../`
+9. 新增 unocss 原子类/图标后运行 `pnpm dev`/`pnpm build`，并同步升级全仓库 `?v=` 版本号与 package.json 版本
 
 #### projects 项目展示
 
-projects/ 目录下每个子目录是一个独立小项目（同工具嵌套组合的二级应用）：
+projects/ 目录下每个子目录是一个独立小项目（与顶层应用同一 `mount` 契约，可被壳嵌套）：
 
 ```
 projects/<项目名>/
-  ├── index.html    # 独立完整单页（约定同应用编写约定）
+  ├── index.js      # 契约入口：mount(container, ctx)（通常调 mountComponent）
+  ├── index.html    # 独立打开薄宿主
+  ├── <组件>.html    # ofa 组件（<template component>）
   ├── cover.png     # 封面（可选，支持 png/jpg/webp，文件名固定 cover.*）
   └── meta.json     # 元信息（可选）：{ "title": "显示标题", "description": "卡片描述" }
 ```
 
+- 深链 `#/projects/<项目名>` 直达详情；点击卡片改壳路由（浏览器前进/后退可用）
 - meta.json 缺省时 title 取目录名、description 为空；缺封面时卡片显示渐变占位（标题首字）
-- 项目页引用站内资源一律用**相对路径**，不要用 `/` 开头的绝对路径——GitHub Pages 部署在 `/dev-journey/` 子路径下，绝对路径会 404
 - 新增/修改后运行 `pnpm menu`（生成三个菜单到各 apps/*/ 目录）
 
 #### 组件库（components/）
@@ -89,7 +106,7 @@ projects/<项目名>/
 pnpm menu && pnpm build && node node_util/verify.mjs
 ```
 
-[verify.mjs](node_util/verify.mjs) 用无头 Chrome 跑全量冒烟用例（三个应用的深链/内嵌/独立打开形态）。
+[verify.mjs](node_util/verify.mjs) 用无头 Chrome 跑全量冒烟用例（深链 `#/<app>[/<sub>]`、旧链接重定向、内嵌/独立打开）；SPA 用例等 `data-app-ready` 稳定后再断言，不用固定 sleep。调试单个用例：`ONLY=<用例名子串> node node_util/verify.mjs`。
 
 ### npm 依赖使用
 

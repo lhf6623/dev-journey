@@ -1,13 +1,15 @@
 /**
  * dev-journey 验证工具
  * 用法：node node_util/verify.mjs
- * 流程：生成临时 smoke 宿主页（o-app 指向 smoke-app-config）+ shadow-walk 收集器，
+ * 流程：生成临时 smoke 宿主页（index.html 副本 + 注入 hash 与 shadow-walk 收集器），
  * 起 python http.server，用无头 Chrome dump-dom 对每个用例做断言。
- * SPA 用例：home 路由加载；独立页用例：把目标文件复制为同目录 smoke 副本注入收集器。
- * 断言：expectText/expectHrefs/expectLmSrc 子串命中、无 load fail、console 无错误（可 allowError）。
+ * SPA 用例：设置 location.hash 后等壳的 data-app-ready 信号再收集；
+ * 独立页用例：把目标文件复制为同目录 smoke 副本注入收集器。
+ * 断言：expectText/expectHrefs/expectLmSrc/expectIframes/expectHash 子串命中、
+ * 无 load fail、console 无错误（可 allowError）。
  */
-import { spawn, execSync } from "node:child_process";
-import { readFileSync, writeFileSync, copyFileSync, rmSync, mkdirSync, existsSync } from "node:fs";
+import { spawn } from "node:child_process";
+import { readFileSync, writeFileSync, rmSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -16,10 +18,10 @@ const PORT = 8734;
 const BASE = `http://127.0.0.1:${PORT}`;
 const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 
-// shadow-walk 收集器：遍历 shadowRoot 收集文本/hrefs/l-m src，写入 body 的 data-smoke-* 属性
+// shadow-walk 收集器：等 data-app-ready 后遍历 shadowRoot 收集文本/hrefs/l-m src/hash
 const COLLECTOR = `
 <script>
-  setTimeout(() => {
+  const collectSmoke = () => {
     const acc = { text: "", hrefs: [], lmSrcs: [], iframes: [] };
     const seen = new Set();
     const walk = (node) => {
@@ -38,7 +40,26 @@ const COLLECTOR = `
     document.body.setAttribute("data-smoke-hrefs", acc.hrefs.join(","));
     document.body.setAttribute("data-smoke-lmsrc", acc.lmSrcs.join(","));
     document.body.setAttribute("data-smoke-iframes", acc.iframes.join(","));
-  }, 10000);
+    document.body.setAttribute("data-smoke-hash", location.hash);
+  };
+  // 等就绪信号稳定（宿主 ready 后二级项目还会再更新一次），避免固定 sleep
+  let lastReady = null;
+  let stableSince = 0;
+  const waitSmoke = (deadline) => {
+    const now = Date.now();
+    if (now > deadline) return collectSmoke();
+    const ready = document.body.getAttribute("data-app-ready");
+    if (ready) {
+      if (ready !== lastReady) {
+        lastReady = ready;
+        stableSince = now;
+      } else if (now - stableSince >= 2000) {
+        return collectSmoke();
+      }
+    }
+    setTimeout(() => waitSmoke(deadline), 150);
+  };
+  setTimeout(() => waitSmoke(Date.now() + 15000), 500);
 </script>`;
 
 const CASES = [
@@ -46,28 +67,29 @@ const CASES = [
   {
     name: "P0-projects列表",
     type: "spa",
-    home: "app/projects/",
+    hash: "#/projects",
     expectText: ["力扣", "文档", "项目", "示例项目", "一个 ofa.js 小项目演示"],
-    expectLmSrc: ["src/micro/l-micro.html", "apps/projects/components/projects-app.html"],
+    expectLmSrc: ["src/micro/app-host.html", "apps/projects/components/projects-app.html"],
   },
   {
     name: "P0-projects深链详情",
     type: "spa",
-    home: "app/projects/?sub=demo",
+    hash: "#/projects/demo",
     expectText: ["项目列表", "示例项目", "点我 +1", "返回"],
     expectHrefs: ["projects/demo/index.html"],
   },
   {
     name: "P0-leetcode深链",
     type: "spa",
-    home: "app/leetcode/",
+    hash: "#/leetcode",
     expectText: ["力扣", "1.两数之和", "还原代码"],
   },
   {
-    name: "P0-projects带斜杠深链",
+    name: "P0-旧链接重定向",
     type: "spa",
-    home: "app/projects/",
-    expectText: ["力扣", "文档", "项目", "示例项目"],
+    hash: "#/app/projects/?sub=demo",
+    expectText: ["项目列表", "示例项目"],
+    expectHash: "#/projects/demo",
   },
   {
     name: "P0-projects独立打开",
@@ -85,7 +107,7 @@ const CASES = [
   {
     name: "P1-mdbook内嵌",
     type: "spa",
-    home: "app/mdbook/",
+    hash: "#/mdbook",
     expectText: ["文档", "filename与dirname", "在 CommonJS 模块中使用"],
     expectLmSrc: ["apps/mdbook/components/mdbook-app.html", "components/l-doc-menu/index.html", "components/l-doc-search/index.html"],
   },
@@ -99,7 +121,7 @@ const CASES = [
   {
     name: "P2-leetcode内嵌",
     type: "spa",
-    home: "app/leetcode/",
+    hash: "#/leetcode",
     expectText: ["力扣", "1.两数之和", "还原代码", "运行", "2.两数相加"],
     expectLmSrc: ["apps/leetcode/components/leetcode-app.html", "components/l-doc-menu/index.html", "components/l-doc-search/index.html", "components/l-editor/index.html", "components/l-console-list/index.html"],
     expectIframes: ["components/l-editor/CodeMirrorIframe/index.html"],
@@ -125,21 +147,21 @@ const CASES = [
       PAGE_MD_CONTENT: "# 迁移测试标题\n\n迁移内容",
       PAGE_MD_TITLE: "filename与dirname.md",
     },
-    home: "app/mdbook/",
+    hash: "#/mdbook",
     expectText: ["迁移测试标题"],
   },
   // ===== 修复回归 =====
   {
     name: "FIX-tab切换菜单稳定",
     type: "spa-switch",
-    home: "app/leetcode/",
+    hash: "#/leetcode",
     budget: 60000,
     expectText: ["1.两数之和"], // 最终停在力扣，断言当前应用菜单渲染；console 零错误由全局检查覆盖
   },
   {
     name: "FIX-菜单项点击切换",
     type: "spa-menu",
-    home: "app/leetcode/",
+    hash: "#/leetcode",
     budget: 50000,
     expectText: ["mac 自动操作", "CONTENT-OK"], // 切到文档后点击第 3 个菜单项，断言 active 状态与内容切换
   },
@@ -163,16 +185,16 @@ async function ensureServer() {
   throw new Error("静态服务启动失败");
 }
 
-/** 生成 smoke 宿主页（index.html 副本 + o-app 指向 smoke config + 注入脚本） */
-function writeSmokeIndex(script = COLLECTOR) {
+/** 生成 smoke 宿主页：index.html 副本 + 注入 hash 设置、可选 head 注入与收集脚本 */
+function writeSmokeIndex({ script = COLLECTOR, hash = "", head = "" } = {}) {
   let html = readFileSync(join(ROOT, "index.html"), "utf-8");
-  html = html.replace('src="./src/js/app-config.mjs"', 'src="./smoke-app-config.mjs"');
+  const hashScript = hash ? `<script>location.hash = ${JSON.stringify(hash)};</script>` : "";
+  html = html.replace("<head>", "<head>" + head + hashScript);
   html = html.replace("</body>", script + "</body>");
   writeFileSync(join(ROOT, "smoke-index.html"), html);
-  writeFileSync(join(ROOT, "smoke-app-config.mjs"), "export const home = \"__HOME__\";\n");
 }
 
-// tab 切换用例脚本：力扣→文档→力扣→文档 连续切换后收集文本（验证菜单/内容稳定渲染）
+// tab 切换用例脚本：力扣→文档→力扣→文档→力扣，每次等就绪信号稳定后再切，最后收集文本
 const SWITCH_SCRIPT = `
 <script>
   const walkAll = (node, acc) => {
@@ -190,25 +212,34 @@ const SWITCH_SCRIPT = `
     w(document.body);
     if (acc.btns.length) acc.btns[0].click();
   };
+  const waitReady = (name, cb, deadline) => {
+    const ready = document.body.getAttribute("data-app-ready");
+    if (ready === name || (ready && ready.startsWith(name + "/"))) return setTimeout(cb, 2500);
+    if (Date.now() > deadline) return cb();
+    setTimeout(() => waitReady(name, cb, deadline), 150);
+  };
+  const runSeq = (steps, done) => {
+    if (!steps.length) return done();
+    const step = steps.shift();
+    clickTab(step.title);
+    waitReady(step.app, () => runSeq(steps, done), Date.now() + 15000);
+  };
   setTimeout(() => {
-    setTimeout(() => {
-      clickTab("文档");
-      setTimeout(() => {
-        clickTab("力扣");
-        setTimeout(() => {
-          clickTab("文档");
-          setTimeout(() => {
-            clickTab("力扣");
-            setTimeout(() => {
-              const acc = { text: "" };
-              walkAll(document.body, acc);
-              document.body.setAttribute("data-smoke-text", acc.text.replace(/\\s+/g, " ").slice(0, 8000));
-            }, 6000);
-          }, 6000);
-        }, 6000);
-      }, 6000);
-    }, 8000);
-  }, 1000);
+    runSeq(
+      [
+        { title: "文档", app: "mdbook" },
+        { title: "力扣", app: "leetcode" },
+        { title: "文档", app: "mdbook" },
+        { title: "力扣", app: "leetcode" },
+      ],
+      () => {
+        const acc = { text: "" };
+        walkAll(document.body, acc);
+        document.body.setAttribute("data-smoke-text", acc.text.replace(/\\s+/g, " ").slice(0, 8000));
+        document.body.setAttribute("data-smoke-hash", location.hash);
+      }
+    );
+  }, 1500);
 </script>`;
 
 // 菜单点击用例脚本：切到文档应用后点击第 3 个菜单项，把 active 项文本写入 data-smoke-text
@@ -297,33 +328,23 @@ function extract(dom) {
     hrefs: pick("data-smoke-hrefs"),
     lmSrc: pick("data-smoke-lmsrc"),
     iframes: pick("data-smoke-iframes"),
+    hash: pick("data-smoke-hash"),
   };
 }
 
 async function runCase(c) {
   let url;
   let cleanup = () => {};
-  if (c.type === "spa" || c.type === "spa-seed" || c.type === "spa-switch" || c.type === "spa-menu") {
-    if (c.type === "spa-switch") {
-      // 切换用例：收集器换成 tab 连续点击脚本（先重写宿主页，再写配置，避免占位符覆盖 home）
-      writeSmokeIndex(SWITCH_SCRIPT);
-    }
-    if (c.type === "spa-menu") {
-      writeSmokeIndex(MENU_SCRIPT);
-    }
-    // 每次重写整个配置（占位符替换一次后就消失，不能复用 replace）
-    writeFileSync(
-      join(ROOT, "smoke-app-config.mjs"),
-      `export const home = ${JSON.stringify(c.home)};\n`
-    );
-    if (c.type === "spa-seed") {
-      // 探针用例：head 注入旧版本 localStorage 数据，验证 cache.js 迁移；跑完恢复原文件
-      const seedScript = `<script>localStorage.setItem("dev-journey_0.2.9", ${JSON.stringify(JSON.stringify(c.seed))});</script>`;
-      let html = readFileSync(join(ROOT, "smoke-index.html"), "utf-8");
-      html = html.replace("<head>", "<head>" + seedScript);
-      writeFileSync(join(ROOT, "smoke-index.html"), html);
-      cleanup = () => writeFileSync(join(ROOT, "smoke-index.html"), readFileSync(join(ROOT, "smoke-index.html"), "utf-8").replace(seedScript, ""));
-    }
+  if (String(c.type).startsWith("spa")) {
+    let script = COLLECTOR;
+    if (c.type === "spa-switch") script = SWITCH_SCRIPT;
+    if (c.type === "spa-menu") script = MENU_SCRIPT;
+    // 探针用例：head 注入旧版本 localStorage 数据，验证 cache.js 迁移
+    const head =
+      c.type === "spa-seed"
+        ? `<script>localStorage.setItem("dev-journey_0.2.9", ${JSON.stringify(JSON.stringify(c.seed))});</script>`
+        : "";
+    writeSmokeIndex({ script, hash: c.hash, head });
     url = `${BASE}/smoke-index.html`;
   } else {
     const dest = writeSmokeStandalone(c.file);
@@ -333,7 +354,7 @@ async function runCase(c) {
   const { stdout, stderr } = await runChrome(url, c.budget ?? 30000);
   cleanup();
   const dom = stdout;
-  const { text, hrefs, lmSrc, iframes } = extract(dom);
+  const { text, hrefs, lmSrc, iframes, hash } = extract(dom);
   const fails = [];
   for (const t of c.expectText || []) {
     if (!text.includes(t)) fails.push(`text缺少【${t}】`);
@@ -347,7 +368,14 @@ async function runCase(c) {
   for (const f of c.expectIframes || []) {
     if (!iframes.includes(f)) fails.push(`iframe缺少【${f}】`);
   }
+  if (c.expectHash && hash !== c.expectHash) {
+    fails.push(`hash 期望【${c.expectHash}】实际【${hash}】`);
+  }
   if (text.includes("load fail")) fails.push("出现 load fail 页");
+  if (fails.length && process.env.DEBUG) {
+    console.log(`      [debug] hash=${hash}`);
+    console.log(`      [debug] text=${text.slice(0, 400)}`);
+  }
   if (!c.allowError) {
     const errLines = stderr
       .split("\n")
@@ -359,12 +387,14 @@ async function runCase(c) {
 }
 
 async function main() {
-  writeSmokeIndex();
   await ensureServer();
+  // 可选：ONLY=<用例名子串> 只跑匹配用例，便于本地调试
+  const only = process.env.ONLY || "";
+  const cases = only ? CASES.filter((c) => c.name.includes(only)) : CASES;
   const results = [];
-  for (const c of CASES) {
+  for (const c of cases) {
     let r = await runCase(c);
-    // CDN（esm.sh/jsdelivr）偶发抖动会导致组件 blob import 失败，失败重试一次
+    // CDN（esm.sh/jsdelivr）偶发抖动会导致组件加载失败，失败重试一次
     if (!r.pass && !c.allowError) {
       await sleep(2000);
       const retry = await runCase(c);

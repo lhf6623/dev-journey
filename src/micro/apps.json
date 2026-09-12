@@ -2,19 +2,16 @@
   {
     "name": "leetcode",
     "title": "力扣",
-    "icon": "i-tabler:brand-leetcode",
-    "entry": "apps/leetcode/index.html"
+    "icon": "i-tabler:brand-leetcode"
   },
   {
     "name": "mdbook",
     "title": "文档",
-    "icon": "i-mdi:book-open-outline",
-    "entry": "apps/mdbook/index.html"
+    "icon": "i-mdi:book-open-outline"
   },
   {
     "name": "projects",
     "title": "项目",
-    "icon": "i-mdi:view-grid-outline",
-    "entry": "apps/projects/index.html"
+    "icon": "i-mdi:view-grid-outline"
   }
 ]

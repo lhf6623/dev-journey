@@ -5,19 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>项目</title>
     <link rel="icon" href="../../public/favicon.ico" type="image/x-icon" />
-    <link rel="stylesheet" href="../../src/css/tailwind-compat.css?v=0.4.0" />
-    <link rel="stylesheet" href="../../src/css/public.css?v=0.4.0" />
-    <link rel="stylesheet" href="../../src/css/uno.css?v=0.4.0" />
-    <link rel="stylesheet" href="../../src/css/uno-icon.css?v=0.4.0" />
-    <!-- 共享双模式脚本：独立打开跟随系统深浅色；被壳加载器内嵌时自动跳过主题逻辑 -->
-    <script src="../../src/micro/init.js"></script>
+    <link rel="stylesheet" href="../../src/css/tailwind-compat.css?v=0.5.0" />
+    <link rel="stylesheet" href="../../src/css/public.css?v=0.5.0" />
+    <link rel="stylesheet" href="../../src/css/uno.css?v=0.5.0" />
+    <link rel="stylesheet" href="../../src/css/uno-icon.css?v=0.5.0" />
+    <link rel="stylesheet" href="../../components/ui.css?v=0.5.0" />
+    <link rel="stylesheet" href="../../components/ui-icon.css?v=0.5.0" />
     <script src="https://cdn.jsdelivr.net/gh/kirakiray/ofa.js@4.6.12/dist/ofa.min.js"></script>
   </head>
   <body>
-    <!-- 布局类放容器 div：被内嵌时注入的是 body 子节点，body 本身不进外壳 -->
-    <div class="h100vh wfull bg-theme-bg">
-      <l-m src="./components/projects-app.html"></l-m>
-      <projects-app></projects-app>
-    </div>
+    <!-- 独立打开形态：与壳内嵌共用 apps/projects/index.js 的 mount -->
+    <div id="app"></div>
+    <script type="module">
+      import { mountStandalone } from "../../src/micro/standalone.js";
+      mountStandalone("projects", document.getElementById("app"));
+    </script>
   </body>
 </html>

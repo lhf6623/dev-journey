@@ -13,12 +13,12 @@ const sysTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
 
 /** 壳 store：应用加载状态 + 主题 + 当前应用（l-header tab 高亮） */
 export const sysStore = $.stanz({
-  /** 应用加载中（l-micro 控制） */
+  /** 应用加载中（app-host 控制） */
   loading: false,
   /** 主题 */
   theme: Cache.getItem(THEME) ?? sysTheme,
   isMac: getPlatform() === "macOS",
-  /** 当前挂载的应用 name（别名页 attached 设置） */
+  /** 当前挂载的应用 name（壳解析 hash 后设置） */
   activeApp: null,
 });
 

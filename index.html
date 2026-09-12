@@ -8,13 +8,12 @@
       refreshTheme();
     </script>
     <title>Coding Journey - 编码之旅</title>
-    <link rel="stylesheet" href="./src/css/tailwind-compat.css?v=0.4.0" />
-    <link rel="stylesheet" href="./src/css/public.css?v=0.4.0" />
-    <link rel="stylesheet" href="./src/css/uno.css?v=0.4.0" />
+    <link rel="stylesheet" href="./src/css/tailwind-compat.css?v=0.5.0" />
+    <link rel="stylesheet" href="./src/css/public.css?v=0.5.0" />
+    <link rel="stylesheet" href="./src/css/uno.css?v=0.5.0" />
 
     <link rel="icon" href="./public/favicon.ico" type="image/x-icon" />
     <script src="https://cdn.jsdelivr.net/gh/kirakiray/ofa.js@4.6.12/dist/ofa.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/kirakiray/ofa.js@4.6.12/libs/router/dist/router.min.js"></script>
     <script src="./src/js/global-link.mjs" type="module"></script>
   </head>
 
@@ -25,8 +24,7 @@
     <o-global-link href="./src/css/uno-icon.css"></o-global-link>
     <o-global-link href="./components/ui.css"></o-global-link>
     <o-global-link href="./components/ui-icon.css"></o-global-link>
-    <o-router fix-body>
-      <o-app src="./src/js/app-config.mjs"> </o-app>
-    </o-router>
+    <!-- 路由由壳自己接管（src/micro/router.js）：#/<app> 与 #/<app>/<sub> -->
+    <o-app src="./src/js/app-config.mjs"> </o-app>
   </body>
 </html>

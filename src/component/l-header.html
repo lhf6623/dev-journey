@@ -54,8 +54,7 @@
   </header>
 
   <script type="module">
-    import { getUrl } from "../js/util.js";
-    import { getApps } from "../micro/index.js";
+    import { getAppMetas } from "../micro/registry.js";
     export const tag = "l-header";
     export default async function ({ load }) {
       const { sysStore, refreshTheme, system, light, dark } = await load(
@@ -64,7 +63,7 @@
       return {
         data: {
           sysStore: {},
-          apps: getApps(),
+          apps: getAppMetas(),
           themeList: [
             {
               label: "系统",
@@ -90,14 +89,14 @@
           this.sysStore = null;
         },
         proto: {
-          /** tab 高亮：别名页 attached 时设置 sysStore.activeApp */
+          /** tab 高亮：壳解析 hash 后写入 sysStore.activeApp */
           isActive(name) {
             return this.sysStore?.activeApp === name;
           },
           toPage(name) {
             if (this.sysStore?.activeApp === name) return;
-            // 物理别名页路由：#/app/<name>/（目录索引 + ofa 尾斜杠 .html flag）
-            this.app.goto(getUrl(`app/${name}/`));
+            // 壳路由：#/<name>
+            location.hash = `#/${name}`;
           },
           toggleTheme({ data }) {
             refreshTheme(data);
