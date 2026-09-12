@@ -29,7 +29,7 @@ class Cache {
 const cache = new Cache(`${name}_${version}`);
 
 // 版本升级数据迁移：旧版本 key 的数据一次性搬入新 key（用户保存的代码/文档/主题不丢），只读旧写新，不删除旧数据
-for (const legacyVersion of ["0.2.9", "0.2.8"]) {
+for (const legacyVersion of ["0.3.0", "0.2.9", "0.2.8"]) {
   const legacyKey = `${name}_${legacyVersion}`;
   if (legacyKey !== cache.key && !loc.getItem(cache.key) && loc.getItem(legacyKey)) {
     loc.setItem(cache.key, loc.getItem(legacyKey));

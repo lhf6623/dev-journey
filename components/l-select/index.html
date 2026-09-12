@@ -1,5 +1,5 @@
 <template component>
-  <l-m src="./l-button.html"></l-m>
+  <l-m src="../l-button/index.html"></l-m>
   <div class="relative">
     <div on:click="show = !show" class="select__btn">
       <slot></slot>
@@ -26,8 +26,7 @@
 
   <script type="module">
     export const tag = "l-select";
-    export default async function ({ load }) {
-      const { watchHtmlTheme } = await load("../../js/util.js");
+    export default function () {
       return {
         data: {
           // 多选的时候会有选中状态

@@ -1,4 +1,4 @@
-<!-- mdbook-menu.html 文档菜单（自 src/component/l-menu.html 参数化而来，props 驱动） -->
+<!-- l-doc-menu.html 文档菜单（通用组件：menus/title 由宿主 props 驱动，合并自 leetcode-menu/mdbook-menu） -->
 <template component>
   <div
     on:click="setMenu"
@@ -30,9 +30,9 @@
     </ul>
   </aside>
   <script type="module">
-    export const tag = "mdbook-menu";
-    import { throttle } from "https://esm.sh/lodash-es@4.17.21";
-    export default async function ({ load }) {
+    export const tag = "l-doc-menu";
+    import { throttle } from "../_shared/throttle.mjs";
+    export default async function () {
       return {
         attrs: {},
         data: {

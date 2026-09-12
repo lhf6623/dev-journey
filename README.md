@@ -74,6 +74,15 @@ projects/<项目名>/
 - 项目页引用站内资源一律用**相对路径**，不要用 `/` 开头的绝对路径——GitHub Pages 部署在 `/dev-journey/` 子路径下，绝对路径会 404
 - 新增/修改后运行 `pnpm menu`（生成三个菜单到各 apps/*/ 目录）
 
+#### 组件库（components/）
+
+站点与页面共用的组件集中在 [components/](components/)，**不依赖该目录之外的仓库文件**，为后续整目录抽成独立仓库做准备：
+
+- 组件：`l-button`、`l-select`、`l-doc-menu`（菜单合并）、`l-doc-search`（搜索合并）、`l-console-list`、`l-editor`，以及 JS 类 `l-toast`；清单见 [components/manifest.js](components/manifest.js)
+- 约定：库内只用相对本目录的路径；数据走 props + `emit`，不读全局 store / `document.body`；tag 全局唯一
+- 样式：`components/tokens.css`（主题变量唯一来源，`public.css` 改为 `@import` 引入）、`components/reset.css`、`components/ui.css` + `components/ui-icon.css`（UnoCSS 生成物）
+- 构建：`pnpm dev` / `pnpm build` 会同时生成站点与组件库两份 CSS；改动组件后需重跑并同步 `?v=` 与 `package.json` 版本
+
 #### 验证
 
 ```shell

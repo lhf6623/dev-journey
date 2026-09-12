@@ -1,5 +1,6 @@
+// 组件库图标 UnoCSS 配置：只扫描 components/**，输出 components/ui-icon.css
 import { defineConfig, presetIcons } from "unocss";
-import { collections } from "./components/uno.shared.js";
+import { collections } from "./uno.shared.js";
 
 export default defineConfig({
   presets: [
@@ -14,14 +15,8 @@ export default defineConfig({
   cli: {
     entry: [
       {
-        patterns: [
-          "src/**/*.{html,js,mjs}",
-          "projects/**/*.html",
-          "apps/**/*.{html,js,mjs,json}",
-          "app/**/*.html",
-          "index.html",
-        ],
-        outFile: "src/css/uno-icon.css",
+        patterns: ["components/**/*.{html,js,mjs}"],
+        outFile: "components/ui-icon.css",
       },
     ],
   },

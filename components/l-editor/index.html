@@ -10,8 +10,7 @@
   <script type="module">
     export const tag = "l-editor";
     export default async function ({ load }) {
-      const { setCode } = await load("../store.js");
-      const { watchHtmlTheme } = await load("../../../src/js/util.js");
+      const { watchHtmlTheme } = await load("../_shared/theme.mjs");
       return {
         data: {
           code: "",
@@ -59,7 +58,10 @@
           this.observer = null;
         },
         proto: {
-          setCode,
+          // iframe 内容变化 → 向上抛事件，由宿主决定是否持久化（库不直接写 store）
+          setCode(code) {
+            this.emit("change", { data: code });
+          },
           postMessage(fn, ags) {
             if (!this.iframe) return;
             this.iframe.contentWindow.postMessage(

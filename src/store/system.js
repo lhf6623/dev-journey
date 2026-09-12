@@ -1,5 +1,5 @@
 import Cache from "../js/cache.js";
-import { getPlatform } from "../js/Keyboard.mjs";
+import { getPlatform } from "../../components/_shared/keyboard.mjs";
 
 const THEME = "SYSTEM_THEME";
 export const dark = "dark";

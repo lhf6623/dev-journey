@@ -1,20 +1,22 @@
 <!-- leetcode-app.html 力扣应用根组件：菜单 + 搜索 + 三分栏编辑器 + 运行控制台（自 src/pages/leetcode.html 移植） -->
 <template component>
-  <link rel="stylesheet" href="../../../src/css/uno.css?v=0.3.0" />
-  <link rel="stylesheet" href="../../../src/css/uno-icon.css?v=0.3.0" />
+  <link rel="stylesheet" href="../../../src/css/uno.css?v=0.4.0" />
+  <link rel="stylesheet" href="../../../src/css/uno-icon.css?v=0.4.0" />
+  <link rel="stylesheet" href="../../../components/ui.css?v=0.4.0" />
+  <link rel="stylesheet" href="../../../components/ui-icon.css?v=0.4.0" />
 
-  <l-m src="../../../src/component/common/l-button.html"></l-m>
-  <l-m src="./leetcode-menu.html"></l-m>
-  <l-m src="./leetcode-search.html"></l-m>
-  <l-m src="./l-console-list.html"></l-m>
-  <l-m src="./l-editor.html"></l-m>
+  <l-m src="../../../components/l-button/index.html"></l-m>
+  <l-m src="../../../components/l-doc-menu/index.html"></l-m>
+  <l-m src="../../../components/l-doc-search/index.html"></l-m>
+  <l-m src="../../../components/l-console-list/index.html"></l-m>
+  <l-m src="../../../components/l-editor/index.html"></l-m>
 
   <div attr:class="`relative hfull flex ${theme}`">
-    <leetcode-menu
+    <l-doc-menu
       :menus="store.menus"
       :title="store.title"
       on:toggle="selectDoc"
-    ></leetcode-menu>
+    ></l-doc-menu>
     <div class="flex-1 min-w-0 flex flex-col">
       <div
         id="main"
@@ -24,11 +26,11 @@
         <div
           class="p3px pl16px m0 flex-between h44px flex-shrink-0 b-b b-b-solid b-b-theme-hover gap-x12px"
         >
-          <leetcode-search
+          <l-doc-search
             :menus="store.menus"
             :suffix="'.js'"
             on:select="selectDoc"
-          ></leetcode-search>
+          ></l-doc-search>
           <p class="text-14px text-blueGray truncate">{{pageTitle}}</p>
           <div class="flex-between gap-x10px *:flex-shrink-0">
             <div class="relative">
@@ -91,6 +93,7 @@
               :update-code="updateCode"
               on:load="editorLoad"
               on:keydown="editorKeydown"
+              on:change="saveEditorCode"
             ></l-editor>
           </div>
           <div
@@ -132,16 +135,17 @@
 
   <script>
     import screenfull from "https://esm.sh/screenfull@6.0.0";
-    import Toast from "./Toast.js";
-    import { keyboard, getCombinationKey } from "../../../src/js/Keyboard.mjs";
+    import Toast from "../../../components/l-toast/index.mjs";
+    import { keyboard, getCombinationKey } from "../../../components/_shared/keyboard.mjs";
     export default async ({ load }) => {
       const { Split, createJsRunner } = await load("../js/util.js");
-      const { watchHtmlTheme } = await load("../../../src/js/util.js");
+      const { watchHtmlTheme } = await load("../../../components/_shared/theme.mjs");
       const { sysStore } = await load("../../../src/store/system.js");
       const { store, setTitle, setCode, stripSuffix, getContent } = await load(
         "../store.js"
       );
-      const toast = new Toast(3);
+      // Toast 实例放闭包：ofa 的响应式会包装普通对象并丢失原型方法，不能挂在 this 上
+      let toast = null;
       return {
         data: {
           store: {},
@@ -171,6 +175,8 @@
         },
         async attached() {
           this.isMac = sysStore?.isMac ?? false;
+          // Toast 容器挂在应用 shadow 内（组件库不再写 document.body）
+          toast = new Toast(this.shadow.ele, 3);
           // 模板绑定走原对象（attached 赋值保留引用，data 定义会被包装成副本）；
           // title 变化经 stanz 原生 watch 桥接到组件自有 data
           this.store = store;
@@ -216,6 +222,8 @@
           this.store = null;
           this.onDestroy && this.onDestroy();
           this.observer && this.observer();
+          toast?.destroy();
+          toast = null;
 
           keyboard.off("Ctrl-Enter", this.runCode, this);
           keyboard.off("Ctrl-'", this.restoreCode, this);
@@ -239,6 +247,12 @@
           },
           editorLoad() {
             this.setFooterTitle();
+          },
+          // l-editor 内容变化 → 落库（编辑器组件本身不再直接写 store）
+          saveEditorCode({ data }) {
+            if (data == null) return;
+            setCode(data);
+            this.leetcodeCode = data;
           },
           clearLog() {
             this.logList = [];
@@ -293,7 +307,7 @@
             const leetcodeCode = store.leetcodeCode ?? this.leetcodeCode;
             setCode(leetcodeCode);
             this.leetcodeCode = leetcodeCode;
-            toast.show("代码已经保存到本地，点击 还原代码 按钮立即还原");
+            toast?.show("代码已经保存到本地，点击 还原代码 按钮立即还原");
           },
         },
       };

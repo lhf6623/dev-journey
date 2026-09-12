@@ -1,0 +1,24 @@
+/*
+ * tokens.css 组件库主题变量（全库唯一来源）
+ * 定义在 html 上，CSS 自定义属性可穿透 shadow DOM 继承到组件内部
+ */
+html {
+  --theme-bg-color: #fff;
+  --text-base-color: #333;
+  --text-color: #606770;
+  --border-color: #858585;
+  --bg-hover-color: #f0f0f0;
+  --popover-bg-color: #fff;
+  --popover-b-color: #f0f0f0;
+}
+
+html.dark {
+  color-scheme: dark;
+  --theme-bg-color: #222;
+  --text-base-color: #fff;
+  --text-color: #dedede;
+  --border-color: #767676;
+  --bg-hover-color: #323232;
+  --popover-bg-color: #222;
+  --popover-b-color: #323232;
+}

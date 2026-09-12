@@ -87,7 +87,7 @@ const CASES = [
     type: "spa",
     home: "app/mdbook/",
     expectText: ["文档", "filename与dirname", "在 CommonJS 模块中使用"],
-    expectLmSrc: ["apps/mdbook/components/mdbook-app.html", "apps/mdbook/components/mdbook-menu.html"],
+    expectLmSrc: ["apps/mdbook/components/mdbook-app.html", "components/l-doc-menu/index.html", "components/l-doc-search/index.html"],
   },
   {
     name: "P1-mdbook独立打开",
@@ -101,20 +101,20 @@ const CASES = [
     type: "spa",
     home: "app/leetcode/",
     expectText: ["力扣", "1.两数之和", "还原代码", "运行", "2.两数相加"],
-    expectLmSrc: ["apps/leetcode/components/leetcode-app.html", "apps/leetcode/components/l-editor.html", "apps/leetcode/components/l-console-list.html"],
-    expectIframes: ["apps/leetcode/components/CodeMirrorIframe/index.html"],
+    expectLmSrc: ["apps/leetcode/components/leetcode-app.html", "components/l-doc-menu/index.html", "components/l-doc-search/index.html", "components/l-editor/index.html", "components/l-console-list/index.html"],
+    expectIframes: ["components/l-editor/CodeMirrorIframe/index.html"],
   },
   {
     name: "P2-leetcode独立打开",
     type: "standalone",
     file: "apps/leetcode/index.html",
     expectText: ["力扣", "1.两数之和", "还原代码", "运行"],
-    expectIframes: ["apps/leetcode/components/CodeMirrorIframe/index.html"],
+    expectIframes: ["components/l-editor/CodeMirrorIframe/index.html"],
   },
   {
     name: "P2-CodeMirrorIframe独立",
     type: "standalone",
-    file: "apps/leetcode/components/CodeMirrorIframe/index.html",
+    file: "components/l-editor/CodeMirrorIframe/index.html",
     expectText: ["1"],
   },
   // ===== P3 =====

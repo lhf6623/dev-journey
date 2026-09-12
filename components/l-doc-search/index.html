@@ -1,23 +1,22 @@
-<!-- leetcode-search.html 文档搜索（自 src/component/l-search.html 参数化而来，props 驱动） -->
+<!-- l-doc-search.html 文档搜索（通用组件：menus/suffix 由宿主 props 驱动，合并自 leetcode-search/mdbook-search） -->
 <template component>
   <input
     attr:placeholder="`搜索 ${isMac ? '⌘':'Ctrl'} K`"
-    list="leetcode-menus"
+    list="l-doc-search-menus"
     :value="inputValue"
     on:change="toggle"
     type="search"
     class="relative w168px box-border px6px py0px rounded placeholder:text-12px b b-solid b-theme-border"
   />
-  <datalist id="leetcode-menus">
+  <datalist id="l-doc-search-menus">
     <x-fill :value="menus">
       <option :value="$host.stripSuffix($data)" />
     </x-fill>
   </datalist>
   <script type="module">
-    export const tag = "leetcode-search";
-    import { keyboard } from "../../../src/js/Keyboard.mjs";
-    export default async function ({ load }) {
-      const { sysStore } = await load("../../../src/store/system.js");
+    export const tag = "l-doc-search";
+    import { keyboard, getPlatform } from "../_shared/keyboard.mjs";
+    export default async function () {
       return {
         attrs: {},
         data: {
@@ -27,7 +26,8 @@
           isMac: false,
         },
         attached() {
-          this.isMac = sysStore?.isMac ?? false;
+          // 快捷键提示的平台差异在组件内部推导，不依赖宿主 store
+          this.isMac = getPlatform() === "macOS";
           keyboard.on("Ctrl-K", this.focusInput, this);
         },
         detached() {

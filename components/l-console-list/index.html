@@ -1,6 +1,6 @@
 <template component>
-  <l-m src="../../../src/component/common/l-button.html"></l-m>
-  <l-m src="../../../src/component/common/l-select.html"></l-m>
+  <l-m src="../l-button/index.html"></l-m>
+  <l-m src="../l-select/index.html"></l-m>
   <div
     id="console-list"
     attr:class="`${theme} hfull wfull relative overflow-hidden flex flex-col`"
@@ -51,7 +51,7 @@
 
     export const tag = "l-console-list";
     export default async function ({ load }) {
-      const { watchHtmlTheme } = await load("../../../src/js/util.js");
+      const { watchHtmlTheme } = await load("../_shared/theme.mjs");
       const cls = {
         warn: "bg-#fef4cb text-#2f2400 dark:bg-#322e1d dark:text-#efe591",
         error: "bg-#fae6e6 text-#492222 dark:bg-#3c2728 dark:text-#eececd",

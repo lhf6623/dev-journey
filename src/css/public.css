@@ -1,26 +1,12 @@
+/* 主题变量唯一来源在组件库：components/tokens.css（@import 必须在最前） */
+@import url("../../components/tokens.css");
+
 [un-cloak] {
   display: none;
 }
 
-html {
-  --theme-bg-color: #fff;
-  --text-base-color: #333;
-  --text-color: #606770;
-  --border-color: #858585;
-  --bg-hover-color: #f0f0f0;
-  --popover-bg-color: #fff;
-  --popover-b-color: #f0f0f0;
-}
-
 html.dark {
   color-scheme: dark;
-  --theme-bg-color: #222;
-  --text-base-color: #fff;
-  --text-color: #dedede;
-  --border-color: #767676;
-  --bg-hover-color: #323232;
-  --popover-bg-color: #222;
-  --popover-b-color: #323232;
 }
 
 [tabindex]:focus-visible,

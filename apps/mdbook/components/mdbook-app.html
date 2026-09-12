@@ -1,29 +1,31 @@
 <!-- mdbook-app.html 文档应用根组件：菜单 + 搜索 + md 渲染 + PDF 导出（自 src/pages/mdbook.html 移植） -->
 <template component>
-  <link rel="stylesheet" href="../../../src/css/uno.css?v=0.3.0" />
-  <link rel="stylesheet" href="../../../src/css/uno-icon.css?v=0.3.0" />
-  <link rel="stylesheet" href="../../../src/css/highlightjs.css?v=0.3.0" />
+  <link rel="stylesheet" href="../../../src/css/uno.css?v=0.4.0" />
+  <link rel="stylesheet" href="../../../src/css/uno-icon.css?v=0.4.0" />
+  <link rel="stylesheet" href="../../../src/css/highlightjs.css?v=0.4.0" />
+  <link rel="stylesheet" href="../../../components/ui.css?v=0.4.0" />
+  <link rel="stylesheet" href="../../../components/ui-icon.css?v=0.4.0" />
 
-  <l-m src="../../../src/component/common/l-button.html"></l-m>
-  <l-m src="./mdbook-menu.html"></l-m>
-  <l-m src="./mdbook-search.html"></l-m>
+  <l-m src="../../../components/l-button/index.html"></l-m>
+  <l-m src="../../../components/l-doc-menu/index.html"></l-m>
+  <l-m src="../../../components/l-doc-search/index.html"></l-m>
 
   <div class="flex hfull bg-theme-bg">
-    <mdbook-menu
+    <l-doc-menu
       :menus="store.menus"
       :title="store.title"
       on:toggle="selectDoc"
-    ></mdbook-menu>
+    ></l-doc-menu>
     <div class="flex-1 flex flex-col relative overflow-hidden min-w-0">
       <!-- 内容区工具条：搜索 + 当前文档标题 + PDF 按钮 -->
       <div
         class="flex-between h44px px16px b-b b-b-solid b-b-theme-hover flex-shrink-0 gap-x12px"
       >
-        <mdbook-search
+        <l-doc-search
           :menus="store.menus"
           :suffix="'.md'"
           on:select="selectDoc"
-        ></mdbook-search>
+        ></l-doc-search>
         <span class="text-14px text-blueGray truncate">{{pageTitle}}</span>
         <l-button
           title="下载文档为PDF"
@@ -65,7 +67,7 @@
         checkImgEmptyLine,
         colorDistance,
       } = await load("../js/pdf.js");
-      const { watchHtmlTheme } = await load("../../../src/js/util.js");
+      const { watchHtmlTheme } = await load("../../../components/_shared/theme.mjs");
       const { store, setTitle, setMdContent, stripSuffix, getContent } =
         await load("../store.js");
 

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>l-button demo</title>
+    <link rel="stylesheet" href="../reset.css" />
+    <link rel="stylesheet" href="../tokens.css" />
+    <link rel="stylesheet" href="../ui.css" />
+    <link rel="stylesheet" href="../ui-icon.css" />
+    <script src="https://cdn.jsdelivr.net/gh/kirakiray/ofa.js@4.6.12/dist/ofa.min.js"></script>
+  </head>
+  <body class="bg-theme-bg text-theme-text p24px">
+    <h1 class="text-18px">l-button 独立 demo</h1>
+    <div class="flex items-center gap-x12px">
+      <l-m src="./index.html"></l-m>
+      <l-button :icon="'i-mdi:github'">默认按钮</l-button>
+      <l-button :icon="'i-tabler:pdf'" :loading="true">加载中</l-button>
+      <l-button :icon="'i-mdi:plus'" :size="'large'">Large</l-button>
+    </div>
+  </body>
+</html>
