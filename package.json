@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "unocss -c uno.config.js -w",
     "build": "unocss -c uno.config.js -m",
-    "menu": "node ./node_util/createMenus.cjs"
+    "menu": "node ./node_util/createMenus.cjs",
+    "vendor": "node node_util/vendor.mjs",
+    "vendor:check": "node node_util/vendor.mjs --check"
   },
   "devDependencies": {
     "@unocss/cli": "^66.10.0",

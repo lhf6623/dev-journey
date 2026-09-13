@@ -1,0 +1,50 @@
+[
+  {
+    "name": "ofa.js",
+    "file": "ofa.min.js",
+    "version": "4.6.12",
+    "url": "https://cdn.jsdelivr.net/gh/kirakiray/ofa.js@{version}/dist/ofa.min.js",
+    "sha256": "993845aaf90ded42a079fd22d59ff5e9b706b79a047099007404867493da690c",
+    "usage": "所有入口页 <script src>（运行时基座）"
+  },
+  {
+    "name": "marked",
+    "file": "marked.esm.js",
+    "version": "14.1.3",
+    "url": "https://cdn.jsdelivr.net/npm/marked@{version}/lib/marked.esm.js",
+    "sha256": "bfd3e88651386b1eceae1332e899c1ec403ef0d46594a41b07ffa93285ce4356",
+    "usage": "mdbook 常驻"
+  },
+  {
+    "name": "marked-highlight",
+    "file": "marked-highlight.esm.js",
+    "version": "2.2.0",
+    "url": "https://cdn.jsdelivr.net/npm/marked-highlight@{version}/src/index.js",
+    "sha256": "8b91c64d44c31fd17ebb47bac13d28b67ee59648b8e19ea4d5cb770ffc8dfaa7",
+    "usage": "mdbook 常驻"
+  },
+  {
+    "name": "highlight.js",
+    "file": "highlight.min.js",
+    "version": "11.10.0",
+    "url": "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/{version}/es/highlight.min.js",
+    "sha256": "cdcc197c33b8c60bc61286aa7770cf49bf2699cb7bcd76a515cc577262fc9eb2",
+    "usage": "mdbook 常驻（含全部语言）"
+  },
+  {
+    "name": "html2canvas",
+    "file": "html2canvas.esm.js",
+    "version": "1.4.1",
+    "url": "https://cdn.jsdelivr.net/npm/html2canvas@{version}/dist/html2canvas.esm.js",
+    "sha256": "c3b0b8b257996d79b5e362d2aee2411ff74fd23e984e9900f5ba005ea4753d64",
+    "usage": "mdbook 导出 PDF 时动态 import"
+  },
+  {
+    "name": "jsPDF",
+    "file": "jspdf.umd.min.js",
+    "version": "2.5.2",
+    "url": "https://cdn.jsdelivr.net/npm/jspdf@{version}/dist/jspdf.umd.min.js",
+    "sha256": "85ba2cc3ff858a20fa49fe6e457bec863ea40b55a9f3725e58a940e62f6f61a4",
+    "usage": "mdbook 导出 PDF 时加载脚本，取 window.jspdf.jsPDF"
+  }
+]

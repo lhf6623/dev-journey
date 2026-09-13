@@ -123,7 +123,8 @@ src/styles/
 
 #### 外部依赖（vendor/）
 
-站点运行只依赖本仓库的静态文件，第三方库全部本地化在 [vendor/](vendor/)（不再有 CDN 依赖）：
+站点运行只依赖本仓库的静态文件，第三方库全部本地化在 [vendor/](vendor/)（不再有 CDN 依赖）。
+**版本的唯一来源是 [node_util/vendor.manifest.json](node_util/vendor.manifest.json)**（下面表格只是说明）：
 
 | 库 | 版本 | 产物 | 引入方 |
 |---|---|---|---|
@@ -135,7 +136,20 @@ src/styles/
 | jsPDF | 2.5.2 | `jspdf.umd.min.js`（UMD，依赖已打包） | mdbook（导出 PDF 时才加载脚本，取 `window.jspdf.jsPDF`） |
 
 - `screenfull` 已删除（改用原生 Fullscreen API），`lodash-es` 的 `inRange` 已内联，`jspdf`/`html2canvas` 改为导出时懒加载（首屏不下载 ~700KB）
-- 升级某个库：替换 `vendor/` 下对应文件，并同步本节版本号；ofa 升级后建议跑一遍 `node node_util/verify.mjs`
+
+**升级依赖**（不用手抄 URL，也不用手动改仓库其它地方）：
+
+```shell
+# 1. 改 node_util/vendor.manifest.json 里对应条目的 version（URL 由 {version} 模板生成）
+# 2. 重新下载并回写 sha256
+pnpm vendor                 # 全部；也可 pnpm vendor marked 只更新匹配项
+# 3. 回归（版本升级可能带 API 变更，mdbook/leetcode 用例会覆盖到）
+pnpm vendor:check && node node_util/verify.mjs
+```
+
+- `pnpm vendor:check` 只校验 `vendor/` 文件存在且 sha256 与清单一致，不联网；改动 vendor 文件后如果忘了跑 `pnpm vendor`，这一步会报不一致
+- 升级大版本时留意产物形态是否变了（例如某个库不再提供自包含 ESM，就要改用 UMD + 全局，参考 jsPDF 的引入方式）
+- 引入方式若变化，需同步改 `apps/*/` 里的 import；清单里的 `usage` 字段记录了每个库的引入方
 
 #### 验证
 
