@@ -18,11 +18,11 @@ const PORT = 8734;
 const BASE = `http://127.0.0.1:${PORT}`;
 const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 
-// shadow-walk 收集器：等 data-app-ready 后遍历 shadowRoot 收集文本/hrefs/l-m src/hash
+// shadow-walk 收集器：等 data-app-ready 后遍历 shadowRoot 收集文本/hrefs/l-m src/hash/样式注入情况
 const COLLECTOR = `
 <script>
   const collectSmoke = () => {
-    const acc = { text: "", hrefs: [], lmSrcs: [], iframes: [] };
+    const acc = { text: "", hrefs: [], lmSrcs: [], iframes: [], styledRoots: 0 };
     const seen = new Set();
     const walk = (node) => {
       if (node.nodeType === 3) { acc.text += node.textContent; return; }
@@ -32,7 +32,10 @@ const COLLECTOR = `
       if (node.nodeName === "A" && node.href) acc.hrefs.push(node.href);
       if (node.tagName === "L-M" && node.getAttribute("src")) acc.lmSrcs.push(node.getAttribute("src"));
       if (node.tagName === "IFRAME" && node.getAttribute("src")) acc.iframes.push(node.getAttribute("src"));
-      if (node.shadowRoot) [...node.shadowRoot.childNodes].forEach((c) => walk(c));
+      if (node.shadowRoot) {
+        if ((node.shadowRoot.adoptedStyleSheets || []).length) acc.styledRoots++;
+        [...node.shadowRoot.childNodes].forEach((c) => walk(c));
+      }
       [...node.childNodes].forEach((c) => walk(c));
     };
     walk(document.body);
@@ -41,6 +44,14 @@ const COLLECTOR = `
     document.body.setAttribute("data-smoke-lmsrc", acc.lmSrcs.join(","));
     document.body.setAttribute("data-smoke-iframes", acc.iframes.join(","));
     document.body.setAttribute("data-smoke-hash", location.hash);
+    // 首屏主题探针：html class 与 html 计算背景色（深色白闪回归）
+    document.body.setAttribute("data-smoke-htmlclass", document.documentElement.className);
+    document.body.setAttribute("data-smoke-bg", getComputedStyle(document.documentElement).backgroundColor);
+    // 首屏加载动画是否已收起（boot.js 写 data-styles-ready）
+    document.body.setAttribute("data-smoke-bootready", document.documentElement.hasAttribute("data-styles-ready") ? "1" : "0");
+    // 样式注入探针：document 上的公共样式数量 + 已带上公共样式的 shadow root 数
+    document.body.setAttribute("data-smoke-adopted", String((document.adoptedStyleSheets || []).length));
+    document.body.setAttribute("data-smoke-styledroots", String(acc.styledRoots));
   };
   // 等就绪信号稳定（宿主 ready 后二级项目还会再更新一次），避免固定 sleep
   let lastReady = null;
@@ -70,6 +81,8 @@ const CASES = [
     hash: "#/projects",
     expectText: ["力扣", "文档", "项目", "示例项目", "一个 ofa.js 小项目演示"],
     expectLmSrc: ["src/micro/app-host.html", "apps/projects/components/projects-app.html"],
+    expectAdopted: 4,
+    expectStyledRoots: 2,
   },
   {
     name: "P0-projects深链详情",
@@ -96,6 +109,9 @@ const CASES = [
     type: "standalone",
     file: "apps/projects/index.html",
     expectText: ["示例项目", "一个 ofa.js 小项目演示"],
+    expectAdopted: 4,
+    expectStyledRoots: 1,
+    expectBootReady: true,
   },
   {
     name: "P0-demo独立打开",
@@ -151,6 +167,17 @@ const CASES = [
     expectText: ["迁移测试标题"],
   },
   // ===== 修复回归 =====
+  {
+    name: "FIX-深色模式首屏不白闪",
+    type: "spa",
+    hash: "#/leetcode",
+    head: '<script>localStorage.setItem("dev-journey-theme","dark");</script>',
+    expectText: ["1.两数之和"],
+    expectHtmlClass: "dark",
+    expectBg: "rgb(34, 34, 34)",
+    expectBootReady: true,
+    budget: 40000,
+  },
   {
     name: "FIX-tab切换菜单稳定",
     type: "spa-switch",
@@ -289,8 +316,8 @@ const MENU_SCRIPT = `
         walkText(document.body);
         const contentOk = acc.text.includes("自动操作文件保存地址") ? "CONTENT-OK" : "";
         document.body.setAttribute("data-smoke-text", activeText() + "|" + contentOk);
-      }, 5000);
-    }, 6000);
+      }, 8000);
+    }, 8000);
   }, 8000);
 </script>`;
 
@@ -329,6 +356,11 @@ function extract(dom) {
     lmSrc: pick("data-smoke-lmsrc"),
     iframes: pick("data-smoke-iframes"),
     hash: pick("data-smoke-hash"),
+    adopted: pick("data-smoke-adopted"),
+    styledRoots: pick("data-smoke-styledroots"),
+    htmlClass: pick("data-smoke-htmlclass"),
+    bg: pick("data-smoke-bg"),
+    bootReady: pick("data-smoke-bootready"),
   };
 }
 
@@ -339,11 +371,11 @@ async function runCase(c) {
     let script = COLLECTOR;
     if (c.type === "spa-switch") script = SWITCH_SCRIPT;
     if (c.type === "spa-menu") script = MENU_SCRIPT;
-    // 探针用例：head 注入旧版本 localStorage 数据，验证 cache.js 迁移
-    const head =
-      c.type === "spa-seed"
-        ? `<script>localStorage.setItem("dev-journey_0.2.9", ${JSON.stringify(JSON.stringify(c.seed))});</script>`
-        : "";
+    // head 注入：seed 探针（旧版本缓存迁移）或自定义（如主题首屏探针）
+    let head = c.head || "";
+    if (!head && c.type === "spa-seed") {
+      head = `<script>localStorage.setItem("dev-journey_0.2.9", ${JSON.stringify(JSON.stringify(c.seed))});</script>`;
+    }
     writeSmokeIndex({ script, hash: c.hash, head });
     url = `${BASE}/smoke-index.html`;
   } else {
@@ -354,7 +386,7 @@ async function runCase(c) {
   const { stdout, stderr } = await runChrome(url, c.budget ?? 30000);
   cleanup();
   const dom = stdout;
-  const { text, hrefs, lmSrc, iframes, hash } = extract(dom);
+  const { text, hrefs, lmSrc, iframes, hash, adopted, styledRoots, htmlClass, bg, bootReady } = extract(dom);
   const fails = [];
   for (const t of c.expectText || []) {
     if (!text.includes(t)) fails.push(`text缺少【${t}】`);
@@ -370,6 +402,23 @@ async function runCase(c) {
   }
   if (c.expectHash && hash !== c.expectHash) {
     fails.push(`hash 期望【${c.expectHash}】实际【${hash}】`);
+  }
+  // 样式注入探针：document 公共样式数 / 已注入公共样式的 shadow root 数
+  if (c.expectAdopted != null && Number(adopted) !== c.expectAdopted) {
+    fails.push(`document 公共样式数期望【${c.expectAdopted}】实际【${adopted}】`);
+  }
+  if (c.expectStyledRoots != null && Number(styledRoots) < c.expectStyledRoots) {
+    fails.push(`已注入样式的 shadow root 数期望 ≥【${c.expectStyledRoots}】实际【${styledRoots}】`);
+  }
+  // 首屏主题探针
+  if (c.expectHtmlClass && !htmlClass.includes(c.expectHtmlClass)) {
+    fails.push(`html class 期望含【${c.expectHtmlClass}】实际【${htmlClass}】`);
+  }
+  if (c.expectBg && bg !== c.expectBg) {
+    fails.push(`html 背景色期望【${c.expectBg}】实际【${bg}】`);
+  }
+  if (c.expectBootReady && bootReady !== "1") {
+    fails.push(`首屏加载动画未收起（data-styles-ready 缺失）`);
   }
   if (text.includes("load fail")) fails.push("出现 load fail 页");
   if (fails.length && process.env.DEBUG) {

@@ -17,7 +17,7 @@ export const rules = [
   ],
 ];
 
-/** 主题变量映射（值来自 components/tokens.css） */
+/** 主题变量映射（值来自 src/styles/tokens.css） */
 export const theme = {
   colors: {
     themeBg: "var(--theme-bg-color)",

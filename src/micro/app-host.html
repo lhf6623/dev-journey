@@ -9,11 +9,7 @@
   </style>
   <div class="relative wfull hfull">
     <x-if :value="loading">
-      <div
-        class="absolute z99 top-0 left-0 wfull hfull bg-theme-bg flex-center"
-      >
-        <i class="i-eos-icons:bubble-loading w60px h60px text-#3498db"></i>
-      </div>
+      <div class="dj-loading-mask"><span class="dj-spinner"></span></div>
     </x-if>
     <x-if :value="error">
       <div class="p40px flex flex-col items-center gap-y12px text-14px">
@@ -28,8 +24,7 @@
     import { getApp } from "./registry.js";
     import { createCtx } from "./context.js";
 
-    export default async function ({ load }) {
-      const { sysStore } = await load("../store/system.js");
+    export default function () {
       return {
         attrs: { name: null, sub: null },
         data: { loading: false, error: "" },
@@ -42,7 +37,6 @@
           },
         },
         attached() {
-          this.sysStore = sysStore;
           this.loadIfNeeded();
         },
         detached() {
@@ -51,7 +45,6 @@
           this.__loadedKey = null;
           this.__loadingKey = null;
           this.cleanup();
-          this.sysStore = null;
         },
         proto: {
           key() {
@@ -92,7 +85,6 @@
             const token = (this.__token = { key });
             this.loading = true;
             this.error = "";
-            if (this.sysStore) this.sysStore.loading = true;
             document.body.removeAttribute("data-app-ready");
 
             try {
@@ -126,7 +118,6 @@
               if (this.__token === token) {
                 this.loading = false;
                 this.__loadingKey = null;
-                if (this.sysStore) this.sysStore.loading = false;
               }
             }
           },

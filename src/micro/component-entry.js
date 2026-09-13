@@ -6,8 +6,12 @@
  * 所以用 data-ctx-id 属性 + context.js 的注册表传递
  */
 import { registerCtx, releaseCtx } from "./context.js";
+import { useStyles } from "../styles/index.js";
 
-export async function mountComponent(container, { ctx, tag, src, wrapClass }) {
+export async function mountComponent(
+  container,
+  { ctx, tag, src, wrapClass, styles }
+) {
   const wrap = document.createElement("div");
   wrap.className = wrapClass ?? "h100vh wfull bg-theme-bg";
 
@@ -28,6 +32,9 @@ export async function mountComponent(container, { ctx, tag, src, wrapClass }) {
     new Promise((r) => setTimeout(r, 5000)),
   ]);
   await new Promise((r) => setTimeout(r, 100));
+
+  // 模块专用样式：只注入该组件的 shadow（公共样式由 installCommonStyles 统一负责）
+  if (styles?.length) await useStyles(el, styles);
 
   return () => {
     releaseCtx(ctxId);

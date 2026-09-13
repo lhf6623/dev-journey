@@ -5,6 +5,7 @@
  */
 import { getApp } from "./registry.js";
 import { createCtx } from "./context.js";
+import { installCommonStyles } from "../styles/index.js";
 
 /** 跟随系统深浅色，返回取消函数 */
 function followSystemTheme() {
@@ -27,6 +28,7 @@ function followSystemTheme() {
  */
 export async function mountStandalone(name, container) {
   followSystemTheme();
+  await installCommonStyles();
   const app = getApp(name);
   if (!app) throw new Error(`未知应用：${name}`);
   const mod = await app.load();
@@ -43,6 +45,7 @@ export async function mountStandalone(name, container) {
  */
 export async function mountProject(name, container) {
   followSystemTheme();
+  await installCommonStyles();
   const mod = await import(`../../projects/${name}/index.js`);
   const ctx = createCtx({ name: "projects", sub: name, embedded: false });
   const unmount = await mod.mount(container, ctx);

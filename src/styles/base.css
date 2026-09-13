@@ -1,0 +1,55 @@
+/* 站点公共规则；主题变量见 src/styles/tokens.css（由加载器一起注入，不用 @import） */
+[un-cloak] {
+  display: none;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+[tabindex]:focus-visible,
+select:focus-visible,
+a:focus-visible,
+button:focus-visible,
+input:focus-visible {
+  outline: solid #0173ff !important;
+}
+
+input:focus-within {
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* 统一加载动画：参数由 src/styles/boot.js 在首屏写入 --dj-spinner-* 变量，
+   首屏动画与页面内的加载遮罩共用同一套几何/配色 */
+@keyframes dj-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.dj-loading-mask {
+  position: absolute;
+  inset: 0;
+  z-index: 99;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--theme-bg-color);
+}
+
+.dj-spinner {
+  width: var(--dj-spinner-size, 32px);
+  height: var(--dj-spinner-size, 32px);
+  box-sizing: border-box;
+  border: var(--dj-spinner-border, 3px) solid var(--border-color);
+  border-top-color: var(--dj-spinner-accent, #3498db);
+  border-radius: 50%;
+  animation: dj-spin 0.8s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dj-spinner {
+    animation: none;
+  }
+}

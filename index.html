@@ -3,27 +3,22 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- 首屏引导（同步套主题 + 加载动画）：逻辑在 src/styles/boot.js，改一处即可 -->
+    <script src="./src/styles/boot.js?v=0.6.0"></script>
     <script type="module">
       import { refreshTheme } from "./src/store/system.js";
+      import { installCommonStyles } from "./src/styles/index.js";
       refreshTheme();
+      // 统一公共样式加载：一次装好，注入 document 与所有 shadow root
+      installCommonStyles();
     </script>
     <title>Coding Journey - 编码之旅</title>
-    <link rel="stylesheet" href="./src/css/tailwind-compat.css?v=0.5.0" />
-    <link rel="stylesheet" href="./src/css/public.css?v=0.5.0" />
-    <link rel="stylesheet" href="./src/css/uno.css?v=0.5.0" />
 
     <link rel="icon" href="./public/favicon.ico" type="image/x-icon" />
     <script src="https://cdn.jsdelivr.net/gh/kirakiray/ofa.js@4.6.12/dist/ofa.min.js"></script>
-    <script src="./src/js/global-link.mjs" type="module"></script>
   </head>
 
   <body class="overflow-hidden hfull relative">
-    <o-global-link href="./src/css/tailwind-compat.css"></o-global-link>
-    <o-global-link href="./src/css/public.css"></o-global-link>
-    <o-global-link href="./src/css/uno.css"></o-global-link>
-    <o-global-link href="./src/css/uno-icon.css"></o-global-link>
-    <o-global-link href="./components/ui.css"></o-global-link>
-    <o-global-link href="./components/ui-icon.css"></o-global-link>
     <!-- 路由由壳自己接管（src/micro/router.js）：#/<app> 与 #/<app>/<sub> -->
     <o-app src="./src/js/app-config.mjs"> </o-app>
   </body>

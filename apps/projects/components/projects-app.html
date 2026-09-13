@@ -1,10 +1,5 @@
 <!-- projects-app.html 项目应用根组件：卡片网格列表 + 详情视图（二级项目按同一 mount 契约嵌套） -->
 <template component>
-  <link rel="stylesheet" href="../../../src/css/uno.css?v=0.5.0" />
-  <link rel="stylesheet" href="../../../src/css/uno-icon.css?v=0.5.0" />
-  <link rel="stylesheet" href="../../../components/ui.css?v=0.5.0" />
-  <link rel="stylesheet" href="../../../components/ui-icon.css?v=0.5.0" />
-
   <div class="relative hfull wfull overflow-y-auto bg-theme-bg">
     <!-- 列表视图：卡片网格 -->
     <x-if :value="store.view === 'list'">
@@ -75,6 +70,9 @@
           </a>
         </div>
         <div class="flex-1 relative overflow-hidden">
+          <x-if :value="subLoading">
+            <div class="dj-loading-mask"><span class="dj-spinner"></span></div>
+          </x-if>
           <div class="project-sub relative hfull wfull"></div>
         </div>
       </div>
@@ -91,6 +89,7 @@
         data: {
           store,
           pageTitle: "",
+          subLoading: false,
         },
         attached() {
           // 深链 #/projects/<name>：ctx.sub 决定直接进入详情
@@ -127,11 +126,13 @@
             this.store.sub = name;
             this.pageTitle = menu?.title || name;
             this.store.view = "detail";
+            this.subLoading = true;
             this.mountSub(name).catch((e) => console.error(e));
           },
           showList() {
             this.__subUnmount?.();
             this.__subUnmount = null;
+            this.subLoading = false;
             const ctx = this.appCtx();
             if (ctx?.embedded) {
               ctx.back("#/projects");
@@ -142,17 +143,21 @@
           },
           /** 按统一契约挂载二级项目：projects/<name>/index.js 的 mount */
           async mountSub(name) {
-            const container = await this.waitSubContainer();
-            const mod = await import(getUrl(`projects/${name}/index.js`));
-            const childCtx = createCtx({
-              name: "projects",
-              sub: name,
-              embedded: this.appCtx()?.embedded ?? false,
-            });
-            childCtx.back = () => this.showList();
-            this.__subUnmount = await mod.mount(container, childCtx);
-            // 二级项目挂载完成后更新就绪信号（宿主 ready 早于这里）
-            document.body.setAttribute("data-app-ready", `projects/${name}`);
+            try {
+              const container = await this.waitSubContainer();
+              const mod = await import(getUrl(`projects/${name}/index.js`));
+              const childCtx = createCtx({
+                name: "projects",
+                sub: name,
+                embedded: this.appCtx()?.embedded ?? false,
+              });
+              childCtx.back = () => this.showList();
+              this.__subUnmount = await mod.mount(container, childCtx);
+              // 二级项目挂载完成后更新就绪信号（宿主 ready 早于这里）
+              document.body.setAttribute("data-app-ready", `projects/${name}`);
+            } finally {
+              this.subLoading = false;
+            }
           },
           async waitSubContainer() {
             for (let i = 0; i < 40; i++) {

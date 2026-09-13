@@ -12,6 +12,7 @@ pnpm-lock.yaml
 
 # Other files and folders
 .settings/
+.DS_Store
 
 # Executables
 *.swf

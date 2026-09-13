@@ -1,11 +1,5 @@
 <!-- mdbook-app.html 文档应用根组件：菜单 + 搜索 + md 渲染 + PDF 导出（自 src/pages/mdbook.html 移植） -->
 <template component>
-  <link rel="stylesheet" href="../../../src/css/uno.css?v=0.5.0" />
-  <link rel="stylesheet" href="../../../src/css/uno-icon.css?v=0.5.0" />
-  <link rel="stylesheet" href="../../../src/css/highlightjs.css?v=0.5.0" />
-  <link rel="stylesheet" href="../../../components/ui.css?v=0.5.0" />
-  <link rel="stylesheet" href="../../../components/ui-icon.css?v=0.5.0" />
-
   <l-m src="../../../components/l-button/index.html"></l-m>
   <l-m src="../../../components/l-doc-menu/index.html"></l-m>
   <l-m src="../../../components/l-doc-search/index.html"></l-m>
@@ -39,11 +33,7 @@
         attr:class="`md ${theme} flex-1 relative overflow-y-auto`"
       >
         <x-if :value="loading">
-          <div
-            class="absolute z99 top-0 left-0 wfull hfull bg-theme-bg flex-center"
-          >
-            <i class="i-eos-icons:bubble-loading w40px h40px text-#3498db"></i>
-          </div>
+          <div class="dj-loading-mask"><span class="dj-spinner"></span></div>
         </x-if>
         <div id="pdf" class="bg-theme-bg relative max-w794px min-w595px mxauto">
           <h1 class="text-center tracking-2px">{{pageTitle}}</h1>

@@ -13,7 +13,7 @@
   ```shell
   nodemon xxx.js
   ```
-- css 为 unocss 自动生成,组件会自动注入，页面要主动引入
+- css 由 unocss 生成，统一收在 [src/styles/](src/styles/) 并由加载器自动注入 document 与 shadow（页面不用手写 `<link>`）
 
   ```shell
   pnpm dev
@@ -93,12 +93,33 @@ projects/<项目名>/
 
 #### 组件库（components/）
 
-站点与页面共用的组件集中在 [components/](components/)，**不依赖该目录之外的仓库文件**，为后续整目录抽成独立仓库做准备：
+站点与页面共用的组件集中在 [components/](components/)：
 
 - 组件：`l-button`、`l-select`、`l-doc-menu`（菜单合并）、`l-doc-search`（搜索合并）、`l-console-list`、`l-editor`，以及 JS 类 `l-toast`；清单见 [components/manifest.js](components/manifest.js)
 - 约定：库内只用相对本目录的路径；数据走 props + `emit`，不读全局 store / `document.body`；tag 全局唯一
-- 样式：`components/tokens.css`（主题变量唯一来源，`public.css` 改为 `@import` 引入）、`components/reset.css`、`components/ui.css` + `components/ui-icon.css`（UnoCSS 生成物）
-- 构建：`pnpm dev` / `pnpm build` 会同时生成站点与组件库两份 CSS；改动组件后需重跑并同步 `?v=` 与 `package.json` 版本
+- 样式：组件不再自带样式文件，公共样式由 [src/styles/](src/styles/) 统一注入（见下节）；将来整目录抽仓时，把 `src/styles/` 的加载器与 `tokens.css` / `uno.shared.js` 复制一份进 `components/`
+
+#### 样式（src/styles/ 统一加载）
+
+所有 CSS 收在 [src/styles/](src/styles/)，由 [index.js](src/styles/index.js) 一个模块统一加载：
+
+```
+src/styles/
+  index.js        # 加载器：installCommonStyles() / useStyles()
+  boot.js         # 首屏引导（经典脚本）：同步套主题 + 加载动画，改一处即可
+  manifest.js     # 公共样式清单（reset/tokens/base/uno）
+  reset.css  tokens.css  base.css
+  uno.shared.js   # UnoCSS 主题/规则/快捷类/图标集合（组件库共用）
+  uno.css         # UnoCSS 生成物：工具类 + 图标合并（根 uno.config.js，扫描 src/apps/projects/components）
+```
+
+- 机制：把样式构造成 `CSSStyleSheet`，用 `adoptedStyleSheets` 注入 document **和所有 shadow root**（同一个 sheet 共享，只 fetch/parse 一次）；`attachShadow` 钩子保证后建的 shadow 自动带上
+- 站点、应用、独立页都不再手写 `<link>`；入口调一次 `installCommonStyles()`
+- **模块专用 CSS 放模块目录下**，由模块入口声明：`apps/mdbook/index.js` 传 `styles: [new URL("./highlightjs.css", import.meta.url).href]`，只进该模块的 shadow
+- **首屏防闪 + 加载动画**：各入口 `<head>` 只引一行 `src/styles/boot.js`（经典脚本，同步执行才赶得上首帧）。它负责同步套用主题（读与版本无关的镜像键 `dev-journey-theme`）、用 `html` 伪元素画兜底底色与转圈动画，并在样式加载器写 `data-styles-loaded` 后收起动画（最短展示 300ms、5s 兜底）。契约：加载器写 `data-styles-loaded`，`boot.js` 写 `data-styles-ready`。逻辑只有一个文件，改一次即可；**不要并进 `system.js`**（ESM 是 deferred，赶不上首帧）
+- 仅支持 constructable stylesheet 的现代浏览器（Chrome 73+ / Safari 16.4+ / Firefox 101+），不做降级
+- **加载动画统一**：页面内用 `.dj-loading-mask` + `.dj-spinner`（定义在 `base.css`），几何/配色走 `--dj-spinner-*` 变量，而变量的唯一定义处是 `boot.js`——所以首屏动画和页面内遮罩自动一致，改尺寸只改 `boot.js` 一处。使用点：`app-host`（切应用）、`mdbook-app`（加载文档）、`projects-app`（挂载二级项目）；壳里不再有第二层遮罩
+- 新增 unocss 原子类/图标后运行 `pnpm dev` / `pnpm build`，并同步升级全仓库 `?v=` 版本号与 package.json 版本
 
 #### 验证
 
