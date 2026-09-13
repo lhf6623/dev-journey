@@ -2,9 +2,9 @@
   {
     "name": "ofa.js",
     "file": "ofa.min.js",
-    "version": "4.6.12",
+    "version": "4.7.0",
     "url": "https://cdn.jsdelivr.net/gh/kirakiray/ofa.js@{version}/dist/ofa.min.js",
-    "sha256": "993845aaf90ded42a079fd22d59ff5e9b706b79a047099007404867493da690c",
+    "sha256": "2ce2dc6df0a834ecb8749664309423de9fa71afced84a313b6a96274b0f4d7c1",
     "usage": "所有入口页 <script src>（运行时基座）"
   },
   {

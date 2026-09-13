@@ -128,7 +128,7 @@ src/styles/
 
 | 库 | 版本 | 产物 | 引入方 |
 |---|---|---|---|
-| ofa.js | 4.6.12 | `ofa.min.js` | 所有入口页的 `<script src>`（运行时基座） |
+| ofa.js | 4.7.0 | `ofa.min.js` | 所有入口页的 `<script src>`（运行时基座） |
 | marked | 14.1.3 | `marked.esm.js` | mdbook（常驻） |
 | marked-highlight | 2.2.0 | `marked-highlight.esm.js` | mdbook（常驻） |
 | highlight.js | 11.10.0 | `highlight.min.js`（ESM，含全部语言） | mdbook（常驻） |
