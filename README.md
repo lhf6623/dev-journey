@@ -123,10 +123,11 @@ src/styles/
 
 #### 外部依赖（vendor/）
 
-站点运行只依赖本仓库的静态文件，第三方库本地化在 [vendor/](vendor/)（不再走 esm.sh / cdnjs）：
+站点运行只依赖本仓库的静态文件，第三方库全部本地化在 [vendor/](vendor/)（不再有 CDN 依赖）：
 
 | 库 | 版本 | 产物 | 引入方 |
 |---|---|---|---|
+| ofa.js | 4.6.12 | `ofa.min.js` | 所有入口页的 `<script src>`（运行时基座） |
 | marked | 14.1.3 | `marked.esm.js` | mdbook（常驻） |
 | marked-highlight | 2.2.0 | `marked-highlight.esm.js` | mdbook（常驻） |
 | highlight.js | 11.10.0 | `highlight.min.js`（ESM，含全部语言） | mdbook（常驻） |
@@ -134,8 +135,7 @@ src/styles/
 | jsPDF | 2.5.2 | `jspdf.umd.min.js`（UMD，依赖已打包） | mdbook（导出 PDF 时才加载脚本，取 `window.jspdf.jsPDF`） |
 
 - `screenfull` 已删除（改用原生 Fullscreen API），`lodash-es` 的 `inRange` 已内联，`jspdf`/`html2canvas` 改为导出时懒加载（首屏不下载 ~700KB）
-- ofa.js 仍走 jsdelivr CDN（各入口 `<script src>`）；如需完全自持，可把它也放进 `vendor/`
-- 升级某个库：替换 `vendor/` 下对应文件，并同步本节版本号
+- 升级某个库：替换 `vendor/` 下对应文件，并同步本节版本号；ofa 升级后建议跑一遍 `node node_util/verify.mjs`
 
 #### 验证
 
