@@ -121,6 +121,22 @@ src/styles/
 - **加载动画统一**：页面内用 `.dj-loading-mask` + `.dj-spinner`（定义在 `base.css`），几何/配色走 `--dj-spinner-*` 变量，而变量的唯一定义处是 `boot.js`——所以首屏动画和页面内遮罩自动一致，改尺寸只改 `boot.js` 一处。使用点：`app-host`（切应用）、`mdbook-app`（加载文档）、`projects-app`（挂载二级项目）；壳里不再有第二层遮罩
 - 新增 unocss 原子类/图标后运行 `pnpm dev` / `pnpm build`，并同步升级全仓库 `?v=` 版本号与 package.json 版本
 
+#### 外部依赖（vendor/）
+
+站点运行只依赖本仓库的静态文件，第三方库本地化在 [vendor/](vendor/)（不再走 esm.sh / cdnjs）：
+
+| 库 | 版本 | 产物 | 引入方 |
+|---|---|---|---|
+| marked | 14.1.3 | `marked.esm.js` | mdbook（常驻） |
+| marked-highlight | 2.2.0 | `marked-highlight.esm.js` | mdbook（常驻） |
+| highlight.js | 11.10.0 | `highlight.min.js`（ESM，含全部语言） | mdbook（常驻） |
+| html2canvas | 1.4.1 | `html2canvas.esm.js` | mdbook（导出 PDF 时才动态 `import()`） |
+| jsPDF | 2.5.2 | `jspdf.umd.min.js`（UMD，依赖已打包） | mdbook（导出 PDF 时才加载脚本，取 `window.jspdf.jsPDF`） |
+
+- `screenfull` 已删除（改用原生 Fullscreen API），`lodash-es` 的 `inRange` 已内联，`jspdf`/`html2canvas` 改为导出时懒加载（首屏不下载 ~700KB）
+- ofa.js 仍走 jsdelivr CDN（各入口 `<script src>`）；如需完全自持，可把它也放进 `vendor/`
+- 升级某个库：替换 `vendor/` 下对应文件，并同步本节版本号
+
 #### 验证
 
 ```shell

@@ -129,7 +129,6 @@
   </div>
 
   <script>
-    import screenfull from "https://esm.sh/screenfull@6.0.0";
     import Toast from "../../../components/l-toast/index.mjs";
     import { keyboard, getCombinationKey } from "../../../components/_shared/keyboard.mjs";
     export default async ({ load }) => {
@@ -204,6 +203,12 @@
             this.theme = theme;
           });
 
+          // 全屏状态跟随浏览器（用户按 Esc 退出时同步图标）
+          this.__onFullscreenChange = () => {
+            this.isFullscreen = !!document.fullscreenElement;
+          };
+          document.addEventListener("fullscreenchange", this.__onFullscreenChange);
+
           // 首次进入（无缓存代码）时拉取题目原始内容
           if (!store.leetcodeCode) {
             this.restoreCode();
@@ -217,6 +222,11 @@
           this.store = null;
           this.onDestroy && this.onDestroy();
           this.observer && this.observer();
+          document.removeEventListener(
+            "fullscreenchange",
+            this.__onFullscreenChange
+          );
+          this.__onFullscreenChange = null;
           toast?.destroy();
           toast = null;
 
@@ -280,13 +290,19 @@
           setNextTitle(title) {
             if (title) setTitle(title);
           },
-          toggleFullScreen() {
+          /** 全屏：用原生 Fullscreen API（替代 screenfull，去掉外部依赖） */
+          async toggleFullScreen() {
             const element = this.shadow.ele.querySelector("#main");
-            if (!screenfull.isEnabled) return;
-
-            screenfull.toggle(element).then(() => {
-              this.isFullscreen = screenfull.isFullscreen;
-            });
+            if (!document.fullscreenEnabled || !element) return;
+            try {
+              if (document.fullscreenElement) {
+                await document.exitFullscreen();
+              } else {
+                await element.requestFullscreen();
+              }
+            } catch (e) {
+              console.error(e);
+            }
           },
           // 还原代码
           async restoreCode() {

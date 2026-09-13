@@ -49,6 +49,8 @@ const COLLECTOR = `
     document.body.setAttribute("data-smoke-bg", getComputedStyle(document.documentElement).backgroundColor);
     // 首屏加载动画是否已收起（boot.js 写 data-styles-ready）
     document.body.setAttribute("data-smoke-bootready", document.documentElement.hasAttribute("data-styles-ready") ? "1" : "0");
+    // PDF 依赖是否仍为懒加载（未导出前 window.jspdf 不应存在）
+    document.body.setAttribute("data-smoke-jspdf", typeof window.jspdf);
     // 样式注入探针：document 上的公共样式数量 + 已带上公共样式的 shadow root 数
     document.body.setAttribute("data-smoke-adopted", String((document.adoptedStyleSheets || []).length));
     document.body.setAttribute("data-smoke-styledroots", String(acc.styledRoots));
@@ -126,6 +128,7 @@ const CASES = [
     hash: "#/mdbook",
     expectText: ["文档", "filename与dirname", "在 CommonJS 模块中使用"],
     expectLmSrc: ["apps/mdbook/components/mdbook-app.html", "components/l-doc-menu/index.html", "components/l-doc-search/index.html"],
+    expectJspdf: "undefined",
   },
   {
     name: "P1-mdbook独立打开",
@@ -439,6 +442,7 @@ function extract(dom) {
     htmlClass: pick("data-smoke-htmlclass"),
     bg: pick("data-smoke-bg"),
     bootReady: pick("data-smoke-bootready"),
+    jspdf: pick("data-smoke-jspdf"),
   };
 }
 
@@ -465,7 +469,7 @@ async function runCase(c) {
   const { stdout, stderr } = await runChrome(url, c.budget ?? 30000);
   cleanup();
   const dom = stdout;
-  const { text, hrefs, lmSrc, iframes, hash, adopted, styledRoots, htmlClass, bg, bootReady } = extract(dom);
+  const { text, hrefs, lmSrc, iframes, hash, adopted, styledRoots, htmlClass, bg, bootReady, jspdf } = extract(dom);
   const fails = [];
   for (const t of c.expectText || []) {
     if (!text.includes(t)) fails.push(`text缺少【${t}】`);
@@ -498,6 +502,9 @@ async function runCase(c) {
   }
   if (c.expectBootReady && bootReady !== "1") {
     fails.push(`首屏加载动画未收起（data-styles-ready 缺失）`);
+  }
+  if (c.expectJspdf && jspdf !== c.expectJspdf) {
+    fails.push(`window.jspdf 期望【${c.expectJspdf}】实际【${jspdf}】`);
   }
   if (text.includes("load fail")) fails.push("出现 load fail 页");
   if (fails.length && process.env.DEBUG) {

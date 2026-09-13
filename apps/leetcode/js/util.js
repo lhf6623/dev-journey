@@ -1,5 +1,18 @@
 // leetcode 应用私有工具：运行器与拖动分栏（自 src/js/util.js 拷贝，P3 壳瘦身时删原函数）
-import { inRange } from "https://esm.sh/lodash-es@4.17.21";
+
+/** 内联自 lodash.inRange，去掉外部依赖 */
+function inRange(value, start, end) {
+  if (end === undefined) {
+    end = start;
+    start = 0;
+  }
+  if (start > end) {
+    const tmp = start;
+    start = end;
+    end = tmp;
+  }
+  return value >= start && value < end;
+}
 
 /**
  * 获取开始到结束的值，如果大于或小于 start 或 end，则返回 start 或 end
