@@ -188,6 +188,13 @@ const CASES = [
   },
   // ===== 修复回归 =====
   {
+    name: "FIX-leetcode切题加载动画",
+    type: "spa-loading",
+    hash: "#/leetcode",
+    expectText: ["mask:found", "mask:gone"],
+    budget: 45000,
+  },
+  {
     name: "FIX-窄屏菜单收起",
     type: "spa-resize",
     hash: "#/leetcode",
@@ -419,8 +426,84 @@ const RESIZE_SCRIPT = `
   }, 1500);
 </script>`;
 
-/** 独立页用例：复制为同目录 smoke 副本并注入收集器 */
-function writeSmokeStandalone(file) {
+// 内容加载动画用例：劫持 fetch 让切题内容延迟返回，观察遮罩出现与消失
+const LOADING_SCRIPT = `
+<script>
+  const hasMask = () => {
+    let r = false;
+    const seen = new Set();
+    const w = (node) => {
+      if (r || seen.has(node)) return;
+      seen.add(node);
+      if (typeof node.className === "string" && node.className.includes("dj-loading-mask")) { r = true; return; }
+      if (node.shadowRoot) [...node.shadowRoot.childNodes].forEach(w);
+      [...node.childNodes].forEach(w);
+    };
+    w(document.body);
+    return r;
+  };
+  const findMenuItems = () => {
+    const acc = [];
+    const seen = new Set();
+    const w = (node) => {
+      if (seen.has(node)) return;
+      seen.add(node);
+      if (node.tagName === "LI" && typeof node.className === "string" && node.className.includes("l-btn")) acc.push(node);
+      if (node.shadowRoot) [...node.shadowRoot.childNodes].forEach(w);
+      [...node.childNodes].forEach(w);
+    };
+    w(document.body);
+    return acc;
+  };
+  const waitFor = (fn, cb, deadline) => {
+    if (fn()) return cb();
+    if (Date.now() > deadline) return cb();
+    setTimeout(() => waitFor(fn, cb, deadline), 100);
+  };
+  setTimeout(() => {
+    waitFor(
+      () => document.body.getAttribute("data-app-ready") === "leetcode",
+      () => {
+        // 让切题拉取原文变慢，遮罩才有可观察窗口
+        const orig = window.fetch;
+        window.fetch = (input, init) =>
+          String(input).includes("/leetcode/")
+            ? new Promise((res, rej) =>
+                setTimeout(() => orig(input, init).then(res, rej), 1500)
+              )
+            : orig(input, init);
+
+        const target = findMenuItems().find(
+          (li) => !li.className.includes("active")
+        );
+        if (target) target.click();
+
+        waitFor(
+          () => hasMask(),
+          () => {
+            const shown = hasMask();
+            waitFor(
+              () => !hasMask(),
+              () => {
+                document.body.setAttribute(
+                  "data-smoke-text",
+                  (shown ? "mask:found" : "mask:missing") +
+                    "|" +
+                    (hasMask() ? "mask:stuck" : "mask:gone")
+                );
+              },
+              Date.now() + 12000
+            );
+          },
+          Date.now() + 4000
+        );
+      },
+      Date.now() + 12000
+    );
+  }, 1500);
+</script>`;
+
+/** 独立页用例：复制为同目录 smoke 副本并注入收集器 */function writeSmokeStandalone(file) {
   const src = join(ROOT, file);
   const dest = join(ROOT, dirname(file), "smoke-" + file.split("/").pop());
   let html = readFileSync(src, "utf-8");
@@ -472,6 +555,7 @@ async function runCase(c) {
     if (c.type === "spa-switch") script = SWITCH_SCRIPT;
     if (c.type === "spa-menu") script = MENU_SCRIPT;
     if (c.type === "spa-resize") script = RESIZE_SCRIPT;
+    if (c.type === "spa-loading") script = LOADING_SCRIPT;
     // head 注入：seed 探针（旧版本缓存迁移）或自定义（如主题首屏探针）
     let head = c.head || "";
     if (!head && c.type === "spa-seed") {

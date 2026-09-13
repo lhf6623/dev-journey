@@ -79,6 +79,10 @@
         </div>
         <!-- 编辑区 -->
         <div class="flex-1 group relative flex b-y overflow-hidden b-theme-hover">
+          <!-- 切题/还原代码时拉题目原文，遮罩与 mdbook 统一 -->
+          <x-if :value="loading">
+            <div class="dj-loading-mask"><span class="dj-spinner"></span></div>
+          </x-if>
           <div
             id="split-0"
             class="relative flex-shrink-0 hfull overflow-hidden group-[.cursor-col-resize]:select-none group-[.cursor-col-resize]:pointer-events-none"
