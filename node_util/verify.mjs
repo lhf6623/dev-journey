@@ -22,7 +22,7 @@ const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 const COLLECTOR = `
 <script>
   const collectSmoke = () => {
-    const acc = { text: "", hrefs: [], lmSrcs: [], iframes: [], styledRoots: 0 };
+    const acc = { text: "", hrefs: [], lmSrcs: [], iframes: [], styledRoots: 0, main: null, wrap: null };
     const seen = new Set();
     const walk = (node) => {
       if (node.nodeType === 3) { acc.text += node.textContent; return; }
@@ -32,6 +32,8 @@ const COLLECTOR = `
       if (node.nodeName === "A" && node.href) acc.hrefs.push(node.href);
       if (node.tagName === "L-M" && node.getAttribute("src")) acc.lmSrcs.push(node.getAttribute("src"));
       if (node.tagName === "IFRAME" && node.getAttribute("src")) acc.iframes.push(node.getAttribute("src"));
+      if (node.tagName === "MAIN" && !acc.main) acc.main = node;
+      if (node.dataset && node.dataset.djAppWrap !== undefined && !acc.wrap) acc.wrap = node;
       if (node.shadowRoot) {
         if ((node.shadowRoot.adoptedStyleSheets || []).length) acc.styledRoots++;
         [...node.shadowRoot.childNodes].forEach((c) => walk(c));
@@ -51,6 +53,18 @@ const COLLECTOR = `
     document.body.setAttribute("data-smoke-bootready", document.documentElement.hasAttribute("data-styles-ready") ? "1" : "0");
     // PDF 依赖是否仍为懒加载（未导出前 window.jspdf 不应存在）
     document.body.setAttribute("data-smoke-jspdf", typeof window.jspdf);
+    // 布局探针：应用包裹层高度不应超过壳内容区（超过就会把底部裁掉）
+    const overflow =
+      acc.wrap && acc.main
+        ? Math.round(
+            acc.wrap.getBoundingClientRect().height -
+              acc.main.getBoundingClientRect().height
+          )
+        : null;
+    document.body.setAttribute(
+      "data-smoke-wrapoverflow",
+      overflow == null ? "" : String(overflow)
+    );
     // 样式注入探针：document 上的公共样式数量 + 已带上公共样式的 shadow root 数
     document.body.setAttribute("data-smoke-adopted", String((document.adoptedStyleSheets || []).length));
     document.body.setAttribute("data-smoke-styledroots", String(acc.styledRoots));
@@ -85,6 +99,7 @@ const CASES = [
     expectLmSrc: ["src/micro/app-host.html", "apps/projects/components/projects-app.html"],
     expectAdopted: 4,
     expectStyledRoots: 2,
+    expectWrapOverflowMax: 1,
   },
   {
     name: "P0-projects深链详情",
@@ -98,6 +113,7 @@ const CASES = [
     type: "spa",
     hash: "#/leetcode",
     expectText: ["力扣", "1.两数之和", "还原代码"],
+    expectWrapOverflowMax: 1,
   },
   {
     name: "P0-旧链接重定向",
@@ -129,6 +145,7 @@ const CASES = [
     expectText: ["文档", "filename与dirname", "在 CommonJS 模块中使用"],
     expectLmSrc: ["apps/mdbook/components/mdbook-app.html", "components/l-doc-menu/index.html", "components/l-doc-search/index.html"],
     expectJspdf: "undefined",
+    expectWrapOverflowMax: 1,
   },
   {
     name: "P1-mdbook独立打开",
@@ -443,6 +460,7 @@ function extract(dom) {
     bg: pick("data-smoke-bg"),
     bootReady: pick("data-smoke-bootready"),
     jspdf: pick("data-smoke-jspdf"),
+    wrapOverflow: pick("data-smoke-wrapoverflow"),
   };
 }
 
@@ -469,7 +487,7 @@ async function runCase(c) {
   const { stdout, stderr } = await runChrome(url, c.budget ?? 30000);
   cleanup();
   const dom = stdout;
-  const { text, hrefs, lmSrc, iframes, hash, adopted, styledRoots, htmlClass, bg, bootReady, jspdf } = extract(dom);
+  const { text, hrefs, lmSrc, iframes, hash, adopted, styledRoots, htmlClass, bg, bootReady, jspdf, wrapOverflow } = extract(dom);
   const fails = [];
   for (const t of c.expectText || []) {
     if (!text.includes(t)) fails.push(`text缺少【${t}】`);
@@ -505,6 +523,12 @@ async function runCase(c) {
   }
   if (c.expectJspdf && jspdf !== c.expectJspdf) {
     fails.push(`window.jspdf 期望【${c.expectJspdf}】实际【${jspdf}】`);
+  }
+  // 应用包裹层不应高于壳内容区（否则底部被裁）
+  if (c.expectWrapOverflowMax != null && wrapOverflow !== "") {
+    if (Number(wrapOverflow) > c.expectWrapOverflowMax) {
+      fails.push(`应用包裹层高出内容区 ${wrapOverflow}px（应 ≤ ${c.expectWrapOverflowMax}）`);
+    }
   }
   if (text.includes("load fail")) fails.push("出现 load fail 页");
   if (fails.length && process.env.DEBUG) {

@@ -13,7 +13,14 @@ export async function mountComponent(
   { ctx, tag, src, wrapClass, styles }
 ) {
   const wrap = document.createElement("div");
-  wrap.className = wrapClass ?? "h100vh wfull bg-theme-bg";
+  // 内嵌时容器已有确定高度（壳的内容区），填充即可；独立打开时靠 100vh 撑开
+  // （用 h100vh 内嵌会高出 header 那么多，底部被 overflow-hidden 裁掉）
+  wrap.className =
+    wrapClass ??
+    (ctx?.embedded
+      ? "hfull wfull bg-theme-bg"
+      : "h100vh wfull bg-theme-bg");
+  wrap.dataset.djAppWrap = "";
 
   const lm = document.createElement("l-m");
   lm.setAttribute("src", src);
