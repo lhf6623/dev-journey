@@ -6,8 +6,9 @@
   ></div>
   <x-if :value="isSmall">
     <button
-      on:click="setMenu"
+      on:click="showMenu"
       class="fixed bottom-20px left-16px z400 b b-solid b-theme-border rounded-full w40px h40px flex-center bg-theme-bg"
+      aria-label="打开菜单"
     >
       <i class="i-typcn:th-menu"></i>
     </button>
@@ -32,6 +33,10 @@
   <script type="module">
     export const tag = "l-doc-menu";
     import { throttle } from "../_shared/throttle.mjs";
+
+    /** 视口小于该宽度时菜单收起为悬浮按钮 */
+    const SMALL_WIDTH = 960;
+
     export default async function () {
       return {
         attrs: {},
@@ -42,20 +47,10 @@
           isShowMenu: true,
           menuClass: "",
         },
-        watch: {
-          isShowMenu() {
-            const show = this.isSmall && this.isShowMenu;
-            if (this.isSmall) {
-              this.menuClass = show
-                ? "!fixed z400 !top-0 !h100vh"
-                : "!fixed !w0 overflow-hidden";
-            } else {
-              this.menuClass = "";
-            }
-          },
-        },
         attached() {
-          this.resizeHandler = throttle(this.setShowMenu, 300);
+          // 用箭头函数包一层：addEventListener 回调里的 this 是 window，
+          // 直接把 setShowMenu 交给 throttle 会把状态写到 window 上，resize 不生效
+          this.resizeHandler = throttle(() => this.setShowMenu(), 300);
           window.addEventListener("resize", this.resizeHandler);
           this.setShowMenu();
         },
@@ -64,18 +59,35 @@
           this.resizeHandler = null;
         },
         proto: {
+          /** 宽屏常驻；窄屏按 isShowMenu 展开或收起 */
+          syncMenuClass() {
+            if (!this.isSmall) {
+              this.menuClass = "";
+              return;
+            }
+            this.menuClass = this.isShowMenu
+              ? "!fixed z400 !top-0 !h100vh"
+              : "!fixed !w0 overflow-hidden";
+          },
           setShowMenu() {
             const width = window.innerWidth;
-            this.isSmall = width < 960;
-            this.isShowMenu = width >= 960;
+            this.isSmall = width < SMALL_WIDTH;
+            this.isShowMenu = width >= SMALL_WIDTH;
+            this.syncMenuClass();
+          },
+          showMenu() {
+            this.isShowMenu = true;
+            this.syncMenuClass();
+          },
+          /** 收起菜单（遮罩点击、选中菜单项后调用） */
+          setMenu() {
+            this.isShowMenu = false;
+            this.syncMenuClass();
           },
           stripSuffix(textName) {
             return typeof textName === "string"
               ? textName.replace(/\.\w+$/, "")
               : "";
-          },
-          setMenu() {
-            this.isShowMenu = false;
           },
           keydownToggle(e, _title) {
             if (e.key === "Enter") {

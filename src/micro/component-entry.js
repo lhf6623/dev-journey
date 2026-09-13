@@ -25,12 +25,13 @@ export async function mountComponent(
   wrap.append(lm, el);
   container.appendChild(wrap);
 
-  // 等组件定义 + 一次宏任务，让 ready 信号真正代表「已渲染」
-  // 注意：不用 requestAnimationFrame —— 无头虚拟时间下 rAF 不可靠
-  await Promise.race([
-    customElements.whenDefined(tag),
-    new Promise((r) => setTimeout(r, 5000)),
+  // 等组件注册完成。超时不静默放过：组件加载失败时必须显式报错，
+  // 否则会出现「挂在 DOM 里但没 shadow、样式也没注入」的半挂载状态
+  const defined = await Promise.race([
+    customElements.whenDefined(tag).then(() => true),
+    new Promise((r) => setTimeout(() => r(false), 8000)),
   ]);
+  if (!defined) throw new Error(`组件注册超时：${tag}（${src}）`);
   await new Promise((r) => setTimeout(r, 100));
 
   // 模块专用样式：只注入该组件的 shadow（公共样式由 installCommonStyles 统一负责）

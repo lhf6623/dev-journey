@@ -22,23 +22,31 @@ function toUrl(path) {
   return `${base}${base.includes("?") ? "&" : "?"}v=${version}`;
 }
 
-/** 取（并缓存）一个样式表的 CSSStyleSheet */
+/** 取（并缓存）一个样式表的 CSSStyleSheet；失败重试且不缓存失败结果 */
 function loadSheet(path) {
   const url = toUrl(path);
   if (!sheetCache.has(url)) {
-    sheetCache.set(
-      url,
-      fetch(url)
-        .then((res) => {
+    const entry = (async () => {
+      let lastErr;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          const res = await fetch(url);
           if (!res.ok) throw new Error(`样式加载失败 ${res.status}: ${url}`);
-          return res.text();
-        })
-        .then((css) => {
+          const css = await res.text();
           const sheet = new CSSStyleSheet();
           sheet.replaceSync(css);
           return sheet;
-        })
-    );
+        } catch (e) {
+          lastErr = e;
+          if (attempt < 2) {
+            await new Promise((r) => setTimeout(r, 200 * (attempt + 1)));
+          }
+        }
+      }
+      sheetCache.delete(url); // 失败不缓存，下次调用可重试
+      throw lastErr;
+    })();
+    sheetCache.set(url, entry);
   }
   return sheetCache.get(url);
 }
@@ -119,6 +127,17 @@ export function installCommonStyles() {
   return installPromise;
 }
 
+/** 等目标出现可注入的 root（组件 shadow 可能晚于 mount 一点点创建） */
+async function waitRoot(target, timeout = 3000) {
+  const deadline = Date.now() + timeout;
+  for (;;) {
+    const root = resolveRoot(target);
+    if (root) return root;
+    if (Date.now() > deadline) return null;
+    await new Promise((r) => setTimeout(r, 50));
+  }
+}
+
 /**
  * 给某个 document/shadow/ofa 元素追加模块专用样式
  * @param {Document|ShadowRoot|object} target
@@ -128,6 +147,8 @@ export async function useStyles(target, urls) {
   if (!urls?.length) return;
   await installCommonStyles();
   const sheets = await Promise.all(urls.map(loadSheet));
-  const root = resolveRoot(target);
-  if (root) adopt(root, sheets);
+  // 注入不到就显式报错，不要静默跳过（否则表现为「模块样式有时没生效」）
+  const root = await waitRoot(target);
+  if (!root) throw new Error("目标没有 shadow root，无法注入模块样式");
+  adopt(root, sheets);
 }

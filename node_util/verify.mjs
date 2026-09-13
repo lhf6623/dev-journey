@@ -168,6 +168,13 @@ const CASES = [
   },
   // ===== 修复回归 =====
   {
+    name: "FIX-窄屏菜单收起",
+    type: "spa-resize",
+    hash: "#/leetcode",
+    expectText: ["wide:wide", "narrow:hidden", "opened:open", "closed:hidden"],
+    budget: 45000,
+  },
+  {
     name: "FIX-深色模式首屏不白闪",
     type: "spa",
     hash: "#/leetcode",
@@ -321,6 +328,77 @@ const MENU_SCRIPT = `
   }, 8000);
 </script>`;
 
+// 窄屏菜单用例：改视口宽度触发 resize，验证宽屏常驻/窄屏收起、汉堡可展开、遮罩可收起
+const RESIZE_SCRIPT = `
+<script>
+  const findAside = () => {
+    let r = null;
+    const seen = new Set();
+    const w = (node) => {
+      if (seen.has(node)) return;
+      seen.add(node);
+      if (node.tagName === "ASIDE" && !r) r = node;
+      if (node.shadowRoot) [...node.shadowRoot.childNodes].forEach(w);
+      [...node.childNodes].forEach(w);
+    };
+    w(document.body);
+    return r;
+  };
+  const findBy = (pred) => {
+    let r = null;
+    const seen = new Set();
+    const w = (node) => {
+      if (seen.has(node) || r) return;
+      seen.add(node);
+      if (pred(node)) { r = node; return; }
+      if (node.shadowRoot) [...node.shadowRoot.childNodes].forEach(w);
+      [...node.childNodes].forEach(w);
+    };
+    w(document.body);
+    return r;
+  };
+  const asideState = () => {
+    const cls = findAside().className;
+    if (cls.includes("!w0")) return "hidden";
+    if (cls.includes("!fixed")) return "open";
+    return "wide";
+  };
+  const setWidth = (value) => {
+    Object.defineProperty(window, "innerWidth", { value, configurable: true });
+    window.dispatchEvent(new Event("resize"));
+  };
+  const wait = (fn, cb, deadline) => {
+    if (fn()) return cb();
+    if (Date.now() > deadline) return cb();
+    setTimeout(() => wait(fn, cb, deadline), 200);
+  };
+  setTimeout(() => {
+    wait(() => findAside(), () => {
+      setWidth(1200);
+      setTimeout(() => {
+        const wide = asideState();
+        setWidth(800);
+        setTimeout(() => {
+          const narrow = asideState();
+          const btn = findBy((n) => n.tagName === "BUTTON" && n.getAttribute("aria-label") === "打开菜单");
+          if (btn) btn.click();
+          setTimeout(() => {
+            const opened = asideState();
+            const mask = findBy((n) => typeof n.className === "string" && n.className.includes("bg-#00000022"));
+            if (mask) mask.click();
+            setTimeout(() => {
+              document.body.setAttribute(
+                "data-smoke-text",
+                "wide:" + wide + "|narrow:" + narrow + "|opened:" + opened + "|closed:" + asideState()
+              );
+            }, 700);
+          }, 700);
+        }, 900);
+      }, 700);
+    }, Date.now() + 12000);
+  }, 1500);
+</script>`;
+
 /** 独立页用例：复制为同目录 smoke 副本并注入收集器 */
 function writeSmokeStandalone(file) {
   const src = join(ROOT, file);
@@ -371,6 +449,7 @@ async function runCase(c) {
     let script = COLLECTOR;
     if (c.type === "spa-switch") script = SWITCH_SCRIPT;
     if (c.type === "spa-menu") script = MENU_SCRIPT;
+    if (c.type === "spa-resize") script = RESIZE_SCRIPT;
     // head 注入：seed 探针（旧版本缓存迁移）或自定义（如主题首屏探针）
     let head = c.head || "";
     if (!head && c.type === "spa-seed") {
