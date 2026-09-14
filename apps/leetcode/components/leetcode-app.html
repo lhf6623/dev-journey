@@ -79,8 +79,8 @@
         </div>
         <!-- 编辑区 -->
         <div class="flex-1 group relative flex b-y overflow-hidden b-theme-hover">
-          <!-- 切题/还原代码时拉题目原文，遮罩与 mdbook 统一 -->
-          <x-if :value="loading">
+          <!-- 切题拉原文 / 编辑器 iframe 初始化期间都要有遮罩，避免编辑器空窗 -->
+          <x-if :value="loading || editorLoading">
             <div class="dj-loading-mask"><span class="dj-spinner"></span></div>
           </x-if>
           <div
@@ -159,6 +159,8 @@
           onDestroy: null,
           theme: "light",
           loading: false,
+          /** 编辑器 iframe（CodeMirror）尚未就绪 */
+          editorLoading: true,
           observer: null,
           isMac: false,
         },
@@ -255,6 +257,8 @@
             keyboard.trigger(key);
           },
           editorLoad() {
+            // l-editor 在 iframe 就绪时 emit load，收掉编辑器加载遮罩
+            this.editorLoading = false;
             this.setFooterTitle();
           },
           // l-editor 内容变化 → 落库（编辑器组件本身不再直接写 store）

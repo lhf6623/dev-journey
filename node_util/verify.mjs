@@ -195,6 +195,13 @@ const CASES = [
     budget: 45000,
   },
   {
+    name: "FIX-切回力扣编辑器不空窗",
+    type: "spa-blank",
+    hash: "#/mdbook",
+    expectText: ["mask:yes", "editor:blank"],
+    budget: 45000,
+  },
+  {
     name: "FIX-窄屏菜单收起",
     type: "spa-resize",
     hash: "#/leetcode",
@@ -503,6 +510,75 @@ const LOADING_SCRIPT = `
   }, 1500);
 </script>`;
 
+// 编辑器空窗用例：阻断 l-editor 的 iframe 就绪消息，制造"编辑器一直没就绪"的
+// 确定性场景，再切回 leetcode，断言这段空窗里始终有加载遮罩
+const BLANK_SCRIPT = `
+<script>
+  const all = (pred) => {
+    const r = [];
+    const seen = new Set();
+    const w = (node) => {
+      if (seen.has(node)) return;
+      seen.add(node);
+      if (pred(node)) r.push(node);
+      if (node.shadowRoot) [...node.shadowRoot.childNodes].forEach(w);
+      [...node.childNodes].forEach(w);
+    };
+    w(document.body);
+    return r;
+  };
+  const hasMask = () =>
+    all((n) => typeof n.className === "string" && n.className.includes("dj-loading-mask")).length > 0;
+  const editorState = () => {
+    const f = all((n) => n.tagName === "IFRAME" && n.id === "iframe")[0];
+    if (!f) return "none";
+    return f.getBoundingClientRect().width > 0 ? "ready" : "blank";
+  };
+  const waitFor = (fn, cb, deadline) => {
+    if (fn()) return cb();
+    if (Date.now() > deadline) return cb();
+    setTimeout(() => waitFor(fn, cb, deadline), 100);
+  };
+  setTimeout(() => {
+    waitFor(
+      () => document.body.getAttribute("data-app-ready") === "mdbook",
+      () => {
+        // 捕获阶段拦掉 codemirror 的 load 消息（l-editor 用冒泡监听，收不到）
+        window.addEventListener(
+          "message",
+          (e) => {
+            if (e.data && e.data.id === "codemirror" && e.data.fn === "load") {
+              e.stopImmediatePropagation();
+            }
+          },
+          true
+        );
+        const tab = all(
+          (n) => n.nodeName === "BUTTON" && n.textContent.trim() === "力扣"
+        )[0];
+        if (!tab) {
+          document.body.setAttribute("data-smoke-text", "no-tab");
+          return;
+        }
+        tab.click();
+        waitFor(
+          () => document.body.getAttribute("data-app-ready") === "leetcode",
+          () => {
+            setTimeout(() => {
+              document.body.setAttribute(
+                "data-smoke-text",
+                "mask:" + (hasMask() ? "yes" : "no") + "|editor:" + editorState()
+              );
+            }, 1200);
+          },
+          Date.now() + 12000
+        );
+      },
+      Date.now() + 12000
+    );
+  }, 1500);
+</script>`;
+
 /** 独立页用例：复制为同目录 smoke 副本并注入收集器 */function writeSmokeStandalone(file) {
   const src = join(ROOT, file);
   const dest = join(ROOT, dirname(file), "smoke-" + file.split("/").pop());
@@ -556,6 +632,7 @@ async function runCase(c) {
     if (c.type === "spa-menu") script = MENU_SCRIPT;
     if (c.type === "spa-resize") script = RESIZE_SCRIPT;
     if (c.type === "spa-loading") script = LOADING_SCRIPT;
+    if (c.type === "spa-blank") script = BLANK_SCRIPT;
     // head 注入：seed 探针（旧版本缓存迁移）或自定义（如主题首屏探针）
     let head = c.head || "";
     if (!head && c.type === "spa-seed") {
